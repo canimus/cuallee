@@ -1,2 +1,10 @@
 quart==0.15.1
 hypercorn==0.11.2
+
+pyspark==3.3.0
+delta-spark==2.1.0
+pandas==1.4.4
+numpy==1.23.3
+pyarrow==9.0.0
+
+numba==0.56.2

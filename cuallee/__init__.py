@@ -4,7 +4,7 @@ from functools import reduce
 from logging import CRITICAL
 from operator import attrgetter, methodcaller
 import pdb
-from typing import Any, Collection, List, Union, Tuple
+from typing import Any, Collection, List, Union, Tuple, Optional
 from typing_extensions import Self
 
 import numpy as np
@@ -19,7 +19,7 @@ import inspect
 import sys
 import enum
 import itertools
-from .dataframe import numeric_fields
+from . import dataframe as D
 
 
 class CheckLevel(enum.Enum):
@@ -27,16 +27,28 @@ class CheckLevel(enum.Enum):
     ERROR = 1
 
 
+class CheckTag(enum.Enum):
+    AGNOSTIC = 0
+    NUMERIC = 1
+    STRING = 2
+
+
 @dataclass(frozen=True)
 class Rule:
     method: str
     column: List[str]
+    value: Optional[Any]
     expression: str
+    tag: str
+    coverage: float = 1.0
 
+    def __repr__(self):
+        return f"""
+method: {self.method}
+column: {self.column}
+expression: {self.expression}
+        """.stip()
 
-NUMERIC_VALIDATION = {
-    "is_greater_than" : False,
-}
 
 class Check:
     def __init__(self, level: CheckLevel, description: str):
@@ -46,7 +58,10 @@ class Check:
         self.description = description
 
     def is_complete(self, column: str) -> Self:
-        """Validation for non-null values in column"""
+        """
+        Validation for non-null values in column
+        ƒ: F.sum(F.col(column).isNotNull().cast('integer'))
+        """
         self._rules.append(Rule("is_complete", column))
         return self
 
@@ -55,33 +70,100 @@ class Check:
         self._rules.append(Rule("is_unique", column))
         return self
 
-    def is_greater_than(self, column : str, value : float) -> Self:
-        """ Validation for numeric greater than value """
-        self._rules.append(Rule("is_greater_than", column, value))
+    def is_greater_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+        """
+        Validation for numeric greater than value
+        ƒ: F.sum((F.col(column) > value).cast('integer'))
+        """
+        self._rules.append(
+            Rule(
+                method="is_greater_than",
+                column=column,
+                value=value,
+                expression=lambda rows, expectation: (
+                    (F.sum((F.col(column) > value).cast("integer")) / F.lit(rows))
+                    >= F.lit(expectation)
+                ).alias(f"is_greater_than_{column}"),
+                tag=CheckTag.NUMERIC,
+                coverage=pct,
+            )
+        )
         return self
+
+    def is_less_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+        """
+        Validation for numeric greater than value
+        ƒ: F.sum((F.col(column) > value).cast('integer'))
+
+        """
+        self._rules.append(
+            Rule(
+                method="is_less_than",
+                column=column,
+                value=value,
+                expression=lambda rows, expectation: (
+                    (F.sum((F.col(column) < value).cast("integer")) / F.lit(rows))
+                    >= F.lit(expectation)
+                ).alias(f"is_less_than_{column}"),
+                tag=CheckTag.NUMERIC,
+                coverage=pct,
+            )
+        )
+        return self
+
+    # HERE Thank you!
+    # ==============
+    def has_min(self, column: str, value: float) -> Self:
+        """Validation of a column’s minimum value"""
+        self._rules.append(Rule("has_min", column, value, CheckTag.NUMERIC))
+        return self
+        # Calculation:
+        # assert F.min(F.col(column)) == value
+
+    def has_max(self, column: str, value: float) -> Self:
+        """Validation of a column’s maximu value"""
+        pass
+
+    # ==============
+
+    def __repr__(self):
+        return f"""
+description: {self.description}
+level: {self.level}
+rules: {len(self._rules)}
+""".strip()
 
     def validate(self, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
         assert isinstance(
             dataframe, DataFrame
         ), "Cualle operates only with Spark Dataframes"
+
+        # Pre-validate columns
         rule_set = set(self._rules)
         column_set = set(map(attrgetter("column"), rule_set))
-        
         unknown_columns = column_set.difference(dataframe.columns)
-        assert column_set.issubset(dataframe.columns), f"Column(s): {unknown_columns} not in dataframe"
+        assert column_set.issubset(
+            dataframe.columns
+        ), f"Column(s): {unknown_columns} not in dataframe"
 
-        # 
-        set([r.column for r in rule_set if r.method in NUMERIC_VALIDATION]).issubset(numeric_fields(dataframe))
-        
+        # Pre-Validation of numeric data types
+        numeric_rules = set([r.column for r in rule_set if r.tag == CheckTag.NUMERIC])
+        numeric_fields = D.numeric_fields(dataframe)
+        non_numeric_columns = numeric_rules.difference(numeric_fields)
+        assert set(numeric_rules).issubset(
+            numeric_fields
+        ), f"Column(s): {non_numeric_columns} are not numeric"
+
+        rows = dataframe.count()
+        return dataframe.select(*[r.expression(rows, r.coverage) for r in rule_set])
+
+        # 2. DataType
 
 
-        # Classify Rules
-
-        # 1. DataType Agnostic
-
-        # 2. DataType 
-
+# def numeric_fields(dataframe : DataFrame) -> List[str]:
+#         """ Filter all numeric data types in data frame and returns field names """
+#         return set([f.name for f in dataframe.schema.fields if isinstance(f.dataType, T.NumericType)])
 
 
 def _compute_distribution(observation: dict) -> bool:

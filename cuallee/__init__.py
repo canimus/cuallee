@@ -3,8 +3,10 @@ from datetime import datetime
 from functools import reduce
 from logging import CRITICAL
 from operator import attrgetter, methodcaller
+import operator as O
 import pdb
-from typing import Any, Collection, List, Union, Tuple, Optional
+from shutil import ignore_patterns
+from typing import Any, Callable, Collection, List, Union, Tuple, Optional
 from typing_extensions import Self
 
 import numpy as np
@@ -12,7 +14,7 @@ import pandas as pd
 import pyspark.sql.functions as F
 import toolz as Z
 from loguru import logger
-from pyspark.sql import SparkSession, DataFrame, Observation
+from pyspark.sql import SparkSession, DataFrame, Observation, Column
 from pyspark.sql import Window as W
 import uuid
 import inspect
@@ -20,6 +22,7 @@ import sys
 import enum
 import itertools
 from . import dataframe as D
+import hashlib
 
 
 class CheckLevel(enum.Enum):
@@ -31,6 +34,8 @@ class CheckTag(enum.Enum):
     AGNOSTIC = 0
     NUMERIC = 1
     STRING = 2
+    DATE = 3
+    TIME = 4
 
 
 @dataclass(frozen=True)
@@ -43,25 +48,39 @@ class Rule:
     coverage: float = 1.0
 
     def __repr__(self):
-        return f"""
-method: {self.method}
-column: {self.column}
-expression: {self.expression}
-        """.stip()
+        return f"Rule(method:{self.method}, column:{self.column}, tag:{self.tag}, coverage:{self.coverage})"
 
+def _single_value_rule(
+        method: str,
+        column: str,
+        value: Optional[Any],
+        operator: Callable,
+        tag: CheckTag,
+        coverage: float
+    ):
+        key = hashlib.md5(bytes(f"{method}_{column}", "UTF8")).hexdigest()
+        return Rule(
+            method=method, 
+            column=column, 
+            value=value, 
+            expression=lambda rows, expectation: (
+                    (F.sum((operator(F.col(column), value)).cast("integer")) / F.lit(rows))
+                    >= F.lit(expectation)
+                ).alias(key)
+            
+            ,
+            tag=tag,
+            coverage=coverage
+        )
 
 class Check:
     def __init__(self, level: CheckLevel, description: str):
         self._rules = []
-        self._compute = {}
         self.level = level
         self.description = description
 
     def is_complete(self, column: str) -> Self:
-        """
-        Validation for non-null values in column
-        ƒ: F.sum(F.col(column).isNotNull().cast('integer'))
-        """
+        """Validation for non-null values in column"""
         self._rules.append(Rule("is_complete", column))
         return self
 
@@ -71,44 +90,54 @@ class Check:
         return self
 
     def is_greater_than(self, column: str, value: float, pct: float = 1.0) -> Self:
-        """
-        Validation for numeric greater than value
-        ƒ: F.sum((F.col(column) > value).cast('integer'))
-        """
+        """Validation for numeric greater than value"""
+
         self._rules.append(
-            Rule(
-                method="is_greater_than",
-                column=column,
-                value=value,
-                expression=lambda rows, expectation: (
-                    (F.sum((F.col(column) > value).cast("integer")) / F.lit(rows))
-                    >= F.lit(expectation)
-                ).alias(f"is_greater_than_{column}"),
-                tag=CheckTag.NUMERIC,
-                coverage=pct,
-            )
+            _single_value_rule("is_greater_than", column, value, O.gt, CheckTag.NUMERIC, pct)
+        )
+        return self
+
+    def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+        """Validation for numeric greater or equal than value"""
+
+        self._rules.append(
+            _single_value_rule("is_greater_or_equal_than", column, value, O.ge, CheckTag.NUMERIC, pct)
         )
         return self
 
     def is_less_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+        """Validation for numeric less than value"""
+        self._rules.append(
+            _single_value_rule("is_less_than", column, value, O.lt, CheckTag.NUMERIC, pct)
+        )
+        return self
+
+    def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+        """Validation for numeric less or equal than value"""
+        self._rules.append(
+            _single_value_rule("is_less_or_equal_than", column, value, O.le, CheckTag.NUMERIC, pct)
+        )
+
+        return self
+
+    def is_equal_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+        """Validation for numeric column equal than value"""
+
+        self._rules.append(
+            _single_value_rule("is_equal_than", column, value, O.eq, CheckTag.NUMERIC, pct)
+        )
+        return self
+
+    def has_min(self, column: str, value: float, pct: float = 1.0) -> Self:
         """
         Validation for numeric greater than value
         ƒ: F.sum((F.col(column) > value).cast('integer'))
 
         """
         self._rules.append(
-            Rule(
-                method="is_less_than",
-                column=column,
-                value=value,
-                expression=lambda rows, expectation: (
-                    (F.sum((F.col(column) < value).cast("integer")) / F.lit(rows))
-                    >= F.lit(expectation)
-                ).alias(f"is_less_than_{column}"),
-                tag=CheckTag.NUMERIC,
-                coverage=pct,
-            )
+            _single_value_rule("is_less_than", column, value, O.lt, CheckTag.NUMERIC, pct)
         )
+
         return self
 
     # HERE Thank you!
@@ -127,14 +156,14 @@ class Check:
     # ==============
 
     def __repr__(self):
-        return f"""
-description: {self.description}
-level: {self.level}
-rules: {len(self._rules)}
-""".strip()
+        return f"Check(level:{self.level}, desc:{self.description}, rules:{len(self._rules)})"
 
     def validate(self, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
+        assert (
+            self._rules
+        ), "Check is empty. Add validations i.e. is_complete, is_unique, etc."
+
         assert isinstance(
             dataframe, DataFrame
         ), "Cualle operates only with Spark Dataframes"
@@ -158,29 +187,6 @@ rules: {len(self._rules)}
         rows = dataframe.count()
         return dataframe.select(*[r.expression(rows, r.coverage) for r in rule_set])
 
-        # 2. DataType
-
-
-# def numeric_fields(dataframe : DataFrame) -> List[str]:
-#         """ Filter all numeric data types in data frame and returns field names """
-#         return set([f.name for f in dataframe.schema.fields if isinstance(f.dataType, T.NumericType)])
-
-
-def _compute_distribution(observation: dict) -> bool:
-    logger.info(observation)
-    return observation["positive"] / observation["rows"] == 1.0
-
-
-def is_complete(dataframe: DataFrame, column: str) -> bool:
-    observe_completeness = Observation(f"is_complete({column})")
-    dataframe.observe(
-        observe_completeness,
-        F.sum(F.col(column).isNull().cast("long")).alias(f"negative"),
-        F.sum(F.col(column).isNotNull().cast("long")).alias(f"positive"),
-        F.count(F.lit(1)).alias("rows"),
-    ).count()
-
-    return _compute_distribution(observe_completeness.get)
 
 
 def completeness(dataframe: DataFrame) -> float:
@@ -203,37 +209,3 @@ def completeness(dataframe: DataFrame) -> float:
     return round(sum(results.values()) / _shape, 6)
 
 
-def uniqueness(dataframe: DataFrame, exclude_nulls=False) -> float:
-    """Percentage of unique values from entire data set as compound from column"""
-    dataframe.select([F.sum(F.count_distinct(c)).alias(c) for c in dataframe.columns])
-
-
-def is_unique(dataframe: DataFrame, column: str) -> bool:
-    ratio = (
-        dataframe.select(
-            F.expr(
-                f"""
-                count(distinct({column})) / count(1) as positive
-                """
-            )
-        )
-        .first()
-        .positive
-    )
-    logger.info(f"Distribution of is_unique: {ratio}")
-    return ratio == 1.0
-
-
-def is_contained(
-    dataframe: DataFrame, column: str, collection: Collection[Any], ignore_nulls=False
-) -> bool:
-    logger.info(f"{column} is_contained in {collection}")
-    positive_cases = dataframe.select(
-        F.col(column).isin(collection).alias("positive")
-    ).collect()
-
-    results = map(attrgetter("positive"), positive_cases)
-    if ignore_nulls:
-        results = filter(None, results)
-
-    return all(results)

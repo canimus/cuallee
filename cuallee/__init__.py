@@ -43,12 +43,8 @@ class Rule:
     method: str
     column: List[str]
     value: Optional[Any]
-    expression: str
     tag: str
     coverage: float = 1.0
-
-    def __repr__(self):
-        return f"Rule(method:{self.method}, column:{self.column}, tag:{self.tag}, coverage:{self.coverage})"
 
 def _single_value_rule(
         method: str,
@@ -76,17 +72,20 @@ def _single_value_rule(
 class Check:
     def __init__(self, level: CheckLevel, description: str):
         self._rules = []
+        self._compute = {}
         self.level = level
         self.description = description
 
     def is_complete(self, column: str) -> Self:
         """Validation for non-null values in column"""
-        self._rules.append(Rule("is_complete", column))
+        self._rules.append(Rule("is_complete", column, CheckTag.AGNOSTIC, 0))
+        self._compute[f'is_complete_{column}'] = F.sum(F.col(column).isNotNull().cast('integer'))
         return self
 
     def is_unique(self, column: str) -> Self:
         """Validation for unique values in column"""
-        self._rules.append(Rule("is_unique", column))
+        self._rules.append(Rule("is_unique", column, CheckTag.AGNOSTIC))
+        self._compute[f'is_unique_{column}'] = F.count_distinct(F.col(column))
         return self
 
     def is_greater_than(self, column: str, value: float, pct: float = 1.0) -> Self:
@@ -95,6 +94,7 @@ class Check:
         self._rules.append(
             _single_value_rule("is_greater_than", column, value, O.gt, CheckTag.NUMERIC, pct)
         )
+        self._compute[f'is_greater_than_{column}_{value}_{pct}'] = F.sum((F.col(column) > value).cast('integer'))
         return self
 
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0) -> Self:
@@ -142,23 +142,30 @@ class Check:
 
     # HERE Thank you!
     # ==============
-    def has_min(self, column: str, value: float) -> Self:
-        """Validation of a column’s minimum value"""
+    def has_min(self, column: str, value: float):
+        '''Validation of a column’s minimum value'''
         self._rules.append(Rule("has_min", column, value, CheckTag.NUMERIC))
+        self._compute[f'has_min_{column}_{value}'] = F.min(F.col(column)) == value
         return self
-        # Calculation:
-        # assert F.min(F.col(column)) == value
 
-    def has_max(self, column: str, value: float) -> Self:
-        """Validation of a column’s maximu value"""
-        pass
+    def has_max(self, column: str, value: float):
+        '''Validation of a column’s maximum value'''
+        self._rules.append(Rule("has_max", column, value, CheckTag.NUMERIC))
+        self._compute[f'has_max_{column}_{value}'] = F.max(F.col(column)) == value
+        return self
+
+    def has_std(self, column: str, value: float):
+        '''Validation of a column’s standard deviation'''
+        self._rules.append(Rule("has_std", column, value, CheckTag.NUMERIC))
+        self._compute[f'has_std_{column}_{value}'] = F.stddev_pop(F.col('id')) == value
+        return self
 
     # ==============
 
     def __repr__(self):
         return f"Check(level:{self.level}, desc:{self.description}, rules:{len(self._rules)})"
 
-    def validate(self, dataframe: DataFrame):
+    def validate(self, spark, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
         assert (
             self._rules
@@ -184,8 +191,14 @@ class Check:
             numeric_fields
         ), f"Column(s): {non_numeric_columns} are not numeric"
 
-        rows = dataframe.count()
-        return dataframe.select(*[r.expression(rows, r.coverage) for r in rule_set])
+        # Create observation object
+        observation = Observation(self.description)
+
+        df_observation = dataframe.select(*[v.alias(k) for k,v  in self._compute.items()])
+
+        rows = df_observation.count()
+
+        return spark.createDataFrame([k for k in observation.get.items()], ['computed_rule', 'status']).select(F.lit(self.description).alias('check'), F.lit(self.level.name).alias('level'), F.split(F.col('computed_rule'), '_').getItem(0 & 1).alias('rule'), F.split(F.col('computed_rule'), '_').getItem(2).alias('column'), F.split(F.col('computed_rule'), '_').getItem(3).alias('value'), 'status')
 
 
 

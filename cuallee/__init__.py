@@ -7,11 +7,12 @@ import operator as O
 import pdb
 from shutil import ignore_patterns
 from typing import Any, Callable, Collection, List, Union, Tuple, Optional
-from typing_extensions import Self
+#from typing_extensions import Self
 
 import numpy as np
 import pandas as pd
 import pyspark.sql.functions as F
+import pyspark.sql.types as T
 import toolz as Z
 from loguru import logger
 from pyspark.sql import SparkSession, DataFrame, Observation, Column
@@ -76,19 +77,19 @@ class Check:
         self.level = level
         self.description = description
 
-    def is_complete(self, column: str) -> Self:
+    def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
-        self._rules.append(Rule("is_complete", column, CheckTag.AGNOSTIC, 0))
-        self._compute[f'is_complete_{column}'] = F.sum(F.col(column).isNotNull().cast('integer'))
+        self._rules.append(Rule("is_complete", column, None, CheckTag.AGNOSTIC, pct))
+        self._compute[f'is_complete_{column}_None_{pct}'] = F.sum(F.col(column).isNotNull().cast('integer'))
         return self
 
-    def is_unique(self, column: str) -> Self:
+    def is_unique(self, column: str):
         """Validation for unique values in column"""
         self._rules.append(Rule("is_unique", column, CheckTag.AGNOSTIC))
         self._compute[f'is_unique_{column}'] = F.count_distinct(F.col(column))
         return self
 
-    def is_greater_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+    def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater than value"""
 
         self._rules.append(
@@ -97,7 +98,7 @@ class Check:
         self._compute[f'is_greater_than_{column}_{value}_{pct}'] = F.sum((F.col(column) > value).cast('integer'))
         return self
 
-    def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+    def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
 
         self._rules.append(
@@ -105,14 +106,14 @@ class Check:
         )
         return self
 
-    def is_less_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+    def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less than value"""
         self._rules.append(
             _single_value_rule("is_less_than", column, value, O.lt, CheckTag.NUMERIC, pct)
         )
         return self
 
-    def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+    def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
         self._rules.append(
             _single_value_rule("is_less_or_equal_than", column, value, O.le, CheckTag.NUMERIC, pct)
@@ -120,7 +121,7 @@ class Check:
 
         return self
 
-    def is_equal_than(self, column: str, value: float, pct: float = 1.0) -> Self:
+    def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric column equal than value"""
 
         self._rules.append(
@@ -128,7 +129,7 @@ class Check:
         )
         return self
 
-    def has_min(self, column: str, value: float, pct: float = 1.0) -> Self:
+    def has_min(self, column: str, value: float, pct: float = 1.0):
         """
         Validation for numeric greater than value
         ƒ: F.sum((F.col(column) > value).cast('integer'))
@@ -142,10 +143,10 @@ class Check:
 
     # HERE Thank you!
     # ==============
-    def has_min(self, column: str, value: float):
+    def has_min(self, column: str, value: float, pct: float=1.0):
         '''Validation of a column’s minimum value'''
         self._rules.append(Rule("has_min", column, value, CheckTag.NUMERIC))
-        self._compute[f'has_min_{column}_{value}'] = F.min(F.col(column)) == value
+        self._compute[f'has_min_{column}_{value}_{pct}'] = F.min(F.col(column)) == value
         return self
 
     def has_max(self, column: str, value: float):
@@ -194,12 +195,27 @@ class Check:
         # Create observation object
         observation = Observation(self.description)
 
-        df_observation = dataframe.select(*[v.alias(k) for k,v  in self._compute.items()])
-
+        df_observation = dataframe.observe(observation, *[v.cast(T.StringType()).alias(k) for k,v  in self._compute.items()])
         rows = df_observation.count()
 
-        return spark.createDataFrame([k for k in observation.get.items()], ['computed_rule', 'status']).select(F.lit(self.description).alias('check'), F.lit(self.level.name).alias('level'), F.split(F.col('computed_rule'), '_').getItem(0 & 1).alias('rule'), F.split(F.col('computed_rule'), '_').getItem(2).alias('column'), F.split(F.col('computed_rule'), '_').getItem(3).alias('value'), 'status')
-
+        return spark.createDataFrame([k for k in observation.get.items()], 
+    ['computed_rule', 'results']).withColumn(
+        'obs_pct',
+        F.when((F.col('results')=='false') | (F.col('results')=='true'), F.lit(1.0)).otherwise(F.col('results').cast(T.DoubleType())/rows),
+        ).withColumn(
+            'requiered_pct',
+            F.split(F.col('computed_rule'), '_').getItem(4)
+        ).select(
+        F.lit(self.description).alias('check'), 
+        F.lit(self.level.name).alias('level'), 
+        F.concat_ws('_', F.split(F.col('computed_rule'), '_').getItem(0), F.split(F.col('computed_rule'), '_').getItem(1)).alias('rule'), 
+        F.split(F.col('computed_rule'), '_').getItem(2).alias('column'), 
+        F.split(F.col('computed_rule'), '_').getItem(3).alias('value'), 
+        'results',
+        'obs_pct',
+        'requiered_pct',
+        F.when((F.col('results')=='true') | ((F.col('results')!='false') & (F.col('obs_pct')>= F.col('requiered_pct'))), F.lit(True)).otherwise(F.lit(False)).alias('status')
+        )
 
 
 def completeness(dataframe: DataFrame) -> float:

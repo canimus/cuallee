@@ -11,13 +11,7 @@ from datetime import datetime
 from functools import reduce
 from operator import attrgetter, methodcaller
 from shutil import ignore_patterns
-<<<<<<< HEAD
-from typing import Any, Callable, Collection, List, Union, Tuple, Optional
-
-# from typing_extensions import Self
-=======
 from typing import Any, Callable, Collection, List, Optional, Tuple, Union
->>>>>>> 7bc1c5a (Removal of unnecessary libraries in cuallee)
 
 import numpy as np
 import pandas as pd
@@ -27,17 +21,9 @@ import toolz as Z
 from loguru import logger
 from pyspark.sql import Column, DataFrame, Observation, SparkSession
 from pyspark.sql import Window as W
-<<<<<<< HEAD
-import uuid
-import inspect
-import sys
-import enum
-import itertools as I
-=======
-from typing_extensions import Self
 
->>>>>>> 7bc1c5a (Removal of unnecessary libraries in cuallee)
 from . import dataframe as D
+import itertools as I
 
 
 class CheckLevel(enum.Enum):
@@ -205,8 +191,16 @@ class Check:
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate columns
-        rule_set = set(self._rules)
-        column_set = set(I.chain.from_iterable(map(attrgetter("column"), rule_set)))
+        rule_set = set(self._rules)        
+        single_columns = []
+        for column_field  in map(attrgetter("column"), rule_set):
+            if isinstance(column_field, str):
+                single_columns.append(column_field)
+            elif isinstance(column_field, Collection):
+                for column_in_group in column_field:
+                    single_columns.append(column_in_group)
+
+        column_set = set(single_columns)
         unknown_columns = column_set.difference(dataframe.columns)
         assert column_set.issubset(
             dataframe.columns

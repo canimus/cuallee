@@ -63,6 +63,7 @@ class Check:
     ):
         self._rules = []
         self._compute = {}
+        self._unique = {}
         self.level = level
         self.name = name
         self.date = execution_date
@@ -96,7 +97,7 @@ class Check:
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
         self._rules.append(Rule("is_unique", column, CheckDataType.AGNOSTIC, pct))
-        self._compute[
+        self._unique[
             f"is_unique{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}N/A{self.COMPUTE_DELIMITER}{pct}"
         ] = F.count_distinct(F.col(column))
         return self
@@ -287,7 +288,7 @@ class Check:
         return self
 
     def __repr__(self):
-        return f"Check(level:{self.level}, desc:{self.name}, rules:{len(self._rules)})"
+        return f"Check(level:{self.level}, desc:{self.name}, rules:{len(set(self._rules))})"
 
     def validate(self, spark, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
@@ -340,11 +341,17 @@ class Check:
             *[v.cast(T.StringType()).alias(k) for k, v in self._compute.items()],
         )
         rows = df_observation.count()
+        
+        unique_observe = (
+            dataframe
+            .select(*[v.cast(T.StringType()).alias(k) for k, v in self._unique.items()])
+            .first()
+            .asDict()
+        )
 
-        print(observation.get)
         return (
             spark.createDataFrame(
-                [k for k in observation.get.items()], ["computed_rule", "results"]
+                [tuple([i,*k]) for i,k in enumerate({**unique_observe, **observation.get}.items(), 1)], ["id", "computed_rule", "results"]
             )
             .withColumn(
                 "pass_rate",
@@ -358,19 +365,15 @@ class Check:
                 F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(3),
             )
             .select(
+                F.col("id"),
                 F.lit(self.date.strftime("%Y-%m-%d")).alias("date"),
                 F.lit(self.date.strftime("%H:%M:%S")).alias("time"),
                 F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
-                .getItem(1)
-                .alias("column"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
-                .getItem(0)
-                .alias("rule"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
-                .getItem(2)
-                .alias("value"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(1).alias("column"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(0).alias("rule"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(2).alias("value"),
+                F.lit(rows).alias("rows"),
                 "pass_rate",
                 "pass_threshold",
                 F.when(

@@ -23,7 +23,7 @@ from pyspark.sql import Column, DataFrame, Observation, SparkSession
 from pyspark.sql import Window as W
 
 from . import dataframe as D
-
+from termcolor import colored
 
 class CheckLevel(enum.Enum):
     WARNING = 0
@@ -166,7 +166,7 @@ class Check:
         )
         self._compute[
             f"matches_regex{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
-        ] = F.sum((F.regexp_extract(column, value, 0) == value).cast("integer"))
+        ] = F.sum((F.length(F.regexp_extract(column, value, 0)) > 0).cast("integer"))
         return self
 
     def has_min(self, column: str, value: float, pct: float = 1.0):
@@ -347,41 +347,41 @@ class Check:
                 [k for k in observation.get.items()], ["computed_rule", "results"]
             )
             .withColumn(
-                "obs_pct",
-                F.when(
+                "pass_rate",
+                F.round(F.when(
                     (F.col("results") == "false") | (F.col("results") == "true"),
                     F.lit(1.0),
-                ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
+                ).otherwise(F.col("results").cast(T.DoubleType()) / rows),2)
             )
             .withColumn(
-                "requiered_pct",
+                "pass_threshold",
                 F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(3),
             )
             .select(
-                F.lit(self.date).alias("observation_date"),
+                F.lit(self.date.strftime("%Y-%m-%d")).alias("date"),
+                F.lit(self.date.strftime("%H:%M:%S")).alias("time"),
                 F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
-                .getItem(0)
-                .alias("rule"),
                 F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
                 .getItem(1)
                 .alias("column"),
                 F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
+                .getItem(0)
+                .alias("rule"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
                 .getItem(2)
                 .alias("value"),
-                "results",
-                "obs_pct",
-                "requiered_pct",
+                "pass_rate",
+                "pass_threshold",
                 F.when(
                     (F.col("results") == "true")
                     | (
                         (F.col("results") != "false")
-                        & (F.col("obs_pct") >= F.col("requiered_pct"))
+                        & (F.col("pass_rate") >= F.col("pass_threshold"))
                     ),
-                    F.lit(True),
+                    F.lit("PASS"),
                 )
-                .otherwise(F.lit(False))
+                .otherwise(F.lit("FAIL"))
                 .alias("status"),
             )
         )

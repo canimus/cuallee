@@ -177,6 +177,16 @@ class Check:
         )
         return self
 
+    def is_between(self, column : str, *value : Any, pct : float = 1.0):
+        """Validation of a column between a range"""
+        print(value)
+        self._rules.append(Rule("is_between", column, None, CheckTag.AGNOSTIC, pct))
+        self._compute[f"is_between-{column}-{value}-{pct}"] = (
+            F.sum(F.col(column).between(*value).cast("integer"))
+        )
+        return self
+
+
     def __repr__(self):
         return f"Check(level:{self.level}, desc:{self.description}, rules:{len(self._rules)})"
 

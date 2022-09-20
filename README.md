@@ -52,3 +52,18 @@ df = spark.createDataFrame([[1, 10], [2, 15], [3, 17]], ["ID", "value"])
 check = Check(CheckLevel.WARNING, "is_contained_in_number_test")
 check.is_contained_in("value", (10, 15, 20, 25)).validate(spark, df)
 ```
+
+### More...
+- `are_complete(*cols)`
+- `is_greater_than(col, val)`
+- `is_greater_or_equal_than(col, val)`
+- `is_less_than(col, val)`
+- `is_less_or_equal_than(col, val)`
+- `is_equal_than(col, val)`
+- `has_min(col, val)`
+- `has_max(col, val)`
+- `has_std(col, val)`
+- `is_between(col, i, k)`
+- `is_between(col, date_1, date_2)`
+- `has_min_by(col2, col1, value)`
+- `satisfies(predicate, coverage)`

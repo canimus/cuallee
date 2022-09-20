@@ -1,29 +1,17 @@
 import enum
-import hashlib
-import inspect
-import itertools as I
 import operator as O
-import pdb
-import sys
-import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
-from operator import attrgetter, methodcaller
-from shutil import ignore_patterns
+from operator import attrgetter
 from typing import Any, Callable, Collection, List, Optional, Tuple, Union
 
-import numpy as np
-import pandas as pd
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-import toolz as Z
-from loguru import logger
-from pyspark.sql import Column, DataFrame, Observation, SparkSession
+from pyspark.sql import DataFrame, Observation, SparkSession
 from pyspark.sql import Window as W
 
 from . import dataframe as D
-from termcolor import colored
 
 
 class CheckLevel(enum.Enum):
@@ -291,7 +279,7 @@ class Check:
     def __repr__(self):
         return f"Check(level:{self.level}, desc:{self.name}, rules:{len(set(self._rules))})"
 
-    def validate(self, spark, dataframe: DataFrame):
+    def validate(self, spark : SparkSession, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
         assert (
             self._rules

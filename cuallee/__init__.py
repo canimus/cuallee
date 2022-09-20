@@ -52,10 +52,7 @@ def _single_value_rule(
         value: Optional[Any],
         operator: Callable,
     ):
-        return lambda rows, expectation: (
-                    (F.sum((operator(F.col(column), value)).cast("integer")) / F.lit(rows))
-                    >= F.lit(expectation)
-        )
+    return F.sum((operator(F.col(column), value)).cast("integer"))
 
 class Check:
     def __init__(self, level: CheckLevel, description: str):

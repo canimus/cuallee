@@ -190,6 +190,11 @@ class Check:
 
     def is_contained_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
         """Validation of column value in set of given values"""
+        # Create tuple if user pass list
+        if isinstance(value, List):
+            value = tuple(value)
+        
+        # Check value type to later assess correct column type
         if [isinstance(v, str) for v in value]:
             check = CheckTag.STRING
         else:

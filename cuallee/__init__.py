@@ -153,7 +153,7 @@ class Check:
         """Validation for string type column matching regex expression"""
         self._rules.append(Rule("matches_regex", column, value, CheckTag.STRING, pct))
         self._compute[f"matches_regex-{column}-{value}-{pct}"] = F.sum(
-            (F.regexp_extract("B", value, 0) == value).cast("integer")
+            (F.regexp_extract(column, value, 0) == value).cast("integer")
         )
         return self
 
@@ -174,6 +174,14 @@ class Check:
         self._rules.append(Rule("has_std", column, value, CheckTag.NUMERIC))
         self._compute[f"has_std-{column}-{value}-{pct}"] = (
             F.stddev_pop(F.col(column)) == value
+        )
+        return self
+
+    def is_contained_in(self, column: str, value: Tuple(float), pct: float = 1.0):
+        '''Validation of column value in set of given values'''
+        self._rules.append(Rule('is_contained_in', column, value, CheckTag.NUMERIC))
+        self._compute[f"is_contained_in-{column}-{value}-{pct}"] = (
+            F.sum((F.col(column).isin(list(value))).cast('integer'))
         )
         return self
 

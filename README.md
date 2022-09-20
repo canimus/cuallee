@@ -17,7 +17,7 @@ When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underne
 
 ## Checks
 
-### is_complete
+### Completeness and Uniqueness
 ```python
 from cuallee import Check
 from pyspark.sql import SparkSession
@@ -25,12 +25,30 @@ spark = SparkSession.builder.getOrCreate()
 
 # Nulls on column Id
 check = Check(CheckLevel.WARNING, "Completeness")
-check.is_complete("id").validate(spark, spark.range(10))
+(
+    check
+    .is_complete("id")
+    .is_unique("id")
+    .validate(spark, df)
+).show() # Returns a pyspark.sql.DataFrame
 ```
 
-### is_unique
+### Date Algebra
 ```python
 # Unique values on id
-check = Check(CheckLevel.WARNING, "Completeness")
-check.is_unique("id").validate(spark, spark.range(10))
+check = Check(CheckLevel.WARNING, "CheckIsBetweenDates")
+df = spark.sql("select explode(sequence(to_date('2022-01-01'), to_date('2022-01-10'), interval 1 day)) as date")
+assert (
+    check.is_between("date", "2022-01-01", "2022-01-10")
+    .validate(spark, df)
+    .first()
+    .status
+)
+```
+
+### Value Membership
+```python
+df = spark.createDataFrame([[1, 10], [2, 15], [3, 17]], ["ID", "value"])
+check = Check(CheckLevel.WARNING, "is_contained_in_number_test")
+check.is_contained_in("value", (10, 15, 20, 25)).validate(spark, df)
 ```

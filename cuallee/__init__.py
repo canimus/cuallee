@@ -25,6 +25,7 @@ from pyspark.sql import Window as W
 from . import dataframe as D
 from termcolor import colored
 
+
 class CheckLevel(enum.Enum):
     WARNING = 0
     ERROR = 1

@@ -5,3 +5,5 @@
 
 temp/
 .vscode/
+cuallee/cuallee.egg-info
+dist/

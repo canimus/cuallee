@@ -6,6 +6,8 @@ clean: # Remove workspace files
 	@find . -name "__pycache__" -exec rm -rf {} + 
 	@rm -rf ./.pytest_cache
 	@rm -rf ./htmlcov
+	@rm -rf dist/
+	@rm -rf cuallee/cuallee.egg-info/
 	@python -c "print('Cleaning: 👌')"
 
 cov: # Run test and coverage
@@ -20,6 +22,8 @@ report: # Launches the coverage report
 	@coverage html
 	@python -m http.server --directory htmlcov
 
+build: # Package wheel
+	@python -m build
 #sort: # Sort import
 #	@isort src
 

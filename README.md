@@ -1,5 +1,5 @@
 # cuallee
-Meaning `good` in Aztec (Nahuatl)
+Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
 
 This library provides an intuitive `API` to describe `checks` for Apache PySpark DataFrames `v3.3.0`.

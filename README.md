@@ -14,6 +14,10 @@ When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underne
  
 > __cuallee__ is inpired by the Green Software Foundation principles, on the advantages of `green` software.
 
+## Install
+```bash
+pip install cuallee
+```
 
 ## Checks
 

@@ -53,8 +53,17 @@ check = Check(CheckLevel.WARNING, "is_contained_in_number_test")
 check.is_contained_in("value", (10, 15, 20, 25)).validate(spark, df)
 ```
 
+### Regular Expressions
+```python
+df = spark.createDataFrame([[1, "is_blue"], [2, "has_hat"], [3, "is_smart"]], ["ID", "desc"])
+check = Check(CheckLevel.WARNING, "matches_regex_test")
+check.matches_regex("desc", r"^is.*t$") # only match is_smart 33% of rows.
+check.validate(spark, df).first().status == "FAIL"
+```
+
 ### More...
 - `are_complete(*cols)`
+- `matches_regex(col, regex)`
 - `is_greater_than(col, val)`
 - `is_greater_or_equal_than(col, val)`
 - `is_less_than(col, val)`
@@ -63,6 +72,7 @@ check.is_contained_in("value", (10, 15, 20, 25)).validate(spark, df)
 - `has_min(col, val)`
 - `has_max(col, val)`
 - `has_std(col, val)`
+- `has_percentile(col, value, percentile, precision, coverage)`
 - `is_between(col, i, k)`
 - `is_between(col, date_1, date_2)`
 - `has_min_by(col2, col1, value)`

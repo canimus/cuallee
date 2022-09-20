@@ -89,7 +89,7 @@ check = Check(CheckLevel.ERROR, "IndexPrices")
     .is_between("Coupon", 25, 500)
     .is_between("MarketRecoveryRate", 0, 100)
     .is_between("Tenor", 0, 30)
-    validate(spark, df)
+    .validate(spark, df)
 ).show(truncate=False)
 +---+----------+--------+----------+-------+------------------------+---------------+------------------------------------------+-----+---------+--------------+------+
 |id |date      |time    |check     |level  |column                  |rule           |value                                     |rows |pass_rate|pass_threshold|status|

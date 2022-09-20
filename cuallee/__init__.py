@@ -22,7 +22,7 @@ import uuid
 import inspect
 import sys
 import enum
-import itertools
+import itertools as I
 from . import dataframe as D
 import hashlib
 
@@ -43,7 +43,7 @@ class CheckTag(enum.Enum):
 @dataclass(frozen=True)
 class Rule:
     method: str
-    column: List[str]
+    column: Union[Tuple[str], str]
     value: Optional[Any]
     tag: str
     coverage: float = 1.0
@@ -73,8 +73,10 @@ class Check:
         return self
 
     # computed_alltogether
-    def are_complete_1(self, column: List[str], pct: float = 1.0):
+    def are_complete_1(self, column: Tuple[str], pct: float = 1.0):
         """Validation for non-null values in a group of column"""
+        if isinstance(column, List):
+            column = tuple(column)
         self._rules.append(Rule("are_complete", column, None, CheckTag.AGNOSTIC, pct))
         self._compute[f"are_complete-{column}-None-{pct}"] = reduce(
             O.add, [F.sum(F.col(c).isNotNull().cast("integer")) for c in column]
@@ -175,14 +177,14 @@ class Check:
 
         # Pre-validate columns
         rule_set = set(self._rules)
-        column_set = set(map(attrgetter("column"), rule_set))
+        column_set = set(I.chain.from_iterable(map(attrgetter("column"), rule_set)))
         unknown_columns = column_set.difference(dataframe.columns)
         assert column_set.issubset(
             dataframe.columns
         ), f"Column(s): {unknown_columns} not in dataframe"
 
         # Pre-Validation of numeric data types
-        numeric_rules = set([r.column for r in rule_set if r.tag == CheckTag.NUMERIC])
+        numeric_rules = set(I.chain.from_iterable([r.column for r in rule_set if r.tag == CheckTag.NUMERIC]))
         numeric_fields = D.numeric_fields(dataframe)
         non_numeric_columns = numeric_rules.difference(numeric_fields)
         assert set(numeric_rules).issubset(

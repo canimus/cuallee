@@ -133,3 +133,29 @@ check = Check(CheckLevel.ERROR, "IndexPrices")
 - `is_between(col, date_1, date_2)`
 - `has_min_by(col2, col1, value)`
 - `satisfies(predicate, coverage)`
+
+
+## Roadmap
+
+This is a very fresh implementation using the `Observation` API in PySpark `v3.3.0`.
+The next round validations in the roadmap include more practical use cases:
+- `between_years(y1, y2)`
+- `in_business_day(col)`
+- `in_working_time(col)`
+- `in_weekend(col)`
+- `is_in_millions(col)`
+- `is_in_billions(col)`
+- `has_entropy(col)`
+- `has_correlation(col1, col2, value)`
+- `has_mutual_information(col1, col2)`
+
+
+## Authors:
+- Herminio Vazquez
+- Virginie Grosboillot
+
+
+## License
+Apache License 2.0
+Free for commercial use, modification, distribution, patent use, private use.
+Just preserve the copyright and license.

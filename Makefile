@@ -1,6 +1,6 @@
 black: # Format code
 	@black cuallee
-	@black tests/unit
+	@black test
 
 clean: # Remove workspace files
 	@find . -name "__pycache__" -exec rm -rf {} + 

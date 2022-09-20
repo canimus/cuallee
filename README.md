@@ -24,3 +24,9 @@ spark = SparkSession.builder.getOrCreate()
 check = Check(CheckLevel.WARNING, "Completeness")
 check.is_complete("id").validate(spark, spark.range(10))
 ```
+
+### is_greater_than
+```python
+check = Check(CheckLevel.WARNING, "Completeness")
+check.is_greater_than("id", 10).validate(spark, spark.range(10))
+```

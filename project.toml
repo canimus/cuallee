@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cuallee"
+version = "0.0.1"
+authors = [
+  { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" },
+  { name="Herminio Vazquez", email="canimus@gmail.com"}
+]
+description = "Python library for data validation on PySpark DataFrame API."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/canimus/cuallee"
+"Bug Tracker" = "https://github.com/canimus/cuallee"

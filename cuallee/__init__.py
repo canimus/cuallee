@@ -72,6 +72,20 @@ class Check:
         )
         return self
 
+    # computed_alltogether
+    def are_complete_1(self, column: List[str], pct: float = 1.0):
+        """Validation for non-null values in a group of column"""
+        self._rules.append(Rule("are_complete", column, None, CheckTag.AGNOSTIC, pct))
+        self._compute[f"are_complete-{column}-None-{pct}"] = reduce(
+            O.add, [F.sum(F.col(c).isNotNull().cast("integer")) for c in column]
+        ) / len(column)
+        return self
+
+    # computed_individually
+    def are_complete_2(self, column: List[str], pct: float = 1.0):
+        """Validation for non-null values in a group of column"""
+        return [self.is_complete(c, pct) for c in column]
+
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
         self._rules.append(Rule("is_unique", column, CheckTag.AGNOSTIC, pct))

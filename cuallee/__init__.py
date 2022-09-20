@@ -266,6 +266,7 @@ class Check:
                 "requiered_pct", F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(3)
             )
             .select(
+                F.lit(self.date).alias("observation_date"),
                 F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
                 F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(0).alias("rule"),

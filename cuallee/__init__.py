@@ -67,7 +67,7 @@ class Check:
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
         self._rules.append(Rule("is_complete", column, None, CheckTag.AGNOSTIC, pct))
-        self._compute[f"is_complete-{column}-None-{pct}"] = F.sum(
+        self._compute[f"is_complete-{column}-N/A-{pct}"] = F.sum(
             F.col(column).isNotNull().cast("integer")
         )
         return self
@@ -78,21 +78,29 @@ class Check:
         if isinstance(column, List):
             column = tuple(column)
         self._rules.append(Rule("are_complete", column, None, CheckTag.AGNOSTIC, pct))
-        self._compute[f"are_complete-{column}-None-{pct}"] = reduce(
+        self._compute[f"are_complete-{column}-N/A-{pct}"] = reduce(
             O.add, [F.sum(F.col(c).isNotNull().cast("integer")) for c in column]
         ) / len(column)
         return self
 
     # computed_individually
     def are_complete_2(self, column: List[str], pct: float = 1.0):
-        """Validation for non-null values in a group of column"""
+        """Validation for non-null values in ech of the columns"""
         return [self.is_complete(c, pct) for c in column]
 
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
         self._rules.append(Rule("is_unique", column, CheckTag.AGNOSTIC, pct))
-        self._compute[f"is_unique-{column}-None-{pct}"] = F.count_distinct(
-            F.col(column)
+        self._compute[f"is_unique-{column}-N/A-{pct}"] = F.count_distinct(F.col(column))
+        return self
+
+    def are_unique(self, column: Tuple[str], pct: float = 1.0):
+        """Validation for unique values in a group of columns"""
+        if isinstance(column, List):
+            column = tuple(column)
+        self._rules.append(Rule("are_unique", column, CheckTag.AGNOSTIC, pct))
+        self._compute[f"are_unique-{column}-N/A-{pct}"] = F.count_distinct(
+            *[F.col(c) for c in column]
         )
         return self
 
@@ -142,6 +150,14 @@ class Check:
         )
         return self
 
+    def matches_regex(self, column: str, value: str, pct: float = 1.0):
+        """Validation for string type column matching regex expression"""
+        self._rules.append(Rule("matches_regex", column, value, CheckTag.STRING, pct))
+        self._compute[f"matches_regex-{column}-{value}-{pct}"] = F.sum(
+            (F.regexp_extract("B", value, 0) == value).cast("integer")
+        )
+        return self
+
     def has_min(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s minimum value"""
         self._rules.append(Rule("has_min", column, value, CheckTag.NUMERIC))
@@ -184,7 +200,11 @@ class Check:
         ), f"Column(s): {unknown_columns} not in dataframe"
 
         # Pre-Validation of numeric data types
-        numeric_rules = set(I.chain.from_iterable([r.column for r in rule_set if r.tag == CheckTag.NUMERIC]))
+        numeric_rules = set(
+            I.chain.from_iterable(
+                [r.column for r in rule_set if r.tag == CheckTag.NUMERIC]
+            )
+        )
         numeric_fields = D.numeric_fields(dataframe)
         non_numeric_columns = numeric_rules.difference(numeric_fields)
         assert set(numeric_rules).issubset(

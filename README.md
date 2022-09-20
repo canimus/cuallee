@@ -2,12 +2,20 @@
 Meaning `good` in Aztec (Nahuatl)
 
 
-Create certificates
-```
-openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:4096 -keyout private.key -out certificate.crt
-```
+This library provides an intuitive `API` to describe `checks` for Apache PySpark DataFrames.
+It is a replacement written in pure `python` of the `pydeequ` framework.
 
-Run
-```
-hypercorn --certfile .\certificate.crt --keyfile .\private.key --reload  app:app
+
+## Checks
+
+
+### is_complete
+```python
+from cuallee import Check
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+
+# Nulls on column Id
+check = Check(CheckLevel.WARNING, "Completeness")
+check.is_complete("id").validate(spark, spark.range(10))
 ```

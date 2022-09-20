@@ -1,7 +1,7 @@
 import enum
 import hashlib
 import inspect
-import itertools
+import itertools as I
 import operator as O
 import pdb
 import sys
@@ -23,7 +23,6 @@ from pyspark.sql import Column, DataFrame, Observation, SparkSession
 from pyspark.sql import Window as W
 
 from . import dataframe as D
-import itertools as I
 
 
 class CheckLevel(enum.Enum):
@@ -31,7 +30,7 @@ class CheckLevel(enum.Enum):
     ERROR = 1
 
 
-class CheckTag(enum.Enum):
+class CheckDataType(enum.Enum):
     AGNOSTIC = 0
     NUMERIC = 1
     STRING = 2
@@ -57,48 +56,45 @@ def _single_value_rule(
 
 
 class Check:
-    def __init__(self, level: CheckLevel, description: str):
+    COMPUTE_DELIMITER = chr(166) # ¦
+
+    def __init__(self, level: CheckLevel, name: str, execution_date : datetime = datetime.today()):
         self._rules = []
         self._compute = {}
         self.level = level
-        self.description = description
+        self.name = name
+        self.date = execution_date
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
-        self._rules.append(Rule("is_complete", column, None, CheckTag.AGNOSTIC, pct))
-        self._compute[f"is_complete-{column}-N/A-{pct}"] = F.sum(
+        self._rules.append(Rule("is_complete", column, None, CheckDataType.AGNOSTIC, pct))
+        self._compute[f"is_complete{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}N/A{self.COMPUTE_DELIMITER}{pct}"] = F.sum(
             F.col(column).isNotNull().cast("integer")
         )
         return self
 
-    # computed_alltogether
-    def are_complete_1(self, column: Tuple[str], pct: float = 1.0):
-        """Validation for non-null values in a group of column"""
+    def are_complete(self, column: Tuple[str], pct: float = 1.0):
+        """Validation for non-null values in a group of columns"""
         if isinstance(column, List):
             column = tuple(column)
-        self._rules.append(Rule("are_complete", column, None, CheckTag.AGNOSTIC, pct))
-        self._compute[f"are_complete-{column}-N/A-{pct}"] = reduce(
+        self._rules.append(Rule("are_complete", column, None, CheckDataType.AGNOSTIC, pct))
+        self._compute[f"are_complete{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}N/A{self.COMPUTE_DELIMITER}{pct}"] = reduce(
             O.add, [F.sum(F.col(c).isNotNull().cast("integer")) for c in column]
         ) / len(column)
         return self
 
-    # computed_individually
-    def are_complete_2(self, column: List[str], pct: float = 1.0):
-        """Validation for non-null values in ech of the columns"""
-        return [self.is_complete(c, pct) for c in column]
-
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
-        self._rules.append(Rule("is_unique", column, CheckTag.AGNOSTIC, pct))
-        self._compute[f"is_unique-{column}-N/A-{pct}"] = F.count_distinct(F.col(column))
+        self._rules.append(Rule("is_unique", column, CheckDataType.AGNOSTIC, pct))
+        self._compute[f"is_unique{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}N/A{self.COMPUTE_DELIMITER}{pct}"] = F.count_distinct(F.col(column))
         return self
 
     def are_unique(self, column: Tuple[str], pct: float = 1.0):
         """Validation for unique values in a group of columns"""
         if isinstance(column, List):
             column = tuple(column)
-        self._rules.append(Rule("are_unique", column, CheckTag.AGNOSTIC, pct))
-        self._compute[f"are_unique-{column}-N/A-{pct}"] = F.count_distinct(
+        self._rules.append(Rule("are_unique", column, CheckDataType.AGNOSTIC, pct))
+        self._compute[f"are_unique{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}N/A{self.COMPUTE_DELIMITER}{pct}"] = F.count_distinct(
             *[F.col(c) for c in column]
         )
         return self
@@ -106,9 +102,9 @@ class Check:
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater than value"""
         self._rules.append(
-            Rule("is_greater_than", column, value, CheckTag.NUMERIC, pct)
+            Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct)
         )
-        self._compute[f"is_greater_than-{column}-{value}-{pct}"] = _single_value_rule(
+        self._compute[f"is_greater_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = _single_value_rule(
             column, value, O.gt
         )
         return self
@@ -116,17 +112,17 @@ class Check:
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
         self._rules.append(
-            Rule("is_greater_or_equal_than", column, value, CheckTag.NUMERIC, pct)
+            Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
         )
         self._compute[
-            f"is_greater_or_equal_than-{column}-{value}-{pct}"
+            f"is_greater_or_equal_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
         ] = _single_value_rule(column, value, O.ge)
         return self
 
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less than value"""
-        self._rules.append(Rule("is_less_than", column, value, CheckTag.NUMERIC, pct))
-        self._compute[f"is_less_than-{column}-{value}-{pct}"] = _single_value_rule(
+        self._rules.append(Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct))
+        self._compute[f"is_less_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = _single_value_rule(
             column, value, O.lt
         )
         return self
@@ -134,45 +130,45 @@ class Check:
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
         self._rules.append(
-            Rule("is_less_or_equal_than", column, value, CheckTag.NUMERIC, pct)
+            Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
         )
         self._compute[
-            f"is_less_or_equal_than-{column}-{value}-{pct}"
+            f"is_less_or_equal_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
         ] = _single_value_rule(column, value, O.le)
         return self
 
     def is_equal(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric column equal than value"""
-        self._rules.append(Rule("is_equal", column, value, CheckTag.NUMERIC, pct))
-        self._compute[f"is_equal-{column}-{value}-{pct}"] = _single_value_rule(
+        self._rules.append(Rule("is_equal", column, value, CheckDataType.NUMERIC, pct))
+        self._compute[f"is_equal{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = _single_value_rule(
             column, value, O.eq
         )
         return self
 
     def matches_regex(self, column: str, value: str, pct: float = 1.0):
         """Validation for string type column matching regex expression"""
-        self._rules.append(Rule("matches_regex", column, value, CheckTag.STRING, pct))
-        self._compute[f"matches_regex-{column}-{value}-{pct}"] = F.sum(
+        self._rules.append(Rule("matches_regex", column, value, CheckDataType.STRING, pct))
+        self._compute[f"matches_regex{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = F.sum(
             (F.regexp_extract(column, value, 0) == value).cast("integer")
         )
         return self
 
     def has_min(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s minimum value"""
-        self._rules.append(Rule("has_min", column, value, CheckTag.NUMERIC))
-        self._compute[f"has_min-{column}-{value}-{pct}"] = F.min(F.col(column)) == value
+        self._rules.append(Rule("has_min", column, value, CheckDataType.NUMERIC))
+        self._compute[f"has_min{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = F.min(F.col(column)) == value
         return self
 
     def has_max(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s maximum value"""
-        self._rules.append(Rule("has_max", column, value, CheckTag.NUMERIC))
-        self._compute[f"has_max-{column}-{value}-{pct}"] = F.max(F.col(column)) == value
+        self._rules.append(Rule("has_max", column, value, CheckDataType.NUMERIC))
+        self._compute[f"has_max{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = F.max(F.col(column)) == value
         return self
 
     def has_std(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s standard deviation"""
-        self._rules.append(Rule("has_std", column, value, CheckTag.NUMERIC))
-        self._compute[f"has_std-{column}-{value}-{pct}"] = (
+        self._rules.append(Rule("has_std", column, value, CheckDataType.NUMERIC))
+        self._compute[f"has_std{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = (
             F.stddev_pop(F.col(column)) == value
         )
         return self
@@ -180,9 +176,8 @@ class Check:
 
     def is_between(self, column : str, *value : Any, pct : float = 1.0):
         """Validation of a column between a range"""
-        print(value)
-        self._rules.append(Rule("is_between", column, None, CheckTag.AGNOSTIC, pct))
-        self._compute[f"is_between-{column}-{value}-{pct}"] = (
+        self._rules.append(Rule("is_between", column, None, CheckDataType.AGNOSTIC, pct))
+        self._compute[f"is_between{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = (
             F.sum(F.col(column).between(*value).cast("integer"))
         )
         return self
@@ -196,18 +191,18 @@ class Check:
         
         # Check value type to later assess correct column type
         if [isinstance(v, str) for v in value]:
-            check = CheckTag.STRING
+            check = CheckDataType.STRING
         else:
-            check = CheckTag.NUMERIC
+            check = CheckDataType.NUMERIC
         self._rules.append(Rule("is_contained_in", column, value, check))
-        self._compute[f"is_contained_in-{column}-{value}-{pct}"] = F.sum(
+        self._compute[f"is_contained_in{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"] = F.sum(
             (F.col(column).isin(list(value))).cast("integer")
         )
         return self
 
 
     def __repr__(self):
-        return f"Check(level:{self.level}, desc:{self.description}, rules:{len(self._rules)})"
+        return f"Check(level:{self.level}, desc:{self.name}, rules:{len(self._rules)})"
 
     def validate(self, spark, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
@@ -238,7 +233,7 @@ class Check:
         # Pre-Validation of numeric data types
         numeric_rules = set(
             I.chain.from_iterable(
-                [r.column for r in rule_set if r.tag == CheckTag.NUMERIC]
+                [r.column for r in rule_set if r.tag == CheckDataType.NUMERIC]
             )
         )
         numeric_fields = D.numeric_fields(dataframe)
@@ -248,7 +243,7 @@ class Check:
         ), f"Column(s): {non_numeric_columns} are not numeric"
 
         # Create observation object
-        observation = Observation(self.description)
+        observation = Observation(self.name)
 
         df_observation = dataframe.observe(
             observation,
@@ -268,14 +263,14 @@ class Check:
                 ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
             )
             .withColumn(
-                "requiered_pct", F.split(F.col("computed_rule"), "-").getItem(3)
+                "requiered_pct", F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(3)
             )
             .select(
-                F.lit(self.description).alias("check"),
+                F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
-                F.split(F.col("computed_rule"), "-").getItem(0).alias("rule"),
-                F.split(F.col("computed_rule"), "-").getItem(1).alias("column"),
-                F.split(F.col("computed_rule"), "-").getItem(2).alias("value"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(0).alias("rule"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(1).alias("column"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(2).alias("value"),
                 "results",
                 "obs_pct",
                 "requiered_pct",
@@ -292,22 +287,3 @@ class Check:
             )
         )
 
-
-def completeness(dataframe: DataFrame) -> float:
-    """Percentage of filled values against total number of fields = fields_filled / (rows x cols)"""
-    _hash = dataframe.semanticHash()
-    observe_completeness = Observation("completeness")
-    _pk = f"rows_{_hash}"
-    _cols = dataframe.columns
-    _nulls = [
-        F.sum(F.col(column).isNotNull().cast("long")).alias(f"{column}")
-        for column in _cols
-    ]
-    _rows = [F.count(F.lit(1)).alias(_pk)]
-    _null_cols = _nulls + _rows
-    dataframe.observe(observe_completeness, *_null_cols).count()
-
-    results = observe_completeness.get
-    rows = results.pop(_pk)
-    _shape = len(_cols) * rows
-    return round(sum(results.values()) / _shape, 6)

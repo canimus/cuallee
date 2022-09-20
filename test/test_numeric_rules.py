@@ -23,3 +23,10 @@ def test_matches_regex(spark: SparkSession):
     c.matches_regex('desc', 'is')
     rs = c.validate(spark, df)
     assert rs.select('status').collect()[0][0] == False
+
+def test_is_contained_in(spark: SparkSession):
+    df = spark.createDataFrame([[1, 10], [2, 15], [3, 17]], ['ID', 'values'])
+    c = Check(CheckLevel.WARNING, 'is_contained_in_test')
+    c.is_contained_in('values', (10,15,20,25))
+    rs = c.validate(spark, df)
+    assert rs.select('status').collect()[0][0] == False

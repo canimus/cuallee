@@ -153,7 +153,7 @@ class Check:
         """Validation for string type column matching regex expression"""
         self._rules.append(Rule("matches_regex", column, value, CheckTag.STRING, pct))
         self._compute[f"matches_regex-{column}-{value}-{pct}"] = F.sum(
-            (F.regexp_extract("B", value, 0) == value).cast("integer")
+            (F.regexp_extract(column, value, 0) == value).cast("integer")
         )
         return self
 
@@ -177,12 +177,26 @@ class Check:
         )
         return self
 
+
     def is_between(self, column : str, *value : Any, pct : float = 1.0):
         """Validation of a column between a range"""
         print(value)
         self._rules.append(Rule("is_between", column, None, CheckTag.AGNOSTIC, pct))
         self._compute[f"is_between-{column}-{value}-{pct}"] = (
             F.sum(F.col(column).between(*value).cast("integer"))
+        )
+        return self
+
+
+    def is_contained_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
+        """Validation of column value in set of given values"""
+        if [isinstance(v, str) for v in value]:
+            check = CheckTag.STRING
+        else:
+            check = CheckTag.NUMERIC
+        self._rules.append(Rule("is_contained_in", column, value, check))
+        self._compute[f"is_contained_in-{column}-{value}-{pct}"] = F.sum(
+            (F.col(column).isin(list(value))).cast("integer")
         )
         return self
 
@@ -201,9 +215,9 @@ class Check:
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate columns
-        rule_set = set(self._rules)        
+        rule_set = set(self._rules)
         single_columns = []
-        for column_field  in map(attrgetter("column"), rule_set):
+        for column_field in map(attrgetter("column"), rule_set):
             if isinstance(column_field, str):
                 single_columns.append(column_field)
             elif isinstance(column_field, Collection):

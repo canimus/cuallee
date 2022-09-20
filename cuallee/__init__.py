@@ -177,11 +177,15 @@ class Check:
         )
         return self
 
-    def is_contained_in(self, column: str, value: Tuple(float), pct: float = 1.0):
-        '''Validation of column value in set of given values'''
-        self._rules.append(Rule('is_contained_in', column, value, CheckTag.NUMERIC))
-        self._compute[f"is_contained_in-{column}-{value}-{pct}"] = (
-            F.sum((F.col(column).isin(list(value))).cast('integer'))
+    def is_contained_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
+        """Validation of column value in set of given values"""
+        if [isinstance(v, str) for v in value]:
+            check = CheckTag.STRING
+        else:
+            check = CheckTag.NUMERIC
+        self._rules.append(Rule("is_contained_in", column, value, check))
+        self._compute[f"is_contained_in-{column}-{value}-{pct}"] = F.sum(
+            (F.col(column).isin(list(value))).cast("integer")
         )
         return self
 
@@ -199,9 +203,9 @@ class Check:
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate columns
-        rule_set = set(self._rules)        
+        rule_set = set(self._rules)
         single_columns = []
-        for column_field  in map(attrgetter("column"), rule_set):
+        for column_field in map(attrgetter("column"), rule_set):
             if isinstance(column_field, str):
                 single_columns.append(column_field)
             elif isinstance(column_field, Collection):

@@ -5,12 +5,15 @@ Meaning `good` in Aztec (Nahuatl)
 This library provides an intuitive `API` to describe `checks` for Apache PySpark DataFrames `v3.3.0`.
 It is a replacement written in pure `python` of the `pydeequ` framework.
 
-I gave up in _deequ_ as projects does not seem to be maintained, and the multiple issues with the callback server.
+I gave up in _deequ_ as project does not seem to be maintained, and the multiple issues with the callback server.
 
 ## Advantages
 This implementation goes in hand with the latest API from PySpark and uses the `Observation` API to collect metrics
 at the lower cost of computation. 
-When benchmarking against pydeequ, `cuallee` uses 3000 less java classes underneath and remarkably less memory.
+When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underneath and **remarkably** less memory.
+ 
+> __cuallee__ is inpired by the Green Software Foundation principles, on the advantages of `green` software.
+
 
 ## Checks
 
@@ -25,8 +28,9 @@ check = Check(CheckLevel.WARNING, "Completeness")
 check.is_complete("id").validate(spark, spark.range(10))
 ```
 
-### is_greater_than
+### is_unique
 ```python
+# Unique values on id
 check = Check(CheckLevel.WARNING, "Completeness")
-check.is_greater_than("id", 10).validate(spark, spark.range(10))
+check.is_unique("id").validate(spark, spark.range(10))
 ```

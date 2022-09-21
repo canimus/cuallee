@@ -36,14 +36,6 @@ class Rule:
     coverage: float = 1.0
 
 
-def _single_value_rule(
-    column: str,
-    value: Optional[Any],
-    operator: Callable,
-):
-    return F.sum((operator(F.col(column), value)).cast("integer"))
-
-
 class Check:
     COMPUTE_DELIMITER = chr(166)  # ¦
 
@@ -56,6 +48,38 @@ class Check:
         self.level = level
         self.name = name
         self.date = execution_date
+
+    def _single_value_rule(
+        column: str,
+        value: Optional[Any],
+        operator: Callable,
+    ):
+        return F.sum((operator(F.col(column), value)).cast("integer"))
+
+    @staticmethod
+    def inventory():
+        """A full list of all rules available in the check"""
+        return [
+            "is_complete",
+            "are_complate",
+            "is_unique",
+            "are_unique",
+            "is_greater_than",
+            "is_greater_or_equal_than",
+            "is_less_than",
+            "is_less_or_equal_than",
+            "is_equal",
+            "matches_regex",
+            "has_min",
+            "has_max",
+            "has_std",
+            "is_between",
+            "is_contained_in",
+            "has_percentile",
+            "has_max_by",
+            "has_min_by",
+            "satisfies"
+        ]
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
@@ -108,7 +132,7 @@ class Check:
         )
         self._compute[
             f"is_greater_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
-        ] = _single_value_rule(column, value, O.gt)
+        ] = self._single_value_rule(column, value, O.gt)
         return self
 
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
@@ -118,7 +142,7 @@ class Check:
         )
         self._compute[
             f"is_greater_or_equal_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
-        ] = _single_value_rule(column, value, O.ge)
+        ] = self._single_value_rule(column, value, O.ge)
         return self
 
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
@@ -128,7 +152,7 @@ class Check:
         )
         self._compute[
             f"is_less_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
-        ] = _single_value_rule(column, value, O.lt)
+        ] = self._single_value_rule(column, value, O.lt)
         return self
 
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
@@ -138,7 +162,7 @@ class Check:
         )
         self._compute[
             f"is_less_or_equal_than{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
-        ] = _single_value_rule(column, value, O.le)
+        ] = self._single_value_rule(column, value, O.le)
         return self
 
     def is_equal(self, column: str, value: float, pct: float = 1.0):
@@ -146,7 +170,7 @@ class Check:
         self._rules.append(Rule("is_equal", column, value, CheckDataType.NUMERIC, pct))
         self._compute[
             f"is_equal{self.COMPUTE_DELIMITER}{column}{self.COMPUTE_DELIMITER}{value}{self.COMPUTE_DELIMITER}{pct}"
-        ] = _single_value_rule(column, value, O.eq)
+        ] = self._single_value_rule(column, value, O.eq)
         return self
 
     def matches_regex(self, column: str, value: str, pct: float = 1.0):
@@ -273,13 +297,13 @@ class Check:
         )
         self._compute[
             f"satisfies{self.COMPUTE_DELIMITER}{predicate}{self.COMPUTE_DELIMITER}{self.COMPUTE_DELIMITER}{pct}"
-        ] = (F.sum(F.expr(predicate).cast("integer")))
+        ] = F.sum(F.expr(predicate).cast("integer"))
         return self
 
     def __repr__(self):
         return f"Check(level:{self.level}, desc:{self.name}, rules:{len(set(self._rules))})"
 
-    def validate(self, spark : SparkSession, dataframe: DataFrame):
+    def validate(self, spark: SparkSession, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
         assert (
             self._rules
@@ -330,24 +354,34 @@ class Check:
             *[v.cast(T.StringType()).alias(k) for k, v in self._compute.items()],
         )
         rows = df_observation.count()
-        
+
         unique_observe = (
-            dataframe
-            .select(*[v.cast(T.StringType()).alias(k) for k, v in self._unique.items()])
+            dataframe.select(
+                *[v.cast(T.StringType()).alias(k) for k, v in self._unique.items()]
+            )
             .first()
             .asDict()
         )
 
         return (
             spark.createDataFrame(
-                [tuple([i,*k]) for i,k in enumerate({**unique_observe, **observation.get}.items(), 1)], ["id", "computed_rule", "results"]
+                [
+                    tuple([i, *k])
+                    for i, k in enumerate(
+                        {**unique_observe, **observation.get}.items(), 1
+                    )
+                ],
+                ["id", "computed_rule", "results"],
             )
             .withColumn(
                 "pass_rate",
-                F.round(F.when(
-                    (F.col("results") == "false") | (F.col("results") == "true"),
-                    F.lit(1.0),
-                ).otherwise(F.col("results").cast(T.DoubleType()) / rows),2)
+                F.round(
+                    F.when(
+                        (F.col("results") == "false") | (F.col("results") == "true"),
+                        F.lit(1.0),
+                    ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
+                    2,
+                ),
             )
             .withColumn(
                 "pass_threshold",
@@ -359,9 +393,15 @@ class Check:
                 F.lit(self.date.strftime("%H:%M:%S")).alias("time"),
                 F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(1).alias("column"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(0).alias("rule"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(2).alias("value"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
+                .getItem(1)
+                .alias("column"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
+                .getItem(0)
+                .alias("rule"),
+                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
+                .getItem(2)
+                .alias("value"),
                 F.lit(rows).alias("rows"),
                 "pass_rate",
                 "pass_threshold",

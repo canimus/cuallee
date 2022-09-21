@@ -7,8 +7,8 @@ def test_are_complete(spark: SparkSession):
     c = Check(CheckLevel.WARNING, "are_complete_test")
     c.are_complete(("A", "B"))
     rs = c.validate(spark, df)
-    assert rs.select("obs_pct").collect()[0][0] == 0.75
-    assert rs.select("status").collect()[0][0] == False
+    assert rs.select("pass_rate").collect()[0][0] == 0.75
+    assert rs.select("status").collect()[0][0] == "FAIL"
 
 
 def test_are_complete_col_list(spark: SparkSession):
@@ -16,8 +16,8 @@ def test_are_complete_col_list(spark: SparkSession):
     c = Check(CheckLevel.WARNING, "are_complete_test")
     c.are_complete(["A", "B"])
     rs = c.validate(spark, df)
-    assert rs.select("obs_pct").collect()[0][0] == 0.75
-    assert rs.select("status").collect()[0][0] == False
+    assert rs.select("pass_rate").collect()[0][0] == 0.75
+    assert rs.select("status").collect()[0][0] == "FAIL"
 
 
 def test_matches_regex(spark: SparkSession):
@@ -27,4 +27,4 @@ def test_matches_regex(spark: SparkSession):
     c = Check(CheckLevel.WARNING, "matches_regex_test")
     c.matches_regex("desc", "is")
     rs = c.validate(spark, df)
-    assert rs.select("status").collect()[0][0] == False
+    assert rs.select("status").collect()[0][0] == "FAIL"

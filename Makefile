@@ -8,6 +8,8 @@ clean: # Remove workspace files
 	@rm -rf ./htmlcov
 	@rm -rf dist/
 	@rm -rf cuallee/cuallee.egg-info/
+	@rm -rf cuallee.egg-info/
+	@rm -rf build/
 	@python -c "print('Cleaning: 👌')"
 
 cov: # Run test and coverage

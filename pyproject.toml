@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" },
   { name="Herminio Vazquez", email="canimus@gmail.com"}
@@ -21,8 +21,6 @@ dependencies = [
     "pyspark==3.3.0",
 ]
 
-[tool.setuptools.packages.find]
-where = ["cuallee"]
 
 [project.urls]
 "Homepage" = "https://github.com/canimus/cuallee"

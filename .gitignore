@@ -6,4 +6,5 @@
 temp/
 .vscode/
 cuallee/cuallee.egg-info
+cuallee.egg-info/
 dist/

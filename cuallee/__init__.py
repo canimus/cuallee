@@ -219,8 +219,13 @@ class Check:
         self._compute[key] = F.stddev_pop(F.col(column)) == value
         return self
 
-    def is_between(self, column: str, *value: Any, pct: float = 1.0):
+    def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
+
+        # Create tuple if user pass list
+        if isinstance(value, List):
+            value = tuple(value)
+        
         key = self._generate_rule_key_id("is_between", column, value, pct)
         self._rules.append(
             Rule("is_between", column, value, CheckDataType.AGNOSTIC, key, pct)

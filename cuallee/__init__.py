@@ -1,4 +1,5 @@
 import enum
+import hashlib
 import operator as O
 from dataclasses import dataclass
 from datetime import datetime
@@ -33,6 +34,7 @@ class Rule:
     column: Union[Tuple[str], str]
     value: Optional[Any]
     tag: str
+    key: str
     coverage: float = 1.0
 
 
@@ -49,7 +51,19 @@ class Check:
         self.name = name
         self.date = execution_date
 
+    def _generate_rule_key_id(
+        self,
+        method: str,
+        column: Union[Tuple[str], str],
+        value: Any,
+        coverage: float,
+    ):
+        return hashlib.sha256(
+            f"{method}{column}{value}{coverage}".encode("utf-8")
+        ).hexdigest()
+
     def _single_value_rule(
+        self,
         column: str,
         value: Optional[Any],
         operator: Callable,
@@ -78,8 +92,33 @@ class Check:
             "has_percentile",
             "has_max_by",
             "has_min_by",
-            "satisfies"
+            "satisfies",
         ]
+
+    # -------
+    def is_complete_key(self, column: str, pct: float = 1.0):
+        """Validation for non-null values in column"""
+        key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
+        self._rules.append(
+            Rule("is_complete", column, None, CheckDataType.AGNOSTIC, key, pct)
+        )
+        self._compute[key] = F.sum(F.col(column).isNotNull().cast("integer"))
+        return self
+
+    def are_complete_key(self, column: Tuple[str], pct: float = 1.0):
+        """Validation for non-null values in a group of columns"""
+        if isinstance(column, List):
+            column = tuple(column)
+        key = self._generate_rule_key_id("are_complete", column, "N/A", pct)
+        self._rules.append(
+            Rule("are_complete", column, None, CheckDataType.AGNOSTIC, key, pct)
+        )
+        self._compute[key] = reduce(
+            O.add, [F.sum(F.col(c).isNotNull().cast("integer")) for c in column]
+        ) / len(column)
+        return self
+
+    # -------
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
@@ -363,6 +402,14 @@ class Check:
             .asDict()
         )
 
+        rule_df = spark.createDataFrame(
+            [
+                [r.method, str(r.column), str(r.value), r.key, r.coverage]
+                for r in set(self._rules)
+            ],
+            ["rule", "column", "value", "key", "pass_threshold"],
+        )
+
         return (
             spark.createDataFrame(
                 [
@@ -373,6 +420,7 @@ class Check:
                 ],
                 ["id", "computed_rule", "results"],
             )
+            .join(rule_df, F.col("computed_rule") == F.col("key"), "left")
             .withColumn(
                 "pass_rate",
                 F.round(
@@ -383,25 +431,15 @@ class Check:
                     2,
                 ),
             )
-            .withColumn(
-                "pass_threshold",
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER).getItem(3),
-            )
             .select(
                 F.col("id"),
                 F.lit(self.date.strftime("%Y-%m-%d")).alias("date"),
                 F.lit(self.date.strftime("%H:%M:%S")).alias("time"),
                 F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
-                .getItem(1)
-                .alias("column"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
-                .getItem(0)
-                .alias("rule"),
-                F.split(F.col("computed_rule"), self.COMPUTE_DELIMITER)
-                .getItem(2)
-                .alias("value"),
+                F.col("column"),
+                F.col("rule"),
+                F.col("value"),
                 F.lit(rows).alias("rows"),
                 "pass_rate",
                 "pass_threshold",

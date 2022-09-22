@@ -10,7 +10,6 @@ from typing import Any, Callable, Collection, List, Optional, Tuple, Union
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession
-from pyspark.sql import Window as W
 
 from . import dataframe as D
 
@@ -225,7 +224,7 @@ class Check:
         # Create tuple if user pass list
         if isinstance(value, List):
             value = tuple(value)
-        
+
         key = self._generate_rule_key_id("is_between", column, value, pct)
         self._rules.append(
             Rule("is_between", column, value, CheckDataType.AGNOSTIC, key, pct)

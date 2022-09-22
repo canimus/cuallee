@@ -1,6 +1,6 @@
 import pyspark.sql.types as T
 from pyspark.sql.dataframe import DataFrame
-from typing import Collection, List
+from typing import Collection
 
 
 def _field_type_filter(dataframe: DataFrame, data_type: T.DataType) -> Collection:

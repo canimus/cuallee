@@ -10,6 +10,7 @@ clean: # Remove workspace files
 	@rm -rf cuallee/cuallee.egg-info/
 	@rm -rf cuallee.egg-info/
 	@rm -rf build/
+	@rm -rf spark-warehouse
 	@python -c "print('Cleaning: 👌')"
 
 cov: # Run test and coverage

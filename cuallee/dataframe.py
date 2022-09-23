@@ -1,12 +1,15 @@
 import pyspark.sql.types as T
 from pyspark.sql.dataframe import DataFrame
-from typing import Collection
+from typing import Collection, Union, Type
 
 
-def _field_type_filter(dataframe: DataFrame, data_type: T.DataType) -> Collection:
+def _field_type_filter(
+    dataframe: DataFrame,
+    field_type: Union[Type[T.DateType], Type[T.NumericType], Type[T.TimestampType]],
+) -> Collection:
     """Internal method to search for column names based on data type"""
     return set(
-        [f.name for f in dataframe.schema.fields if isinstance(f.dataType, data_type)]
+        [f.name for f in dataframe.schema.fields if isinstance(f.dataType, field_type)]  # type: ignore
     )
 
 

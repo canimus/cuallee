@@ -4,7 +4,7 @@ import operator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
-from typing import Any, Callable, List, Optional, Tuple, Union, Dict
+from typing import Any, Callable, Collection, List, Optional, Tuple, Union, Dict
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -33,7 +33,7 @@ class Rule:
     coverage: float = 1.0
 
     def __repr__(self):
-        return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, tag:{self.data_type}, coverage:{self.coverage}"
+        return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}"
 
 
 class Check:
@@ -70,31 +70,7 @@ class Check:
     ):
         return F.sum((operator(F.col(column), value)).cast("integer"))
 
-    @staticmethod
-    def inventory():
-        """A full list of all rules available in the check"""
-        return [
-            "is_complete",
-            "are_complate",
-            "is_unique",
-            "are_unique",
-            "is_greater_than",
-            "is_greater_or_equal_than",
-            "is_less_than",
-            "is_less_or_equal_than",
-            "is_equal",
-            "matches_regex",
-            "has_min",
-            "has_max",
-            "has_std",
-            "is_between",
-            "is_contained_in",
-            "has_percentile",
-            "has_max_by",
-            "has_min_by",
-            "satisfies",
-        ]
-
+        
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
         key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
@@ -104,7 +80,7 @@ class Check:
         )
         return self
 
-    def are_complete(self, column: Tuple[str], pct: float = 1.0):
+    def are_complete(self, *column: str, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         if isinstance(column, List):
             column = tuple(column)
@@ -175,7 +151,7 @@ class Check:
         )
         return self
 
-    def is_equal(self, column: str, value: float, pct: float = 1.0):
+    def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric column equal than value"""
         key = self._generate_rule_key_id("is_equal", column, value, pct)
         self._compute[key] = (
@@ -372,10 +348,11 @@ class Check:
 
         df_observation = dataframe.observe(
             observation,
-            *[v[1].cast(T.StringType()).alias(k) for k, v in self._compute.items()],
+           *[v[1].cast(T.StringType()).alias(k) for k, v in self._compute.items()],
+            # *[v[1].alias(k) for k, v in self._compute.items()],
         )
         rows = df_observation.count()
-
+        print(observation.get)
         unique_observe = (
             dataframe.select(
                 *[v[1].cast(T.StringType()).alias(k) for k, v in self._unique.items()]
@@ -425,7 +402,7 @@ class Check:
                         (F.col("results") == "false") | (F.col("results") == "true"),
                         F.lit(1.0),
                     ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
-                    2,
+                    8,
                 ),
             )
             .select(

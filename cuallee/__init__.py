@@ -21,7 +21,7 @@ class CheckDataType(enum.Enum):
     NUMERIC = 1
     STRING = 2
     DATE = 3
-    TIME = 4
+    TIMESTAMP = 4
 
 
 @dataclass(frozen=True)
@@ -58,8 +58,8 @@ class Check:
         value: Any,
         coverage: float,
     ):
-        return hashlib.sha256(
-            f"{method}{column}{value}{coverage}".encode("utf-8")
+        return hashlib.blake2s(
+            bytes(f"{method}{column}{value}{coverage}", "utf-8")
         ).hexdigest()
 
     def _single_value_rule(
@@ -326,15 +326,20 @@ class Check:
 
     def validate(self, spark: SparkSession, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
-        # assert (
-        #    self._rules
-        # ), "Check is empty. Add validations i.e. is_complete, is_unique, etc."
+        assert {
+            **self._unique,
+            **self._compute,
+        }, "Check is empty. Add validations i.e. is_complete, is_unique, etc."
 
         assert isinstance(
             dataframe, DataFrame
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate columns
+        assert set([v[0].column for v in self._compute.values()]).issubset(
+            set(dataframe.columns)
+        )
+
         # rule_set = set(self._rules)
         # single_columns = []
         # for column_field in map(attrgetter("column"), rule_set):

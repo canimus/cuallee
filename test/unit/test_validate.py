@@ -3,8 +3,7 @@ import pandas as pd
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from cuallee import Check, CheckLevel
-import cuallee.dataframe as D
-import cuallee.exceptions as E
+from cuallee import dataframe as D
 import logging
 
 logger = logging.getLogger("test_validate")
@@ -30,45 +29,11 @@ def test_pandas_dataframe(spark):
 
 def test_column_name_validation(spark):
     df = spark.range(10).alias("id")
-    with pytest.raises(E.ColumnException) as e:
+    with pytest.raises(Exception) as e:
         Check(CheckLevel.WARNING, "test_empty_observation").is_complete("ide").validate(
             spark, df
         )
         assert "Column(s): ide not in dataframe" == str(e)
-
-
-def test_numeric_column_validation(spark):
-    df = (
-        spark.range(10)
-        .alias("id")
-        .withColumn("desc", F.lit(F.col("id").cast("string")))
-    )
-    c = (
-        Check(CheckLevel.WARNING, "test_numeric_column")
-        .has_min("id", 3)
-        .has_min("desc", 3)
-    )
-    rules = {**c._unique, **c._compute}
-    with pytest.raises(E.ColumnException) as e:
-        D.column_datatype_validation(rules, df, D.numeric_fields, 1, "numeric")
-        assert "Column(s): desc are not numeric" == str(e)
-
-
-def test_string_column_validation(spark):
-    df = (
-        spark.range(10)
-        .alias("id")
-        .withColumn("desc", F.lit(F.col("id").cast("string")))
-    )
-    c = (
-        Check(CheckLevel.WARNING, "test_string_column")
-        .matches_regex("id", "reg")
-        .matches_regex("desc", "reg")
-    )
-    rules = {**c._unique, **c._compute}
-    with pytest.raises(E.ColumnException) as e:
-        D.column_datatype_validation(rules, df, D.string_fields, 2, "string")
-        assert "Column(s): id are not string" == str(e)
 
 
 def test_date_column_validation(spark):

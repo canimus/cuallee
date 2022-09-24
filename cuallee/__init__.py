@@ -85,10 +85,10 @@ class Check:
         return {**self._unique, **self._compute}
 
     @staticmethod
-    def _compute_columns(columns: Union[str, List[str], Any[str]]) -> List[str]:
+    def _compute_columns(columns: Union[str, List[str]]) -> List[str]:
         """Confirm that all compute columns exists in dataframe"""
 
-        def _normalize_columns(col: map, agg: List[str]) -> List[str]:
+        def _normalize_columns(col: Union[str, Tuple], agg: List[str]) -> List[str]:
             """Recursive consilidation of compute columns"""
             if isinstance(col, str):
                 agg.append(col)
@@ -96,8 +96,7 @@ class Check:
                 [_normalize_columns(inner_col, agg) for inner_col in col]
             return agg
 
-        _column = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
-        return _normalize_columns(map(_column, columns), [])
+        return _normalize_columns(columns, [])
 
     def _discriminate_result_type(self, column: Column) -> Column:
         """Function to convert categorical rule results into a continuous feature"""
@@ -118,7 +117,7 @@ class Check:
         key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
         self._compute[key] = ComputeInstruction(
             Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
-            F.sum(F.col(column).isNotNull().cast("integer")),
+            F.sum(F.col(f"`{column}`").isNotNull().cast("integer")),
         )
         return self
 
@@ -391,28 +390,21 @@ class Check:
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate column names
-        column_set = set(Check._compute_columns(rule_expressions))
+        _col = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
+        column_set = set(Check._compute_columns(list(map(_col, rule_expressions))))
         unknown_columns = column_set.difference(set(dataframe.columns))
         assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
         # Pre-Validation of numeric data types
-        _col = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
+        
         _numeric = lambda x: x.rule.data_type == CheckDataType.NUMERIC
         _date = lambda x: x.rule.data_type == CheckDataType.DATE
         _timestamp = lambda x: x.rule.data_type == CheckDataType.TIMESTAMP
         _string = lambda x: x.rule.data_type == CheckDataType.STRING
-        assert set(map(_col, valfilter(_numeric, unified_rules).values())).issubset(
-            D.numeric_fields(dataframe)
-        )
-        assert set(map(_col, valfilter(_string, unified_rules).values())).issubset(
-            D.string_fields(dataframe)
-        )
-        assert set(map(_col, valfilter(_date, unified_rules).values())).issubset(
-            D.date_fields(dataframe)
-        )
-        assert set(map(_col, valfilter(_timestamp, unified_rules).values())).issubset(
-            D.timestamp_fields(dataframe)
-        )
+        assert set(Check._compute_columns(map(_col, valfilter(_numeric, unified_rules).values()))).issubset(D.numeric_fields(dataframe))
+        assert set(Check._compute_columns(map(_col, valfilter(_string, unified_rules).values()))).issubset(D.string_fields(dataframe))
+        assert set(Check._compute_columns(map(_col, valfilter(_date, unified_rules).values()))).issubset(D.date_fields(dataframe))
+        assert set(Check._compute_columns(map(_col, valfilter(_timestamp, unified_rules).values()))).issubset(D.timestamp_fields(dataframe))
 
         if self._compute:
             observation = Observation(self.name)

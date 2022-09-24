@@ -88,7 +88,7 @@ class Check:
     def _compute_columns(columns: Union[str, List[str]]) -> List[str]:
         """Confirm that all compute columns exists in dataframe"""
 
-        def _normalize_columns(col: Union[str, Tuple], agg: List[str]) -> List[str]:
+        def _normalize_columns(col: Union[str, List[str]], agg: List[str]) -> List[str]:
             """Recursive consilidation of compute columns"""
             if isinstance(col, str):
                 agg.append(col)
@@ -396,15 +396,29 @@ class Check:
         assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
         # Pre-Validation of numeric data types
-        
+
         _numeric = lambda x: x.rule.data_type == CheckDataType.NUMERIC
         _date = lambda x: x.rule.data_type == CheckDataType.DATE
         _timestamp = lambda x: x.rule.data_type == CheckDataType.TIMESTAMP
         _string = lambda x: x.rule.data_type == CheckDataType.STRING
-        assert set(Check._compute_columns(map(_col, valfilter(_numeric, unified_rules).values()))).issubset(D.numeric_fields(dataframe))
-        assert set(Check._compute_columns(map(_col, valfilter(_string, unified_rules).values()))).issubset(D.string_fields(dataframe))
-        assert set(Check._compute_columns(map(_col, valfilter(_date, unified_rules).values()))).issubset(D.date_fields(dataframe))
-        assert set(Check._compute_columns(map(_col, valfilter(_timestamp, unified_rules).values()))).issubset(D.timestamp_fields(dataframe))
+        assert set(
+            Check._compute_columns(
+                map(_col, valfilter(_numeric, unified_rules).values())  # type: ignore
+            )
+        ).issubset(D.numeric_fields(dataframe))
+        assert set(
+            Check._compute_columns(
+                map(_col, valfilter(_string, unified_rules).values())  # type: ignore
+            )
+        ).issubset(D.string_fields(dataframe))
+        assert set(
+            Check._compute_columns(map(_col, valfilter(_date, unified_rules).values()))  # type: ignore
+        ).issubset(D.date_fields(dataframe))
+        assert set(
+            Check._compute_columns(
+                map(_col, valfilter(_timestamp, unified_rules).values())  # type: ignore
+            )
+        ).issubset(D.timestamp_fields(dataframe))
 
         if self._compute:
             observation = Observation(self.name)

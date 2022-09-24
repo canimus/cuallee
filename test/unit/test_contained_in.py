@@ -14,7 +14,9 @@ def test_string_is_contained_in(spark: SparkSession):
 
 
 def test_number_is_contained_in(spark: SparkSession):
-    df = spark.createDataFrame([[1, 10], [2, 15], [3, 17]], schema="id int, value string")
+    df = spark.createDataFrame(
+        [[1, 10], [2, 15], [3, 17]], schema="id int, value string"
+    )
     c = Check(CheckLevel.WARNING, "is_contained_in_number_test")
     c.is_contained_in("value", (10, 15, 17))
     rs = c.validate(spark, df)

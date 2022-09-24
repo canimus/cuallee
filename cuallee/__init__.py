@@ -10,8 +10,8 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column
 
-import dataframe as D
-import exceptions as E
+from . import dataframe as D
+from . import exceptions as E
 
 
 class CheckLevel(enum.Enum):
@@ -318,9 +318,7 @@ class Check:
         }
 
         # Check the dictionnary is not empty
-        assert (
-            unified_rules
-        ), "Check is empty. Add validations i.e. is_complete, is_unique, etc."
+        assert unified_rules, "Check is empty. Add validations i.e. is_complete, is_unique, etc."
 
         # Check dataframe is spark dataframe
         assert isinstance(
@@ -335,7 +333,7 @@ class Check:
                 for s in v.rule.column
             ]
         )
-        if column_set.issubset(set(dataframe.columns) == True):
+        if column_set.issubset(set(dataframe.columns)):
             pass
         else:
             unknown_columns = column_set.difference(set(dataframe.columns))
@@ -354,30 +352,35 @@ class Check:
         D.column_datatype_validation(unified_rules, dataframe, D.timestamp_fields, 4, 'timestamp')
 
         # Create observation object
-        observation = Observation(self.name)
+        if len(self._compute) == 0:
+            pass
+        else:
+            observation = Observation(self.name)
 
-        df_observation = dataframe.observe(
-            observation,
-            *[
-                compute_instruction.expression.cast(T.StringType()).alias(hash_key)
-                for hash_key, compute_instruction in self._compute.items()
-            ],
-            # *[v[1].alias(k) for k, v in self._compute.items()],
-        )
-        rows = df_observation.count()
-
-        unique_observe = (
-            dataframe.select(
+            df_observation = dataframe.observe(
+                observation,
                 *[
-                    compute_instrunction.expression.cast(T.StringType()).alias(hash_key)
-                    for hash_key, compute_instrunction in self._unique.items()
-                ]
+                    compute_instruction.expression.cast(T.StringType()).alias(hash_key)
+                    for hash_key, compute_instruction in self._compute.items()
+                ],
+                # *[v[1].alias(k) for k, v in self._compute.items()],
             )
-            .first()
-            .asDict()  # type: ignore
-        )
+            rows = df_observation.count()
 
-        unified_rules = {**self._unique, **self._compute}
+        if len(self._unique) == 0:
+            pass
+        else:
+            unique_observe = (
+                dataframe.select(
+                    *[
+                        compute_instrunction.expression.cast(T.StringType()).alias(hash_key)
+                        for hash_key, compute_instrunction in self._unique.items()
+                    ]
+                )
+                .first()
+                .asDict()  # type: ignore
+            )
+
         unified_results = {**unique_observe, **observation.get}
         return (
             spark.createDataFrame(

@@ -2,7 +2,7 @@ import pyspark.sql.types as T
 from pyspark.sql.dataframe import DataFrame
 from typing import Collection, Union, Type, Dict
 
-import exceptions as E
+from . import exceptions as E
 
 
 def _field_type_filter(

@@ -8,7 +8,7 @@ from toolz import compose
 def test_integer_casting(spark : SparkSession, check : Check):
     df = spark.range(10)
     
-    check.has_percentile("id", 4.5, 0.5)
+    check.has_percentile("id", 4.0, 0.5)
     
     # Validate columns in ComputeInstruction
     assert "status" in check.validate(spark, df).first().asDict()

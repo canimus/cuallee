@@ -216,6 +216,15 @@ class Check:
         )
         return self
 
+    def has_mean(self, column: str, value: float, pct: float = 1.0):
+        """Validation of a column's average/mean"""
+        key = self._generate_rule_key_id("has_mean", column, value, pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("has_mean", column, value, CheckDataType.NUMERIC),
+            F.mean(F.col(f"`{column}`")).eqNullSafe(value),
+        )
+        return self
+
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
 
@@ -263,7 +272,7 @@ class Check:
         key = self._generate_rule_key_id(
             "has_percentile", column, (value, percentile, precision), pct
         )
-        self._compute[key] = ComputeInstruction(
+        self._unique[key] = ComputeInstruction(
             Rule(
                 "has_percentile",
                 column,
@@ -273,7 +282,6 @@ class Check:
             ),
             F.percentile_approx(F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision).eqNullSafe(value),
         )
-        print(F.percentile_approx(F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision) == value)
         return self
 
     def has_max_by(
@@ -309,6 +317,23 @@ class Check:
                 CheckDataType.NUMERIC,
             ),
             F.min_by(column_target, column_source) == value,
+        )
+        return self
+
+    def has_correlation(self, column_left: str, column_right: str, value: float, pct: float = 1.0):
+        """ Validates the correlation between 2 columns with some tolerance"""
+        
+        key = self._generate_rule_key_id(
+            "has_correlation", (column_left, column_right), value, pct
+        )
+        self._compute[key] = ComputeInstruction(
+            Rule(
+                "has_correlation",
+                (column_left, column_right),
+                value,
+                CheckDataType.NUMERIC,
+            ),
+            F.corr(F.col(f"`{column_left}`"), F.col(f"`{column_right}`")).eqNullSafe(value),
         )
         return self
 
@@ -365,17 +390,23 @@ class Check:
         # ), f"Column(s): {non_numeric_columns} are not numeric"
 
         # Create observation object
-        observation = Observation(self.name)
+        if self._compute:
+            observation = Observation(self.name)
 
-        df_observation = dataframe.observe(
-            observation,
-            *[
-                compute_instruction.expression.alias(hash_key)
-                for hash_key, compute_instruction in self._compute.items()
-            ],
-            # *[v[1].alias(k) for k, v in self._compute.items()],
-        )
-        rows = df_observation.count()
+            df_observation = dataframe.observe(
+                observation,
+                *[
+                    compute_instruction.expression.alias(hash_key)
+                    for hash_key, compute_instruction in self._compute.items()
+                ],
+                # *[v[1].alias(k) for k, v in self._compute.items()],
+            )
+            rows = df_observation.count()
+            observation_result = observation.get
+        else: 
+            observation_result = {}
+            rows = dataframe.count()
+        
         self.rows = rows
 
         unique_observe = (
@@ -390,7 +421,7 @@ class Check:
         )
 
         unified_rules = {**self._unique, **self._compute}
-        unified_results = {**unique_observe, **observation.get}
+        unified_results = {**unique_observe, **observation_result}
         # return (
         #     spark.createDataFrame(
         #         [
@@ -464,7 +495,7 @@ class Check:
                         index,
                         compute_instruction.rule.method,
                         str(compute_instruction.rule.column),
-                        compute_instruction.rule.value,
+                        str(compute_instruction.rule.value),
                         unified_results[hash_key],
                         compute_instruction.rule.coverage,
                     )

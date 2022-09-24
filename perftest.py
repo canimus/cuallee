@@ -13,35 +13,39 @@ def quiet_logs(sc):
 
 def init():
 
-    spark = SparkSession.builder.config("spark.driver.memory", "8g").config("spark.executor.extraJavaOptions", "-Dlog4j.configuration=log4j.properties -Dlog4j.debug=false").getOrCreate()
+    spark = SparkSession.builder.config("spark.driver.memory", "50g").getOrCreate()
     spark.sparkContext.setLogLevel("OFF")
     quiet_logs(spark.sparkContext)
     rule = Check(CheckLevel.WARNING, "Taxi")
     df = spark.read.parquet("temp/taxi/*.parquet")
 
-    [rule.is_complete(name) for name in df.columns]
-    [rule.is_greater_than(name, 0) for name in numeric_fields(df)]
-    [rule.is_less_than(name, 1e4) for name in numeric_fields(df)]
-    [rule.is_between(name, (1000,2000)) for name in numeric_fields(df)]
-    [rule.is_between(name, ("2000-01-01", "2022-12-31")) for name in timestamp_fields(df)]
+    # [rule.is_complete(name) for name in df.columns]
+    # [rule.is_greater_than(name, 0) for name in numeric_fields(df)]
+    # [rule.is_less_than(name, 1e4) for name in numeric_fields(df)]
+    # [rule.is_between(name, (1000,2000)) for name in numeric_fields(df)]
+    # [rule.is_between(name, ("2000-01-01", "2022-12-31")) for name in timestamp_fields(df)]
+    for i in range(1000):
+        rule.is_greater_than("fare_amount", i)
 
     return spark, df, rule
 
-def run1(spark, df, rule):
-    rule.validate(spark, df).show(n=100, truncate=False)
+def with_validate(spark, df, rule):
+    return rule.validate(spark, df)
 
-def run2(df, c):
-    df.select([(F.round(x[1]/F.count("*"),2)).alias(f"{x[0].method}({x[0].column})") for x in c._compute.values()]).show(n=100, truncate=False)
+def with_select(df, c):
+    df.select([(F.round(x[1]/F.count("*"),2)).alias(f"{x[0].method}({x[0].column})") for x in c._compute.values()])
 
 if __name__ == "__main__":
+    
+    spark, df, rule = init()
     start = datetime.now()
-    spark, df, rule = init()    
-    #run1(spark, df, rule)
-    run2(df, rule)
+    r = with_validate(spark, df, rule)
+    # r = with_select(df, rule)
+    r.show(n=1000, truncate=False)
     end = datetime.now()
     print("START:",start)
     print("END:",end)
-    
     print("ELAPSED:", end-start)
-
+    print("FRAMEWORK: cuallee [0.0.9]")
+# 0.10513386
 

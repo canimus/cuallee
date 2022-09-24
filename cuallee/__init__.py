@@ -8,7 +8,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import DataFrame, Observation, SparkSession, Column
+from pyspark.sql import DataFrame, Observation, SparkSession, Column, Row
 from toolz import compose, valfilter
 
 from . import dataframe as D
@@ -356,74 +356,53 @@ class Check:
         assert set(map(_col, valfilter(_date, unified_rules).values())).issubset(D.date_fields(dataframe))
         assert set(map(_col, valfilter(_timestamp, unified_rules).values())).issubset(D.timestamp_fields(dataframe))
         
-        # Create observation object
-        if len(self._compute) > 0:
+        if self._compute:
             observation = Observation(self.name)
+
             df_observation = dataframe.observe(
                 observation,
                 *[
-                    compute_instruction.expression.cast(T.StringType()).alias(hash_key)
+                    compute_instruction.expression.alias(hash_key)
                     for hash_key, compute_instruction in self._compute.items()
-                ],
-                # *[v[1].alias(k) for k, v in self._compute.items()],
+                ]
             )
             rows = df_observation.count()
+            observation_result = observation.get
+        else: 
+            observation_result = {}
+            rows = dataframe.count()
+        
+        self.rows = rows
 
-        if len(self._unique) == 0:
-            pass
-        else:
-            unique_observe = (
-                dataframe.select(
-                    *[
-                        compute_instrunction.expression.cast(T.StringType()).alias(hash_key)
-                        for hash_key, compute_instrunction in self._unique.items()
-                    ]
-                )
-                .first()
-                .asDict()  # type: ignore
+        unique_observe = (
+            dataframe.select(
+                *[
+                    compute_instrunction.expression.alias(hash_key)
+                    for hash_key, compute_instrunction in self._unique.items()
+                ]
             )
+            .first()
+            .asDict()  # type: ignore
+        )
 
-        unified_results = {**unique_observe, **observation.get}
+        unified_results = {**unique_observe, **observation_result}
+
         return (
             spark.createDataFrame(
                 [
-                    tuple(
-                        [
-                            i,
-                            *k,
-                            k2,
-                            v2.rule.method,
-                            v2.rule.column,
-                            str(v2.rule.value),
-                            v2.rule.coverage,
-                        ]
+                    Row(
+                        index,
+                        compute_instruction.rule.method,
+                        str(compute_instruction.rule.column),
+                        str(compute_instruction.rule.value),
+                        unified_results[hash_key],
+                        compute_instruction.rule.coverage,
                     )
-                    for i, (k, k2, v2) in enumerate(
-                        zip(
-                            unified_results.fromkeys(unified_rules.keys()).items(),
-                            unified_rules.keys(),
-                            unified_rules.values(),
-                        ),
-                        1,
+                    for index, (hash_key, compute_instruction) in enumerate(
+                        unified_rules.items(), 1
                     )
                 ],
-                [
-                    "id",
-                    "computed_rule",
-                    "results",
-                    "key_dict",
-                    "rule",
-                    "column",
-                    "value",
-                    "pass_threshold",
-                ],
-            )
-            .withColumn(
-                "pass_rate",
-                F.when(
-                    (F.col("results") == "false") | (F.col("results") == "true"),
-                    F.lit(1.0),
-                ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
+                schema="id int, rule string, column string, value string, positive_predicate string, pass_threshold string",
             )
             .select(
                 F.col("id"),
@@ -435,17 +414,14 @@ class Check:
                 F.col("rule"),
                 F.col("value"),
                 F.lit(rows).alias("rows"),
-                "pass_rate",
-                "pass_threshold",
-                F.when(
-                    (F.col("results") == "true")
-                    | (
-                        (F.col("results") != "false")
-                        & (F.col("pass_rate") >= F.col("pass_threshold"))
-                    ),
-                    F.lit("PASS"),
-                )
-                .otherwise(F.lit("FAIL"))
-                .alias("status"),
+                self._discriminate_result_type(F.col("positive_predicate")).alias(
+                    "pass_rate"
+                ),
+                F.col("pass_threshold"),
+            )
+            .withColumn(
+                "status",
+                self._evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
             )
         )
+

@@ -336,26 +336,31 @@ class Check:
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate columns
-        assert set([v[0].column for v in self._compute.values()]).issubset(
-            set(dataframe.columns)
-        )
+        if (
+            set(
+                [
+                    s if not isinstance(v[0].column, str) else v[0].column
+                    for s in v[0].column
+                    for v in self._compute.values()
+                ]
+            ).issubset(set(dataframe.columns))
+            == True
+        ):
+            pass
+        else:
+            unknown_columns = set(
+                [
+                    s if not isinstance(v[0].column, str) else v[0].column
+                    for s in v[0].column
+                    for v in self._compute.values()
+                ]
+            ).difference(set(dataframe.columns))
+            print(f"Column(s): {unknown_columns} not in dataframe")
 
-        # rule_set = set(self._rules)
-        # single_columns = []
-        # for column_field in map(attrgetter("column"), rule_set):
-        #    if isinstance(column_field, str):
-        #        single_columns.append(column_field)
-        #    elif isinstance(column_field, Collection):
-        #        for column_in_group in column_field:
-        #            single_columns.append(column_in_group)
-
-        # column_set = set(single_columns)
-        # unknown_columns = column_set.difference(dataframe.columns)
-        # assert column_set.issubset(
-        #    dataframe.columns
-        # ), f"Column(s): {unknown_columns} not in dataframe"
-
+        
         # Pre-Validation of numeric data types
+
+        
         # numeric_rules = []
         # for rule in rule_set:
         #    if rule.tag == CheckDataType.NUMERIC:

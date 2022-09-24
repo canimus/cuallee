@@ -326,22 +326,28 @@ class Check:
 
     def validate(self, spark: SparkSession, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
-        assert {
+
+        # Merge `unique` and `compute` dict
+        rules = {
             **self._unique,
             **self._compute,
-        }, "Check is empty. Add validations i.e. is_complete, is_unique, etc."
+        }
 
+        # Check the dictionnary is not empty
+        assert rules, "Check is empty. Add validations i.e. is_complete, is_unique, etc."
+
+        # Check dataframe is spark dataframe
         assert isinstance(
             dataframe, DataFrame
         ), "Cualle operates only with Spark Dataframes"
 
-        # Pre-validate columns
+        # Pre-validate column names
         if (
             set(
                 [
                     s if not isinstance(v[0].column, str) else v[0].column
                     for s in v[0].column
-                    for v in self._compute.values()
+                    for v in rules.values()
                 ]
             ).issubset(set(dataframe.columns))
             == True
@@ -352,7 +358,7 @@ class Check:
                 [
                     s if not isinstance(v[0].column, str) else v[0].column
                     for s in v[0].column
-                    for v in self._compute.values()
+                    for v in rules.values()
                 ]
             ).difference(set(dataframe.columns))
             print(f"Column(s): {unknown_columns} not in dataframe")
@@ -361,6 +367,7 @@ class Check:
         # Pre-Validation of numeric data types
 
         
+
         # numeric_rules = []
         # for rule in rule_set:
         #    if rule.tag == CheckDataType.NUMERIC:
@@ -393,7 +400,7 @@ class Check:
             .first()
             .asDict()  # type: ignore
         )
-
+        
         return (
             spark.createDataFrame(
                 [

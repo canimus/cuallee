@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def test_string_is_contained_in(spark: SparkSession):
     logger.info("TEST XXXX LOGGER@!!!!")
     df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["ID", "desc"])

@@ -17,11 +17,15 @@ def test_positive_correlation(spark: SparkSession):
     logger.info(check)
     assert check.validate(spark, df).first().status == "PASS"
 
+
 def test_no_correlation(spark: SparkSession):
     check = Check(CheckLevel.WARNING, "PyTestCheck")
-    df = spark.createDataFrame(pd.DataFrame({"id" : np.arange(10), "id2" : np.random.randn(10)}))
+    df = spark.createDataFrame(
+        pd.DataFrame({"id": np.arange(10), "id2": np.random.randn(10)})
+    )
     check.has_correlation("id", "id2", 1.0)
     assert check.validate(spark, df).first().status == "FAIL"
+
 
 def test_correlation_value(spark: SparkSession):
     check = Check(CheckLevel.WARNING, "PyTestCheck")

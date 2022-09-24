@@ -9,10 +9,9 @@ from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column, Row
-from toolz import compose, valfilter
+from toolz import compose, valfilter  # type: ignore
 
 from . import dataframe as D
-from . import exceptions as E
 
 
 class CheckLevel(enum.Enum):
@@ -55,7 +54,7 @@ class Check:
         self.level = level
         self.name = name
         self.date = execution_date
-        self.rows = None
+        self.rows = -1
 
     def __repr__(self):
         return (
@@ -86,27 +85,29 @@ class Check:
         return {**self._unique, **self._compute}
 
     @staticmethod
-    def _compute_columns(columns : Union[str, List[str]]) -> List[str]:
+    def _compute_columns(columns: Union[str, List[str], Any[str]]) -> List[str]:
         """Confirm that all compute columns exists in dataframe"""
-        def _normalize_columns(col : Union[str, List[str]], agg : List[str]) -> List[str]:
+
+        def _normalize_columns(col: map, agg: List[str]) -> List[str]:
             """Recursive consilidation of compute columns"""
             if isinstance(col, str):
                 agg.append(col)
             else:
                 [_normalize_columns(inner_col, agg) for inner_col in col]
             return agg
+
         _column = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
         return _normalize_columns(map(_column, columns), [])
-        
+
     def _discriminate_result_type(self, column: Column) -> Column:
         """Function to convert categorical rule results into a continuous feature"""
         return (
             F.when(column.eqNullSafe("false"), F.lit(0.0))
             .when(column.eqNullSafe("true"), F.lit(1.0))
-            .otherwise(column.cast(T.DoubleType()) / self.rows)
+            .otherwise(column.cast(T.DoubleType()) / self.rows)  # type: ignore
         )
 
-    def _evaluate_status(self, pass_rate: str, pass_threshold: str) -> Column:
+    def _evaluate_status(self, pass_rate: Column, pass_threshold: Column) -> Column:
         """Assign the PASS/FAIL status to the threshold of the rules"""
         return F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(
             F.lit("FAIL")
@@ -301,7 +302,9 @@ class Check:
                 CheckDataType.NUMERIC,
                 pct,
             ),
-            F.percentile_approx(F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision).eqNullSafe(value),
+            F.percentile_approx(
+                F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision
+            ).eqNullSafe(value),
         )
         return self
 
@@ -341,9 +344,11 @@ class Check:
         )
         return self
 
-    def has_correlation(self, column_left: str, column_right: str, value: float, pct: float = 1.0):
-        """ Validates the correlation between 2 columns with some tolerance"""
-        
+    def has_correlation(
+        self, column_left: str, column_right: str, value: float, pct: float = 1.0
+    ):
+        """Validates the correlation between 2 columns with some tolerance"""
+
         key = self._generate_rule_key_id(
             "has_correlation", (column_left, column_right), value, pct
         )
@@ -354,7 +359,9 @@ class Check:
                 value,
                 CheckDataType.NUMERIC,
             ),
-            F.corr(F.col(f"`{column_left}`"), F.col(f"`{column_right}`")).eqNullSafe(value),
+            F.corr(F.col(f"`{column_left}`"), F.col(f"`{column_right}`")).eqNullSafe(
+                value
+            ),
         )
         return self
 
@@ -374,7 +381,9 @@ class Check:
         unified_rules = self._integrate_compute()
         rule_expressions = unified_rules.values()
         # Check the dictionnary is not empty
-        assert unified_rules, "Check is empty. Add validations i.e. is_complete, is_unique, etc."
+        assert (
+            unified_rules
+        ), "Check is empty. Add validations i.e. is_complete, is_unique, etc."
 
         # Check dataframe is spark dataframe
         assert isinstance(
@@ -392,11 +401,19 @@ class Check:
         _date = lambda x: x.rule.data_type == CheckDataType.DATE
         _timestamp = lambda x: x.rule.data_type == CheckDataType.TIMESTAMP
         _string = lambda x: x.rule.data_type == CheckDataType.STRING
-        assert set(map(_col, valfilter(_numeric, unified_rules).values())).issubset(D.numeric_fields(dataframe))
-        assert set(map(_col, valfilter(_string, unified_rules).values())).issubset(D.string_fields(dataframe))
-        assert set(map(_col, valfilter(_date, unified_rules).values())).issubset(D.date_fields(dataframe))
-        assert set(map(_col, valfilter(_timestamp, unified_rules).values())).issubset(D.timestamp_fields(dataframe))
-        
+        assert set(map(_col, valfilter(_numeric, unified_rules).values())).issubset(
+            D.numeric_fields(dataframe)
+        )
+        assert set(map(_col, valfilter(_string, unified_rules).values())).issubset(
+            D.string_fields(dataframe)
+        )
+        assert set(map(_col, valfilter(_date, unified_rules).values())).issubset(
+            D.date_fields(dataframe)
+        )
+        assert set(map(_col, valfilter(_timestamp, unified_rules).values())).issubset(
+            D.timestamp_fields(dataframe)
+        )
+
         if self._compute:
             observation = Observation(self.name)
 
@@ -405,14 +422,14 @@ class Check:
                 *[
                     compute_instruction.expression.alias(hash_key)
                     for hash_key, compute_instruction in self._compute.items()
-                ]
+                ],
             )
             rows = df_observation.count()
             observation_result = observation.get
-        else: 
+        else:
             observation_result = {}
             rows = dataframe.count()
-        
+
         self.rows = rows
 
         unique_observe = (
@@ -431,7 +448,7 @@ class Check:
         return (
             spark.createDataFrame(
                 [
-                    Row(
+                    Row(  # type: ignore
                         index,
                         compute_instruction.rule.method,
                         str(compute_instruction.rule.column),
@@ -465,4 +482,3 @@ class Check:
                 self._evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
             )
         )
-

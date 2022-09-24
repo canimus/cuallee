@@ -18,13 +18,13 @@ def test_between_args():
 
 def test_between_numbers(spark):
     check = Check(CheckLevel.WARNING, "CheckIsBetween")
-    assert check.is_between("id", 0, 10).validate(spark, spark.range(10)).first().status
+    assert check.is_between("id", (0, 10)).validate(spark, spark.range(10)).first().status
 
 
 def test_between_number_with_pct(spark):
     check = Check(CheckLevel.WARNING, "CheckIsBetween")
     assert (
-        check.is_between("id", 0, 5, pct=0.5)
+        check.is_between("id", (0, 5), pct=0.5)
         .validate(spark, spark.range(10))
         .first()
         .status
@@ -37,7 +37,7 @@ def test_between_dates(spark):
         "select explode(sequence(to_date('2022-01-01'), to_date('2022-01-10'), interval 1 day)) as date"
     )
     assert (
-        check.is_between("date", "2022-01-01", "2022-01-10")
+        check.is_between("date", ("2022-01-01", "2022-01-10"))
         .validate(spark, df)
         .first()
         .status

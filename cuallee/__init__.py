@@ -55,6 +55,7 @@ class Check:
         self.level = level
         self.name = name
         self.date = execution_date
+        self.rows = None
 
     def __repr__(self):
         return (
@@ -96,6 +97,20 @@ class Check:
             return agg
         _column = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
         return _normalize_columns(map(_column, columns), [])
+        
+    def _discriminate_result_type(self, column: Column) -> Column:
+        """Function to convert categorical rule results into a continuous feature"""
+        return (
+            F.when(column.eqNullSafe("false"), F.lit(0.0))
+            .when(column.eqNullSafe("true"), F.lit(1.0))
+            .otherwise(column.cast(T.DoubleType()) / self.rows)
+        )
+
+    def _evaluate_status(self, pass_rate: str, pass_threshold: str) -> Column:
+        """Assign the PASS/FAIL status to the threshold of the rules"""
+        return F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(
+            F.lit("FAIL")
+        )
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
@@ -106,7 +121,7 @@ class Check:
         )
         return self
 
-    def are_complete(self, *column: str, pct: float = 1.0):
+    def are_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         # if isinstance(column, List):
         #    column = tuple(column)
@@ -115,7 +130,7 @@ class Check:
             Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
             reduce(
                 operator.add,
-                [F.sum(F.col(c).isNotNull().cast("integer")) for c in column],
+                [F.sum(F.col(f"`{c}`").isNotNull().cast("integer")) for c in column],
             )
             / len(column),
         )
@@ -222,6 +237,15 @@ class Check:
         )
         return self
 
+    def has_mean(self, column: str, value: float, pct: float = 1.0):
+        """Validation of a column's average/mean"""
+        key = self._generate_rule_key_id("has_mean", column, value, pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("has_mean", column, value, CheckDataType.NUMERIC),
+            F.mean(F.col(f"`{column}`")).eqNullSafe(value),
+        )
+        return self
+
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
 
@@ -269,7 +293,7 @@ class Check:
         key = self._generate_rule_key_id(
             "has_percentile", column, (value, percentile, precision), pct
         )
-        self._compute[key] = ComputeInstruction(
+        self._unique[key] = ComputeInstruction(
             Rule(
                 "has_percentile",
                 column,
@@ -277,7 +301,7 @@ class Check:
                 CheckDataType.NUMERIC,
                 pct,
             ),
-            F.percentile_approx(column, percentile, precision) == value,
+            F.percentile_approx(F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision).eqNullSafe(value),
         )
         return self
 
@@ -314,6 +338,23 @@ class Check:
                 CheckDataType.NUMERIC,
             ),
             F.min_by(column_target, column_source) == value,
+        )
+        return self
+
+    def has_correlation(self, column_left: str, column_right: str, value: float, pct: float = 1.0):
+        """ Validates the correlation between 2 columns with some tolerance"""
+        
+        key = self._generate_rule_key_id(
+            "has_correlation", (column_left, column_right), value, pct
+        )
+        self._compute[key] = ComputeInstruction(
+            Rule(
+                "has_correlation",
+                (column_left, column_right),
+                value,
+                CheckDataType.NUMERIC,
+            ),
+            F.corr(F.col(f"`{column_left}`"), F.col(f"`{column_right}`")).eqNullSafe(value),
         )
         return self
 

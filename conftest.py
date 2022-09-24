@@ -16,3 +16,4 @@ def spark():
 @pytest.fixture(scope="function")
 def check():
     return Check(CheckLevel.WARNING, "PyTestCheck")
+

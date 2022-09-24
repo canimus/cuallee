@@ -88,8 +88,8 @@ class Check:
 
     def are_complete(self, *column: str, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
-        if isinstance(column, List):
-            column = tuple(column)
+        # if isinstance(column, List):
+        #    column = tuple(column)
         key = self._generate_rule_key_id("are_complete", column, "N/A", pct)
         self._compute[key] = ComputeInstruction(
             Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
@@ -104,7 +104,7 @@ class Check:
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
         key = self._generate_rule_key_id("is_unique", column, "N/A", pct)
-        self._unique[key] = (
+        self._unique[key] = ComputeInstruction(
             Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct),
             F.count_distinct(F.col(column)),
         )
@@ -115,7 +115,7 @@ class Check:
         if isinstance(column, List):
             column = tuple(column)
         key = self._generate_rule_key_id("are_unique", column, "N/A", pct)
-        self._unique[key] = (
+        self._unique[key] = ComputeInstruction(
             Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct),
             F.count_distinct(*[F.col(c) for c in column]),
         )
@@ -310,13 +310,15 @@ class Check:
         """Compute all rules in this check for specific data frame"""
 
         # Merge `unique` and `compute` dict
-        rules = {
+        unified_rules = {
             **self._unique,
             **self._compute,
         }
 
         # Check the dictionnary is not empty
-        assert rules, "Check is empty. Add validations i.e. is_complete, is_unique, etc."
+        assert (
+            unified_rules
+        ), "Check is empty. Add validations i.e. is_complete, is_unique, etc."
 
         # Check dataframe is spark dataframe
         assert isinstance(
@@ -327,9 +329,9 @@ class Check:
         if (
             set(
                 [
-                    s if not isinstance(v[0].column, str) else v[0].column
-                    for s in v[0].column
-                    for v in rules.values()
+                    s if not isinstance(v.rule.column, str) else v.rule.column
+                    for v in unified_rules.values()
+                    for s in v.rule.column
                 ]
             ).issubset(set(dataframe.columns))
             == True
@@ -338,17 +340,14 @@ class Check:
         else:
             unknown_columns = set(
                 [
-                    s if not isinstance(v[0].column, str) else v[0].column
-                    for s in v[0].column
-                    for v in rules.values()
+                    s if not isinstance(v.rule.column, str) else v.rule.column
+                    for v in unified_rules.values()
+                    for s in v.rule.column
                 ]
             ).difference(set(dataframe.columns))
             print(f"Column(s): {unknown_columns} not in dataframe")
 
-        
         # Pre-Validation of numeric data types
-
-        
 
         # numeric_rules = []
         # for rule in rule_set:

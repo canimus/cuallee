@@ -9,7 +9,6 @@ from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column
-from collections import OrderedDict
 
 
 class CheckLevel(enum.Enum):
@@ -86,16 +85,16 @@ class Check:
         )
         return self
 
-    def are_complete(self, *column: str, pct: float = 1.0):
+    def are_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         if isinstance(column, List):
             column = tuple(column)
         key = self._generate_rule_key_id("are_complete", column, "N/A", pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
             reduce(
                 operator.add,
-                [F.sum(F.col(c).isNotNull().cast("integer")) for c in column],
+                [F.sum(F.col(f"`{c}`").isNotNull().cast("integer")) for c in column],
             )
             / len(column),
         )
@@ -104,7 +103,7 @@ class Check:
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
         key = self._generate_rule_key_id("is_unique", column, "N/A", pct)
-        self._unique[key] = (
+        self._unique[key] = ComputeInstruction(
             Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct),
             F.count_distinct(F.col(column)),
         )
@@ -115,7 +114,7 @@ class Check:
         if isinstance(column, List):
             column = tuple(column)
         key = self._generate_rule_key_id("are_unique", column, "N/A", pct)
-        self._unique[key] = (
+        self._unique[key] = ComputeInstruction(
             Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct),
             F.count_distinct(*[F.col(c) for c in column]),
         )
@@ -124,7 +123,7 @@ class Check:
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater than value"""
         key = self._generate_rule_key_id("is_greater_than", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct),
             self._single_value_rule(column, value, operator.gt),
         )
@@ -133,7 +132,7 @@ class Check:
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
         key = self._generate_rule_key_id("is_greater_or_equal_than", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct),
             self._single_value_rule(column, value, operator.ge),
         )
@@ -142,7 +141,7 @@ class Check:
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less than value"""
         key = self._generate_rule_key_id("is_less_than", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct),
             self._single_value_rule(column, value, operator.lt),
         )
@@ -151,7 +150,7 @@ class Check:
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
         key = self._generate_rule_key_id("is_less_or_equal_than", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct),
             self._single_value_rule(column, value, operator.le),
         )
@@ -160,7 +159,7 @@ class Check:
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric column equal than value"""
         key = self._generate_rule_key_id("is_equal", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_equal", column, value, CheckDataType.NUMERIC, pct),
             self._single_value_rule(column, value, operator.eq),
         )
@@ -169,7 +168,7 @@ class Check:
     def matches_regex(self, column: str, value: str, pct: float = 1.0):
         """Validation for string type column matching regex expression"""
         key = self._generate_rule_key_id("matches_regex", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("matches_regex", column, value, CheckDataType.STRING, pct),
             F.sum((F.length(F.regexp_extract(column, value, 0)) > 0).cast("integer")),
         )
@@ -178,7 +177,7 @@ class Check:
     def has_min(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s minimum value"""
         key = self._generate_rule_key_id("has_min", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("has_min", column, value, CheckDataType.NUMERIC),
             F.min(F.col(column)) == value,
         )
@@ -187,7 +186,7 @@ class Check:
     def has_max(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s maximum value"""
         key = self._generate_rule_key_id("has_max", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("has_max", column, value, CheckDataType.NUMERIC),
             F.max(F.col(column)) == value,
         )
@@ -196,7 +195,7 @@ class Check:
     def has_std(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s standard deviation"""
         key = self._generate_rule_key_id("has_std", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("has_std", column, value, CheckDataType.NUMERIC),
             F.stddev_pop(F.col(column)) == value,
         )
@@ -210,7 +209,7 @@ class Check:
             value = tuple(value)
 
         key = self._generate_rule_key_id("is_between", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct),
             F.sum(F.col(column).between(*value).cast("integer")),  # type: ignore
         )
@@ -231,7 +230,7 @@ class Check:
             check = CheckDataType.NUMERIC
 
         key = self._generate_rule_key_id("is_contained_in", column, value, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_contained_in", column, value, check),
             F.sum((F.col(column).isin(list(value))).cast("integer")),
         )
@@ -249,7 +248,7 @@ class Check:
         key = self._generate_rule_key_id(
             "has_percentile", column, (value, percentile, precision), pct
         )
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule(
                 "has_percentile",
                 column,
@@ -268,7 +267,7 @@ class Check:
         key = self._generate_rule_key_id(
             "has_max_by", (column_source, column_target), value, pct
         )
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule(
                 "has_max_by",
                 (column_source, column_target),
@@ -286,7 +285,7 @@ class Check:
         key = self._generate_rule_key_id(
             "has_min_by", (column_source, column_target), value, pct
         )
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule(
                 "has_min_by",
                 (column_source, column_target),
@@ -300,7 +299,7 @@ class Check:
     def satisfies(self, predicate: str, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
         key = self._generate_rule_key_id("satisfies", "N/A", predicate, pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("satisfies", "N/A", predicate, CheckDataType.AGNOSTIC),
             F.sum(F.expr(predicate).cast("integer")),
         )

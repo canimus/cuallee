@@ -9,7 +9,9 @@ from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column
-from collections import OrderedDict
+
+import dataframe as D
+import exceptions as E
 
 
 class CheckLevel(enum.Enum):
@@ -326,44 +328,30 @@ class Check:
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate column names
-        if (
-            set(
-                [
-                    s if not isinstance(v.rule.column, str) else v.rule.column
-                    for v in unified_rules.values()
-                    for s in v.rule.column
-                ]
-            ).issubset(set(dataframe.columns))
-            == True
-        ):
+        column_set = set(
+            [
+                s if not isinstance(v.rule.column, str) else v.rule.column
+                for v in unified_rules.values()
+                for s in v.rule.column
+            ]
+        )
+        if column_set.issubset(set(dataframe.columns) == True):
             pass
         else:
-            unknown_columns = set(
-                [
-                    s if not isinstance(v.rule.column, str) else v.rule.column
-                    for v in unified_rules.values()
-                    for s in v.rule.column
-                ]
-            ).difference(set(dataframe.columns))
-            print(f"Column(s): {unknown_columns} not in dataframe")
+            unknown_columns = column_set.difference(set(dataframe.columns))
+            raise E.ColumnException(f"Column(s): {unknown_columns} not in dataframe")
 
         # Pre-Validation of numeric data types
+        D.column_datatype_validation(unified_rules, dataframe, D.numeric_fields, 1, 'numeric')
 
-        # numeric_rules = []
-        # for rule in rule_set:
-        #    if rule.tag == CheckDataType.NUMERIC:
-        #        if isinstance(rule.column, Collection):
-        #            for col in rule.column:
-        #                numeric_rules.append(col)
-        #        elif isinstance(rule.column, str):
-        #            numeric_rules.append(rule.column)
+        # Pre-Validation of string data types
+        D.column_datatype_validation(unified_rules, dataframe, D.string_fields, 2, 'string')
 
-        # numeric_rules = set(numeric_rules)
-        # numeric_fields = D.numeric_fields(dataframe)
-        # non_numeric_columns = numeric_rules.difference(numeric_fields)
-        # assert set(numeric_rules).issubset(
-        #    numeric_fields
-        # ), f"Column(s): {non_numeric_columns} are not numeric"
+        # Pre-Validation of date data types
+        D.column_datatype_validation(unified_rules, dataframe, D.date_fields, 3, 'date')
+
+        # Pre-Validation of timestamp data types
+        D.column_datatype_validation(unified_rules, dataframe, D.timestamp_fields, 4, 'timestamp')
 
         # Create observation object
         observation = Observation(self.name)

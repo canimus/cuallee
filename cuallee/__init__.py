@@ -8,7 +8,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import DataFrame, Observation, SparkSession, Column
+from pyspark.sql import DataFrame, Observation, SparkSession, Column, Row
 
 
 class CheckLevel(enum.Enum):
@@ -51,6 +51,7 @@ class Check:
         self.level = level
         self.name = name
         self.date = execution_date
+        self.rows = None
 
     def __repr__(self):
         return (
@@ -75,6 +76,20 @@ class Check:
         operator: Callable,
     ):
         return F.sum((operator(F.col(column), value)).cast("integer"))
+
+    def _discriminate_result_type(self, column: Column) -> Column:
+        """Function to convert categorical rule results into a continuous feature"""
+        return (
+            F.when(column.eqNullSafe("false"), F.lit(0.0))
+            .when(column.eqNullSafe("true"), F.lit(1.0))
+            .otherwise(column.cast(T.DoubleType()) / self.rows)
+        )
+
+    def _evaluate_status(self, pass_rate: str, pass_threshold: str) -> Column:
+        """Assign the PASS/FAIL status to the threshold of the rules"""
+        return F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(
+            F.lit("FAIL")
+        )
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
@@ -256,8 +271,9 @@ class Check:
                 CheckDataType.NUMERIC,
                 pct,
             ),
-            F.percentile_approx(column, percentile, precision) == value,
+            F.percentile_approx(F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision).eqNullSafe(value),
         )
+        print(F.percentile_approx(F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision) == value)
         return self
 
     def has_max_by(
@@ -354,12 +370,13 @@ class Check:
         df_observation = dataframe.observe(
             observation,
             *[
-                compute_instruction.expression.cast(T.StringType()).alias(hash_key)
+                compute_instruction.expression.alias(hash_key)
                 for hash_key, compute_instruction in self._compute.items()
             ],
             # *[v[1].alias(k) for k, v in self._compute.items()],
         )
         rows = df_observation.count()
+        self.rows = rows
 
         unique_observe = (
             dataframe.select(
@@ -374,46 +391,88 @@ class Check:
 
         unified_rules = {**self._unique, **self._compute}
         unified_results = {**unique_observe, **observation.get}
+        # return (
+        #     spark.createDataFrame(
+        #         [
+        #             tuple(
+        #                 [
+        #                     i,
+        #                     *k,
+        #                     k2,
+        #                     v2.rule.method,
+        #                     str(v2.rule.column),
+        #                     str(v2.rule.value),
+        #                     v2.rule.coverage,
+        #                 ]
+        #             )
+        #             for i, (k, k2, v2) in enumerate(
+        #                 zip(
+        #                     unified_results.fromkeys(unified_rules.keys()).items(),
+        #                     unified_rules.keys(),
+        #                     unified_rules.values(),
+        #                 ),
+        #                 1,
+        #             )
+        #         ],
+        #         [
+        #             "id",
+        #             "computed_rule",
+        #             "results",
+        #             "key_dict",
+        #             "rule",
+        #             "column",
+        #             "value",
+        #             "pass_threshold",
+        #         ],
+        #     )
+        #     .withColumn(
+        #         "pass_rate",
+        #         F.when(
+        #             (F.col("results") == "false") | (F.col("results") == "true"),
+        #             F.lit(1.0),
+        #         ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
+        #     )
+        #     .select(
+        #         F.col("id"),
+        #         F.lit(self.date.strftime("%Y-%m-%d")).alias("date"),
+        #         F.lit(self.date.strftime("%H:%M:%S")).alias("time"),
+        #         F.lit(self.name).alias("check"),
+        #         F.lit(self.level.name).alias("level"),
+        #         F.col("column"),
+        #         F.col("rule"),
+        #         F.col("value"),
+        #         F.lit(rows).alias("rows"),
+        #         "pass_rate",
+        #         "pass_threshold",
+        #         F.when(
+        #             (F.col("results") == "true")
+        #             | (
+        #                 (F.col("results") != "false")
+        #                 & (F.col("pass_rate") >= F.col("pass_threshold"))
+        #             ),
+        #             F.lit("PASS"),
+        #         )
+        #         .otherwise(F.lit("FAIL"))
+        #         .alias("status"),
+        #     )
+        # )
+
         return (
             spark.createDataFrame(
                 [
-                    tuple(
-                        [
-                            i,
-                            *k,
-                            k2,
-                            v2.rule.method,
-                            v2.rule.column,
-                            str(v2.rule.value),
-                            v2.rule.coverage,
-                        ]
+                    Row(
+                        index,
+                        compute_instruction.rule.method,
+                        str(compute_instruction.rule.column),
+                        compute_instruction.rule.value,
+                        unified_results[hash_key],
+                        compute_instruction.rule.coverage,
                     )
-                    for i, (k, k2, v2) in enumerate(
-                        zip(
-                            unified_results.fromkeys(unified_rules.keys()).items(),
-                            unified_rules.keys(),
-                            unified_rules.values(),
-                        ),
-                        1,
+                    for index, (hash_key, compute_instruction) in enumerate(
+                        unified_rules.items(), 1
                     )
                 ],
-                [
-                    "id",
-                    "computed_rule",
-                    "results",
-                    "key_dict",
-                    "rule",
-                    "column",
-                    "value",
-                    "pass_threshold",
-                ],
-            )
-            .withColumn(
-                "pass_rate",
-                F.when(
-                    (F.col("results") == "false") | (F.col("results") == "true"),
-                    F.lit(1.0),
-                ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
+                schema="id int, rule string, column string, value string, positive_predicate string, pass_threshold string",
             )
             .select(
                 F.col("id"),
@@ -425,17 +484,13 @@ class Check:
                 F.col("rule"),
                 F.col("value"),
                 F.lit(rows).alias("rows"),
-                "pass_rate",
-                "pass_threshold",
-                F.when(
-                    (F.col("results") == "true")
-                    | (
-                        (F.col("results") != "false")
-                        & (F.col("pass_rate") >= F.col("pass_threshold"))
-                    ),
-                    F.lit("PASS"),
-                )
-                .otherwise(F.lit("FAIL"))
-                .alias("status"),
+                self._discriminate_result_type(F.col("positive_predicate")).alias(
+                    "pass_rate"
+                ),
+                F.col("pass_threshold"),
+            )
+            .withColumn(
+                "status",
+                self._evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
             )
         )

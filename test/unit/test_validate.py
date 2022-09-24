@@ -5,14 +5,15 @@ from pyspark.sql import DataFrame
 from cuallee import Check, CheckLevel
 import cuallee.dataframe as D
 import cuallee.exceptions as E
-from loguru import logger
+import logging
+
+logger = logging.getLogger("test_validate")
 
 
 def test_empty_dictionary(spark):
     df = spark.range(10).alias('id')
-    with pytest.raises(AssertionError) as e:
+    with pytest.raises(Exception, match="Check is empty. Add validations i.e. is_complete, is_unique, etc."):
         Check(CheckLevel.WARNING, "test_empty_observation").validate(spark, df)
-        assert "Check is empty. Add validations i.e. is_complete, is_unique, etc." == str(e)
 
 
 def test_pandas_dataframe(spark):

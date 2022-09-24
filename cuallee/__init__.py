@@ -9,6 +9,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column
+from toolz import compose, valfilter
 
 from . import dataframe as D
 from . import exceptions as E
@@ -78,6 +79,23 @@ class Check:
         operator: Callable,
     ):
         return F.sum((operator(F.col(column), value)).cast("integer"))
+
+    def _integrate_compute(self) -> Dict:
+        """Unifies the compute dictionaries from observation and select forms"""
+        return {**self._unique, **self._compute}
+
+    @staticmethod
+    def _compute_columns(columns : Union[str, List[str]]) -> List[str]:
+        """Confirm that all compute columns exists in dataframe"""
+        def _normalize_columns(col : Union[str, List[str]], agg : List[str]) -> List[str]:
+            """Recursive consilidation of compute columns"""
+            if isinstance(col, str):
+                agg.append(col)
+            else:
+                [_normalize_columns(inner_col, agg) for inner_col in col]
+            return agg
+        _column = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
+        return _normalize_columns(map(_column, columns), [])
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
@@ -312,11 +330,8 @@ class Check:
         """Compute all rules in this check for specific data frame"""
 
         # Merge `unique` and `compute` dict
-        unified_rules = {
-            **self._unique,
-            **self._compute,
-        }
-
+        unified_rules = self._integrate_compute()
+        rule_expressions = unified_rules.values()
         # Check the dictionnary is not empty
         assert unified_rules, "Check is empty. Add validations i.e. is_complete, is_unique, etc."
 
@@ -326,37 +341,24 @@ class Check:
         ), "Cualle operates only with Spark Dataframes"
 
         # Pre-validate column names
-        column_set = set(
-            [
-                s if not isinstance(v.rule.column, str) else v.rule.column
-                for v in unified_rules.values()
-                for s in v.rule.column
-            ]
-        )
-        if column_set.issubset(set(dataframe.columns)):
-            pass
-        else:
-            unknown_columns = column_set.difference(set(dataframe.columns))
-            raise E.ColumnException(f"Column(s): {unknown_columns} not in dataframe")
+        column_set = set(Check._compute_columns(rule_expressions))
+        unknown_columns = column_set.difference(set(dataframe.columns))
+        assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
         # Pre-Validation of numeric data types
-        D.column_datatype_validation(unified_rules, dataframe, D.numeric_fields, 1, 'numeric')
-
-        # Pre-Validation of string data types
-        D.column_datatype_validation(unified_rules, dataframe, D.string_fields, 2, 'string')
-
-        # Pre-Validation of date data types
-        D.column_datatype_validation(unified_rules, dataframe, D.date_fields, 3, 'date')
-
-        # Pre-Validation of timestamp data types
-        D.column_datatype_validation(unified_rules, dataframe, D.timestamp_fields, 4, 'timestamp')
-
+        _col = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
+        _numeric = lambda x: x.rule.data_type == CheckDataType.NUMERIC
+        _date = lambda x: x.rule.data_type == CheckDataType.DATE
+        _timestamp = lambda x: x.rule.data_type == CheckDataType.TIMESTAMP
+        _string = lambda x: x.rule.data_type == CheckDataType.STRING
+        assert set(map(_col, valfilter(_numeric, unified_rules).values())).issubset(D.numeric_fields(dataframe))
+        assert set(map(_col, valfilter(_string, unified_rules).values())).issubset(D.string_fields(dataframe))
+        assert set(map(_col, valfilter(_date, unified_rules).values())).issubset(D.date_fields(dataframe))
+        assert set(map(_col, valfilter(_timestamp, unified_rules).values())).issubset(D.timestamp_fields(dataframe))
+        
         # Create observation object
-        if len(self._compute) == 0:
-            pass
-        else:
+        if len(self._compute) > 0:
             observation = Observation(self.name)
-
             df_observation = dataframe.observe(
                 observation,
                 *[

@@ -13,7 +13,7 @@ def quiet_logs(sc):
 
 def init():
 
-    spark = SparkSession.builder.config("spark.driver.memory", "8g").config("spark.executor.extraJavaOptions", "-Dlog4j.configuration=log4j.properties -Dlog4j.debug=false").getOrCreate()
+    spark = SparkSession.builder.config("spark.driver.memory", "50g").getOrCreate()
     spark.sparkContext.setLogLevel("OFF")
     quiet_logs(spark.sparkContext)
     rule = Check(CheckLevel.WARNING, "Taxi")
@@ -30,17 +30,18 @@ def init():
     return spark, df, rule
 
 def with_validate(spark, df, rule):
-    rule.validate(spark, df).show(n=1000, truncate=False)
+    return rule.validate(spark, df)
 
 def with_select(df, c):
-    df.select([(F.round(x[1]/F.count("*"),2)).alias(f"{x[0].method}({x[0].column})") for x in c._compute.values()]).show(n=1000, truncate=False)
+    df.select([(F.round(x[1]/F.count("*"),2)).alias(f"{x[0].method}({x[0].column})") for x in c._compute.values()])
 
 if __name__ == "__main__":
     
     spark, df, rule = init()
     start = datetime.now()
-    #with_validate(spark, df, rule)
-    with_select(df, rule)
+    r = with_validate(spark, df, rule)
+    # r = with_select(df, rule)
+    r.show(n=1000, truncate=False)
     end = datetime.now()
     print("START:",start)
     print("END:",end)

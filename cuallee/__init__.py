@@ -4,11 +4,12 @@ import operator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
-from typing import Any, Callable, Collection, List, Optional, Tuple, Union, Dict
+from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import DataFrame, Observation, SparkSession
+from pyspark.sql import DataFrame, Observation, SparkSession, Column
+from collections import OrderedDict
 
 
 class CheckLevel(enum.Enum):
@@ -36,12 +37,18 @@ class Rule:
         return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}"
 
 
+@dataclass(frozen=True)
+class ComputeInstruction:
+    rule: Rule
+    expression: Column
+
+
 class Check:
     def __init__(
         self, level: CheckLevel, name: str, execution_date: datetime = datetime.today()
     ):
-        self._compute: Dict[str, Tuple] = {}
-        self._unique: Dict[str, Tuple] = {}
+        self._compute: Dict[str, ComputeInstruction] = {}
+        self._unique: Dict[str, ComputeInstruction] = {}
         self.level = level
         self.name = name
         self.date = execution_date
@@ -70,11 +77,10 @@ class Check:
     ):
         return F.sum((operator(F.col(column), value)).cast("integer"))
 
-        
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
         key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
-        self._compute[key] = (
+        self._compute[key] = ComputeInstruction(
             Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
             F.sum(F.col(column).isNotNull().cast("integer")),
         )
@@ -348,19 +354,27 @@ class Check:
 
         df_observation = dataframe.observe(
             observation,
-           *[v[1].cast(T.StringType()).alias(k) for k, v in self._compute.items()],
+            *[
+                compute_instruction.expression.cast(T.StringType()).alias(hash_key)
+                for hash_key, compute_instruction in self._compute.items()
+            ],
             # *[v[1].alias(k) for k, v in self._compute.items()],
         )
         rows = df_observation.count()
-        print(observation.get)
+
         unique_observe = (
             dataframe.select(
-                *[v[1].cast(T.StringType()).alias(k) for k, v in self._unique.items()]
+                *[
+                    compute_instrunction.expression.cast(T.StringType()).alias(hash_key)
+                    for hash_key, compute_instrunction in self._unique.items()
+                ]
             )
             .first()
             .asDict()  # type: ignore
         )
 
+        unified_rules = {**self._unique, **self._compute}
+        unified_results = {**unique_observe, **observation.get}
         return (
             spark.createDataFrame(
                 [
@@ -369,17 +383,17 @@ class Check:
                             i,
                             *k,
                             k2,
-                            v2[0].method,
-                            v2[0].column,
-                            str(v2[0].value),
-                            v2[0].coverage,
+                            v2.rule.method,
+                            v2.rule.column,
+                            str(v2.rule.value),
+                            v2.rule.coverage,
                         ]
                     )
                     for i, (k, k2, v2) in enumerate(
                         zip(
-                            {**unique_observe, **observation.get}.items(),
-                            {**self._unique, **self._compute}.keys(),
-                            {**self._unique, **self._compute}.values(),
+                            unified_results.fromkeys(unified_rules.keys()).items(),
+                            unified_rules.keys(),
+                            unified_rules.values(),
                         ),
                         1,
                     )
@@ -397,13 +411,10 @@ class Check:
             )
             .withColumn(
                 "pass_rate",
-                F.round(
-                    F.when(
-                        (F.col("results") == "false") | (F.col("results") == "true"),
-                        F.lit(1.0),
-                    ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
-                    8,
-                ),
+                F.when(
+                    (F.col("results") == "false") | (F.col("results") == "true"),
+                    F.lit(1.0),
+                ).otherwise(F.col("results").cast(T.DoubleType()) / rows),
             )
             .select(
                 F.col("id"),

@@ -32,5 +32,5 @@ type: # Verify static types
 	@mypy --install-types --non-interactive cuallee
 	@python -c "print('Types: 👌')"
 
-rules: # Print inventory of rules
-	@python -c "from cuallee import Check; [print(f'{i}: {f}') for i,f in enumerate(Check.inventory(), 1)];"
+unit: # Run unit test
+	@pytest test/unit

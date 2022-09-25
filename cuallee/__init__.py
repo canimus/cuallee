@@ -13,6 +13,8 @@ from toolz import compose, valfilter  # type: ignore
 
 from . import dataframe as D
 
+import logging
+logger = logging.getLogger(__name__)
 
 class CheckLevel(enum.Enum):
     WARNING = 0
@@ -263,7 +265,7 @@ class Check:
         key = self._generate_rule_key_id("is_contained_in", column, value, pct)
         self._compute[key] = ComputeInstruction(
             Rule("is_contained_in", column, value, check),
-            F.sum((F.col(column).isin(list(value))).cast("integer")),
+            F.sum((F.col(column).isin(list(value))).cast(T.LongType())),
         )
         return self
 
@@ -337,16 +339,14 @@ class Check:
         key = self._generate_rule_key_id(
             "has_correlation", (column_left, column_right), value, pct
         )
-        self._compute[key] = ComputeInstruction(
+        self._unique[key] = ComputeInstruction(
             Rule(
                 "has_correlation",
                 (column_left, column_right),
                 value,
                 CheckDataType.NUMERIC,
             ),
-            F.corr(F.col(f"`{column_left}`"), F.col(f"`{column_right}`")).eqNullSafe(
-                value
-            ),
+            F.corr(F.col(f"`{column_left}`").cast(T.DoubleType()), F.col(f"`{column_right}`").cast(T.DoubleType())).eqNullSafe(F.lit(value)),
         )
         return self
 
@@ -408,6 +408,8 @@ class Check:
 
         if self._compute:
             observation = Observation(self.name)
+            for k,v in self._compute.items():
+                logger.info(str(v.expression))
 
             df_observation = dataframe.observe(
                 observation,
@@ -418,6 +420,7 @@ class Check:
             )
             rows = df_observation.count()
             observation_result = observation.get
+            logger.info(observation_result)
         else:
             observation_result = {}
             rows = dataframe.count()
@@ -436,9 +439,10 @@ class Check:
         )
 
         unified_results = {**unique_observe, **observation_result}
-        _discriminate_result_type = lambda observed_column: (
-            F.when(observed_column.eqNullSafe("false"), F.lit(0.0))
-            .when(observed_column.eqNullSafe("true"), F.lit(1.0))
+
+        _calculate_pass_rate = lambda observed_column: (
+            F.when(observed_column == "false", F.lit(0.0))
+            .when(observed_column == "true", F.lit(1.0))
             .otherwise(observed_column.cast(T.DoubleType()) / self.rows)  # type: ignore
         )
         _evaluate_status = lambda pass_rate, pass_threshold: (
@@ -460,7 +464,7 @@ class Check:
                         unified_rules.items(), 1
                     )
                 ],
-                schema="id int, rule string, column string, value string, positive_predicate string, pass_threshold string",
+                schema="id int, rule string, column string, value string, result string, pass_threshold string",
             )
             .select(
                 F.col("id"),
@@ -472,10 +476,10 @@ class Check:
                 F.col("rule"),
                 F.col("value"),
                 F.lit(rows).alias("rows"),
-                _discriminate_result_type(F.col("positive_predicate")).alias(
+                _calculate_pass_rate(F.col("result")).alias(
                     "pass_rate"
                 ),
-                F.col("pass_threshold"),
+                F.col("pass_threshold").cast(T.DoubleType()),
             )
             .withColumn(
                 "status",

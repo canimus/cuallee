@@ -14,7 +14,9 @@ from toolz import compose, valfilter  # type: ignore
 from . import dataframe as D
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class CheckLevel(enum.Enum):
     WARNING = 0
@@ -346,7 +348,10 @@ class Check:
                 value,
                 CheckDataType.NUMERIC,
             ),
-            F.corr(F.col(f"`{column_left}`").cast(T.DoubleType()), F.col(f"`{column_right}`").cast(T.DoubleType())).eqNullSafe(F.lit(value)),
+            F.corr(
+                F.col(f"`{column_left}`").cast(T.DoubleType()),
+                F.col(f"`{column_right}`").cast(T.DoubleType()),
+            ).eqNullSafe(F.lit(value)),
         )
         return self
 
@@ -408,7 +413,7 @@ class Check:
 
         if self._compute:
             observation = Observation(self.name)
-            for k,v in self._compute.items():
+            for k, v in self._compute.items():
                 logger.info(str(v.expression))
 
             df_observation = dataframe.observe(
@@ -476,9 +481,7 @@ class Check:
                 F.col("rule"),
                 F.col("value"),
                 F.lit(rows).alias("rows"),
-                _calculate_pass_rate(F.col("result")).alias(
-                    "pass_rate"
-                ),
+                _calculate_pass_rate(F.col("result")).alias("pass_rate"),
                 F.col("pass_threshold").cast(T.DoubleType()),
             )
             .withColumn(

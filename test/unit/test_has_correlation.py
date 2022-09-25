@@ -20,7 +20,7 @@ def test_positive_correlation(spark: SparkSession):
     test_result_row = check.validate(spark, df).first()
     logger.info(str(test_result_row))
     logger.info("STATUS")
-    logger.info("*"*100)
+    logger.info("*" * 100)
     logger.info(str(test_result_row.status))
 
     assert test_result_row.status == "PASS"

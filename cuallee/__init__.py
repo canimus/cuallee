@@ -46,7 +46,7 @@ class Rule:
 @dataclass(frozen=True)
 class ComputeInstruction:
     rule: Rule
-    expression: Column
+    expression: Union[Column, Callable]
 
 
 class Check:
@@ -55,6 +55,7 @@ class Check:
     ):
         self._compute: Dict[str, ComputeInstruction] = {}
         self._unique: Dict[str, ComputeInstruction] = {}
+        self._union: Dict[str, ComputeInstruction] = {}
         self.level = level
         self.name = name
         self.date = execution_date
@@ -62,8 +63,12 @@ class Check:
 
     def __repr__(self):
         return (
-            f"Check(level:{self.level}, desc:{self.name}, rules:{len(self._compute)})"
+            f"Check(level:{self.level}, desc:{self.name}, rules:{self._total_rules()})"
         )
+
+    def _total_rules(self):
+        """Collect compute, unique and union type of rules"""
+        return len(self._integrate_compute().keys())
 
     def _generate_rule_key_id(
         self,
@@ -86,7 +91,7 @@ class Check:
 
     def _integrate_compute(self) -> Dict:
         """Unifies the compute dictionaries from observation and select forms"""
-        return {**self._unique, **self._compute}
+        return {**self._unique, **self._compute, **self._union}
 
     @staticmethod
     def _compute_columns(columns: Union[str, List[str]]) -> List[str]:
@@ -364,6 +369,57 @@ class Check:
         )
         return self
 
+    def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
+        """Validation for entropy calculation on continuous values"""
+        key = self._generate_rule_key_id("has_entropy", column, value, tolerance)
+
+        def _execute(dataframe: DataFrame):
+            return (
+                dataframe.groupby(column)
+                .count()
+                .select(F.collect_list("count").alias("freq"))
+                .select(
+                    F.col("freq"),
+                    F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),
+                )
+                .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
+                .withColumn("n_labels", F.size("probs"))
+                .withColumn("log_labels", F.log("n_labels"))
+                .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
+                .withColumn(
+                    "log_classes",
+                    F.transform("probs", lambda x: F.log((x / x) * F.col("n_labels"))),
+                )
+                .withColumn("entropy_vals", F.arrays_zip("probs", "log_prob"))
+                .withColumn(
+                    "product_prob",
+                    F.transform(
+                        "entropy_vals",
+                        lambda x: x.getItem("probs") * x.getItem("log_prob"),
+                    ),
+                )
+                .select(
+                    (
+                        F.aggregate(
+                            "product_prob", F.lit(0.0), lambda acc, x: acc + x
+                        ).alias("p")
+                        / F.col("log_labels")
+                        * -1
+                    ).alias("entropy")
+                )
+                .select(
+                    F.expr(
+                        f"entropy BETWEEN {value-tolerance} AND {value+tolerance}"
+                    ).alias(key)
+                )
+            )
+
+        self._union[key] = ComputeInstruction(
+            Rule("has_entropy", column, value, CheckDataType.AGNOSTIC), _execute
+        )
+
+        return self
+
     def validate(self, spark: SparkSession, dataframe: DataFrame):
         """Compute all rules in this check for specific data frame"""
 
@@ -419,7 +475,7 @@ class Check:
             df_observation = dataframe.observe(
                 observation,
                 *[
-                    compute_instruction.expression.alias(hash_key)
+                    compute_instruction.expression.alias(hash_key)  # type: ignore
                     for hash_key, compute_instruction in self._compute.items()
                 ],
             )
@@ -435,7 +491,7 @@ class Check:
         unique_observe = (
             dataframe.select(
                 *[
-                    compute_instrunction.expression.alias(hash_key)
+                    compute_instrunction.expression.alias(hash_key)  # type: ignore
                     for hash_key, compute_instrunction in self._unique.items()
                 ]
             )
@@ -443,7 +499,12 @@ class Check:
             .asDict()  # type: ignore
         )
 
-        unified_results = {**unique_observe, **observation_result}
+        union_observe = {
+            k: operator.attrgetter(k)(compute_instruction.expression(dataframe).first())  # type: ignore
+            for k, compute_instruction in self._union.items()
+        }
+
+        unified_results = {**unique_observe, **observation_result, **union_observe}
 
         _calculate_pass_rate = lambda observed_column: (
             F.when(observed_column == "false", F.lit(0.0))

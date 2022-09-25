@@ -98,20 +98,6 @@ class Check:
 
         return _normalize_columns(columns, [])
 
-    def _discriminate_result_type(self, column: Column) -> Column:
-        """Function to convert categorical rule results into a continuous feature"""
-        return (
-            F.when(column.eqNullSafe("false"), F.lit(0.0))
-            .when(column.eqNullSafe("true"), F.lit(1.0))
-            .otherwise(column.cast(T.DoubleType()) / self.rows)  # type: ignore
-        )
-
-    def _evaluate_status(self, pass_rate: Column, pass_threshold: Column) -> Column:
-        """Assign the PASS/FAIL status to the threshold of the rules"""
-        return F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(
-            F.lit("FAIL")
-        )
-
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
         key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
@@ -450,6 +436,14 @@ class Check:
         )
 
         unified_results = {**unique_observe, **observation_result}
+        _discriminate_result_type = lambda observed_column: (
+            F.when(observed_column.eqNullSafe("false"), F.lit(0.0))
+            .when(observed_column.eqNullSafe("true"), F.lit(1.0))
+            .otherwise(observed_column.cast(T.DoubleType()) / self.rows)  # type: ignore
+        )
+        _evaluate_status = lambda pass_rate, pass_threshold: (
+            F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
+        )
 
         return (
             spark.createDataFrame(
@@ -478,13 +472,13 @@ class Check:
                 F.col("rule"),
                 F.col("value"),
                 F.lit(rows).alias("rows"),
-                self._discriminate_result_type(F.col("positive_predicate")).alias(
+                _discriminate_result_type(F.col("positive_predicate")).alias(
                     "pass_rate"
                 ),
                 F.col("pass_threshold"),
             )
             .withColumn(
                 "status",
-                self._evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
+                _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
             )
         )

@@ -1,13 +1,13 @@
 pyspark==3.3.0
 toolz==0.12.0
 # delta-spark==2.1.0
-# pandas==1.4.4
+pandas==1.5.0
 # numpy==1.23.3
-# pyarrow==9.0.0
+pyarrow==9.0.0
 # quart==0.15.1
 # hypercorn==0.11.2
 # numba==0.56.2
 # toolz==0.12.0
 
-loguru==0.6.0
-termcolor==0.2.1
+#loguru==0.6.0
+#termcolor==0.2.1

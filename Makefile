@@ -25,7 +25,7 @@ report: # Launches the coverage report
 	@coverage html
 	@python -m http.server --directory htmlcov
 
-build: # Package wheel
+pack: # Package wheel
 	@python -m build
 
 type: # Verify static types

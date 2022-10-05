@@ -1,16 +1,14 @@
 from pyspark.sql import SparkSession, DataFrame, Column, Row, Observation
 from dataclasses import dataclass
 from typing import Dict
+from toolz import valfilter  # type: ignore
 
 import operator
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-from cuallee import Check, Rule
-
-import logging
-
-logger = logging.getLogger(__name__)
+from cuallee import Check, Rule, CheckDataType
+from cuallee import dataframe as D
 
 
 @dataclass(frozen=True)
@@ -45,15 +43,41 @@ def compute_summary(
 ) -> DataFrame:
     """Compute all rules in this check for specific data frame"""
 
+    # Create expression dictionnaries
     compute = Compute(check.name)
     for k, v in check._rule.items():
         f = operator.methodcaller(v.method, k, v)
         f(compute)
 
+    # Pre-Validation of numeric data types
+
+    _col = operator.attrgetter("column")
+    _numeric = lambda x: x.data_type.name == CheckDataType.NUMERIC.name
+    _date = lambda x: x.data_type.name == CheckDataType.DATE.name
+    _timestamp = lambda x: x.data_type.name == CheckDataType.TIMESTAMP.name
+    _string = lambda x: x.data_type.name == CheckDataType.STRING.name
+    assert set(
+        Check._compute_columns(
+            map(_col, valfilter(_numeric, check._rule).values())  # type: ignore
+        )
+    ).issubset(D.numeric_fields(dataframe))
+    assert set(
+        Check._compute_columns(
+            map(_col, valfilter(_string, check._rule).values())  # type: ignore
+        )
+    ).issubset(D.string_fields(dataframe))
+    assert set(
+        Check._compute_columns(map(_col, valfilter(_date, check._rule).values()))  # type: ignore
+    ).issubset(D.date_fields(dataframe))
+    assert set(
+        Check._compute_columns(
+            map(_col, valfilter(_timestamp, check._rule).values())  # type: ignore
+        )
+    ).issubset(D.timestamp_fields(dataframe))
+
+    # Compute the expression
     if compute._compute:
         observation = Observation(compute.name)
-        for k, v in compute._compute.items():
-            logger.info(str(v.expression))
 
         df_observation = dataframe.observe(
             observation,
@@ -64,7 +88,6 @@ def compute_summary(
         )
         rows = df_observation.count()
         observation_result = observation.get
-        logger.info(observation_result)
     else:
         observation_result = {}
         rows = dataframe.count()

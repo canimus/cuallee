@@ -1,7 +1,7 @@
 import enum
 import hashlib
 import operator
-import pandas as pd
+import pandas as pd  # type: ignore
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
@@ -9,10 +9,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import DataFrame, SparkSession, Column
-from toolz import compose, valfilter  # type: ignore
-
-from . import dataframe as D
+from pyspark.sql import DataFrame, Column
 
 import logging
 
@@ -208,6 +205,7 @@ class Check:
     def has_min(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s minimum value"""
         key = self._generate_rule_key_id("has_min", column, value, pct)
+        self._rule[key] = Rule("has_min", column, value, CheckDataType.NUMERIC)
         self._compute[key] = ComputeInstruction(
             Rule("has_min", column, value, CheckDataType.NUMERIC),
             F.min(F.col(column)) == value,
@@ -383,123 +381,26 @@ class Check:
         rule_expressions = self._rule.values()
 
         # Pre-validate column names
-        #_col = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
-        _col = operator.attrgetter("column")
-        column_set = set(Check._compute_columns(list(map(_col, rule_expressions))))
+        # _col = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
+        column_set = set(
+            Check._compute_columns(
+                list(map(operator.attrgetter("column"), rule_expressions))
+            )
+        )
         unknown_columns = column_set.difference(set(dataframe.columns))
         assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
-        # Pre-Validation of numeric data types
-
-        _numeric = lambda x: x.data_type == CheckDataType.NUMERIC
-        _date = lambda x: x.data_type == CheckDataType.DATE
-        _timestamp = lambda x: x.data_type == CheckDataType.TIMESTAMP
-        _string = lambda x: x.data_type == CheckDataType.STRING
-        assert set(
-            Check._compute_columns(
-                map(_col, valfilter(_numeric, self._rule).values())  # type: ignore
-            )
-        ).issubset(D.numeric_fields(dataframe))
-        assert set(
-            Check._compute_columns(
-                map(_col, valfilter(_string, self._rule).values())  # type: ignore
-            )
-        ).issubset(D.string_fields(dataframe))
-        assert set(
-            Check._compute_columns(map(_col, valfilter(_date, self._rule).values()))  # type: ignore
-        ).issubset(D.date_fields(dataframe))
-        assert set(
-            Check._compute_columns(
-                map(_col, valfilter(_timestamp, self._rule).values())  # type: ignore
-            )
-        ).issubset(D.timestamp_fields(dataframe))
-
         # Check dataframe is spark dataframe
         if isinstance(dataframe, DataFrame):
-            from .spark.validation import compute_summary
+            from .spark.spark_validation import compute_summary
             from pyspark.sql import SparkSession
+
             spark = arg[0]
-            assert isinstance(spark, SparkSession), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
+            assert isinstance(
+                spark, SparkSession
+            ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
             return compute_summary(spark, dataframe, self)
         elif isinstance(dataframe, pd.DataFrame):
-            from .pandas.validation import compute_summary
-            return compute_summary(dataframe, self)
+            from .pandas.pandas_validation import pd_compute_summary
 
-        # if self._compute:
-        #     observation = Observation(self.name)
-        #     for k, v in self._compute.items():
-        #         logger.info(str(v.expression))
-
-        #     df_observation = dataframe.observe(
-        #         observation,
-        #         *[
-        #             compute_instruction.expression.alias(hash_key)
-        #             for hash_key, compute_instruction in self._compute.items()
-        #         ],
-        #     )
-        #     rows = df_observation.count()
-        #     observation_result = observation.get
-        #     logger.info(observation_result)
-        # else:
-        #     observation_result = {}
-        #     rows = dataframe.count()
-
-        # self.rows = rows
-
-        # unique_observe = (
-        #     dataframe.select(
-        #         *[
-        #             compute_instrunction.expression.alias(hash_key)
-        #             for hash_key, compute_instrunction in self._unique.items()
-        #         ]
-        #     )
-        #     .first()
-        #     .asDict()  # type: ignore
-        # )
-
-        # unified_results = {**unique_observe, **observation_result}
-
-        # _calculate_pass_rate = lambda observed_column: (
-        #     F.when(observed_column == "false", F.lit(0.0))
-        #     .when(observed_column == "true", F.lit(1.0))
-        #     .otherwise(observed_column.cast(T.DoubleType()) / self.rows)  # type: ignore
-        # )
-        # _evaluate_status = lambda pass_rate, pass_threshold: (
-        #     F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
-        # )
-
-        # return (
-        #     spark.createDataFrame(
-        #         [
-        #             Row(  # type: ignore
-        #                 index,
-        #                 compute_instruction.rule.method,
-        #                 str(compute_instruction.rule.column),
-        #                 str(compute_instruction.rule.value),
-        #                 unified_results[hash_key],
-        #                 compute_instruction.rule.coverage,
-        #             )
-        #             for index, (hash_key, compute_instruction) in enumerate(
-        #                 unified_rules.items(), 1
-        #             )
-        #         ],
-        #         schema="id int, rule string, column string, value string, result string, pass_threshold string",
-        #     )
-        #     .select(
-        #         F.col("id"),
-        #         F.lit(self.date.strftime("%Y-%m-%d")).alias("date"),
-        #         F.lit(self.date.strftime("%H:%M:%S")).alias("time"),
-        #         F.lit(self.name).alias("check"),
-        #         F.lit(self.level.name).alias("level"),
-        #         F.col("column"),
-        #         F.col("rule"),
-        #         F.col("value"),
-        #         F.lit(rows).alias("rows"),
-        #         _calculate_pass_rate(F.col("result")).alias("pass_rate"),
-        #         F.col("pass_threshold").cast(T.DoubleType()),
-        #     )
-        #     .withColumn(
-        #         "status",
-        #         _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
-        #     )
-        # )
+            return pd_compute_summary(dataframe, self)

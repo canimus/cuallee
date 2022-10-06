@@ -14,24 +14,23 @@ from cuallee import dataframe as D
 
 @dataclass(frozen=True)
 class ComputeInstruction:
-    rule: Rule
     predicate: Column
     expression: Column
 
 
 class Compute:
     def __init__(self, name: str):
-        self._unique: Dict[str, ComputeInstruction] = {}
         self._observe: Dict[str, ComputeInstruction] = {}
-        self._something: Dict[str, ComputeInstruction] = {}
+        self._unique: Dict[str, ComputeInstruction] = {}
+        self._union: Dict[str, ComputeInstruction] = {}
         self.name = name
 
     def __repr__(self):
-        return f"Compute(desc:{self.name}, rules:{len({**self._unique, **self._observe, **self._something})})"
+        return f"Compute(desc:{self.name}, rules:{len({**self._observe, **self._unique, **self._union})})"
 
     def _integrate_compute(self) -> Dict:
         """Unifies the compute dictionaries from observation and select forms"""
-        return {**self._unique, **self._observe, **self._something}
+        return {**self._observe, **self._unique, **self._union}
 
     def _single_value_rule(
         self,
@@ -41,31 +40,10 @@ class Compute:
     ):
         return F.sum((operator(F.col(column), value)).cast("integer"))
 
-    def is_unique(self, key: str, rule: Rule):  # To Do with Predicate
-        """Validation for unique values in column"""
-        predicate = F.count_distinct(F.col(rule.column))
-        self._unique[key] = ComputeInstruction(
-            rule,
-            predicate,
-            F.count_distinct(F.col(rule.column)),
-        )
-        return self
-
-    def are_unique(self, key: str, rule: Rule):  # To Do with Predicate
-        """Validation for unique values in a group of columns"""
-        predicate = F.count_distinct(*[F.col(c) for c in rule.column])
-        self._unique[key] = ComputeInstruction(
-            rule,
-            predicate,
-            F.count_distinct(*[F.col(c) for c in rule.column]),
-        )
-        return self
-
     def is_complete(self, key: str, rule: Rule):
         """Validation for non-null values in column"""
         predicate = F.col(f"`{rule.column}`").isNotNull()
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.sum(predicate.cast("integer")),
         )
@@ -75,7 +53,6 @@ class Compute:
         """Validation for non-null values in a group of columns"""
         predicate = [F.col(f"`{c}`").isNotNull() for c in rule.column]
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             reduce(
                 operator.add,
@@ -88,11 +65,28 @@ class Compute:
         )
         return self
 
+    def is_unique(self, key: str, rule: Rule):  # To Do with Predicate
+        """Validation for unique values in column"""
+        predicate = F.count_distinct(F.col(rule.column))
+        self._unique[key] = ComputeInstruction(
+            predicate,
+            F.count_distinct(F.col(rule.column)),
+        )
+        return self
+
+    def are_unique(self, key: str, rule: Rule):  # To Do with Predicate
+        """Validation for unique values in a group of columns"""
+        predicate = F.count_distinct(*[F.col(c) for c in rule.column])
+        self._unique[key] = ComputeInstruction(
+            predicate,
+            F.count_distinct(*[F.col(c) for c in rule.column]),
+        )
+        return self
+
     def is_greater_than(self, key: str, rule: Rule):  # To Do with Predicate
         """Validation for numeric greater than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.gt)
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.gt),
         )
@@ -102,7 +96,6 @@ class Compute:
         """Validation for numeric greater or equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.ge)
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.ge),
         )
@@ -112,7 +105,6 @@ class Compute:
         """Validation for numeric less than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.lt)
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.lt),
         )
@@ -122,7 +114,6 @@ class Compute:
         """Validation for numeric less or equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.le)
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.le),
         )
@@ -132,7 +123,6 @@ class Compute:
         """Validation for numeric column equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.eq)
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.eq),
         )
@@ -142,7 +132,6 @@ class Compute:
         """Validation for string type column matching regex expression"""
         predicate = F.length(F.regexp_extract(rule.column, rule.value, 0)) > 0
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.sum((predicate).cast("integer")),
         )
@@ -152,7 +141,6 @@ class Compute:
         """Validation of a column’s minimum value"""
         predicate = F.min(F.col(rule.column)).eqNullSafe(rule.value)
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.min(F.col(rule.column)) == rule.value,
         )
@@ -162,7 +150,6 @@ class Compute:
         """Validation of a column’s maximum value"""
         predicate = F.max(F.col(rule.column)) == rule.value
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.max(F.col(rule.column)) == rule.value,
         )
@@ -172,7 +159,6 @@ class Compute:
         """Validation of a column’s standard deviation"""
         predicate = F.stddev_pop(F.col(rule.column)) == rule.value
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.stddev_pop(F.col(rule.column)) == rule.value,
         )
@@ -182,7 +168,6 @@ class Compute:
         """Validation of a column's average/mean"""
         predicate = F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value)
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value),
         )
@@ -192,7 +177,6 @@ class Compute:
         """Validation of a column between a range"""
         predicate = F.col(rule.column).between(*rule.value).cast("integer")
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.sum(predicate),  # type: ignore
         )
@@ -202,7 +186,6 @@ class Compute:
         """Validation of column value in set of given values"""
         predicate = F.col(rule.column).isin(list(rule.value))
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.sum(predicate.cast(T.LongType())),
         )
@@ -214,7 +197,6 @@ class Compute:
             F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.value[1], rule.value[2]
         ).eqNullSafe(rule.value[0])
         self._unique[key] = ComputeInstruction(
-            rule,
             predicate,
             F.percentile_approx(
                 F.col(f"`{rule.column}`").cast(T.DoubleType()),
@@ -228,7 +210,6 @@ class Compute:
         """Validation of a column maximum based on other column maximum"""
         predicate = F.max_by(rule.column[1], rule.column[0]) == rule.value
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.max_by(rule.column[1], rule.column[0]) == rule.value,
         )
@@ -238,7 +219,6 @@ class Compute:
         """Validation of a column minimum based on other column minimum"""
         predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.min_by(rule.column[1], rule.column[0]) == rule.value,
         )
@@ -251,7 +231,6 @@ class Compute:
             F.col(f"`{rule.column[1]}`").cast(T.DoubleType()),
         ).eqNullSafe(F.lit(rule.value))
         self._unique[key] = ComputeInstruction(
-            rule,
             predicate,
             F.corr(
                 F.col(f"`{rule.column[0]}`").cast(T.DoubleType()),
@@ -264,7 +243,6 @@ class Compute:
         """Validation of a column satisfying a SQL-like predicate"""
         predicate = F.expr(rule.value).cast("integer")
         self._observe[key] = ComputeInstruction(
-            rule,
             predicate,
             F.sum(F.expr(rule.value).cast("integer")),
         )
@@ -324,9 +302,7 @@ def compute_summary(
         observation_result = {}
         rows = dataframe.count()
 
-    compute.rows = rows
-
-    unique_observe = (
+    unique_result = (
         dataframe.select(
             *[
                 compute_instrunction.expression.alias(hash_key)
@@ -337,13 +313,24 @@ def compute_summary(
         .asDict()  # type: ignore
     )
 
-    unified_rules = {**compute._unique, **compute._observe}
-    unified_results = {**unique_observe, **observation_result}
+    union_result = (
+        dataframe.select(
+            *[
+                compute_instrunction.expression.alias(hash_key)
+                for hash_key, compute_instrunction in compute._union.items()
+            ]
+        )
+        .first()
+        .asDict()  # type: ignore
+    )
+
+    # unified_rules = compute._integrate_compute()
+    unified_results = {**observation_result, **unique_result, **union_result}
 
     _calculate_pass_rate = lambda observed_column: (
         F.when(observed_column == "false", F.lit(0.0))
         .when(observed_column == "true", F.lit(1.0))
-        .otherwise(observed_column.cast(T.DoubleType()) / check.rows)  # type: ignore
+        .otherwise(observed_column.cast(T.DoubleType()) / rows)  # type: ignore
     )
     _evaluate_status = lambda pass_rate, pass_threshold: (
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
@@ -354,15 +341,13 @@ def compute_summary(
             [
                 Row(  # type: ignore
                     index,
-                    compute_instruction.rule.method,
-                    str(compute_instruction.rule.column),
-                    str(compute_instruction.rule.value),
+                    rule.method,
+                    str(rule.column),
+                    str(rule.value),
                     unified_results[hash_key],
-                    compute_instruction.rule.coverage,
+                    rule.coverage,
                 )
-                for index, (hash_key, compute_instruction) in enumerate(
-                    unified_rules.items(), 1
-                )
+                for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
             ],
             schema="id int, rule string, column string, value string, result string, pass_threshold string",
         )
@@ -384,3 +369,7 @@ def compute_summary(
             _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
         )
     )
+
+
+def malformed_records() -> DataFrame:
+    return "I am a malformed record"

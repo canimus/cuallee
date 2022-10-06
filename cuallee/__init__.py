@@ -314,7 +314,7 @@ class Check:
 
             spark = arg[0]
             assert isinstance(
-                spark, SparkSession
+                arg[0], SparkSession
             ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
             return compute_summary(spark, dataframe, self)
         elif isinstance(dataframe, pd.DataFrame):

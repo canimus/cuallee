@@ -28,10 +28,6 @@ class Compute:
     def __repr__(self):
         return f"Compute(desc:{self.name}, compute_instructions:{len({**self._observe, **self._unique, **self._union})})"
 
-    def _integrate_compute(self) -> Dict:
-        """Unifies the compute dictionaries from observation and select forms"""
-        return {**self._observe, **self._unique, **self._union}
-
     def _single_value_rule(
         self,
         column: str,
@@ -323,7 +319,7 @@ def compute_summary(
         .first()
         .asDict()  # type: ignore
     )
-    
+
     unified_results = {**observation_result, **unique_result, **union_result}
 
     _calculate_pass_rate = lambda observed_column: (

@@ -1,58 +1,87 @@
 import pytest
 import pandas as pd
-import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from cuallee import Check, CheckLevel
-from cuallee import dataframe as D
-import logging
-
-logger = logging.getLogger("test_validate")
 
 
-def test_empty_dictionary(spark):
+# __ SPARK DATAFRAME TESTS __
+
+
+def test_return_spark_dataframe(spark):
+    df = spark.range(10).alias("id")
+    rs = (
+        Check(CheckLevel.WARNING, "test_spark_dataframe")
+        .is_complete("id")
+        .validate(df, spark)
+    )
+    assert isinstance(rs, DataFrame)
+
+
+def test_empty_dictionary_spark(spark):
     df = spark.range(10).alias("id")
     with pytest.raises(
         Exception,
         match="Check is empty. Add validations i.e. is_complete, is_unique, etc.",
     ):
-        Check(CheckLevel.WARNING, "test_empty_observation").validate(spark, df)
+        Check(CheckLevel.WARNING, "test_empty_observation_spark").validate(df, spark)
 
 
-def test_pandas_dataframe(spark):
-    df = pd.DataFrame({"id": [1, 2], "desc": ["1", "2"]})
-    with pytest.raises(AssertionError) as e:
-        Check(CheckLevel.WARNING, "test_empty_observation").is_complete("id").validate(
-            spark, df
-        )
-        assert "Cualle operates only with Spark Dataframes" == str(e)
-
-
-def test_column_name_validation(spark):
+def test_column_name_validation_spark(spark):
     df = spark.range(10).alias("id")
+    with pytest.raises(Exception, match="not in dataframe"):
+        Check(CheckLevel.WARNING, "test_column_name_spark").is_complete("ide").validate(
+            df, spark
+        )
+
+
+def test_order_validate_args(spark):
+    df = spark.range(10).alias("id")
+    with pytest.raises(
+        AttributeError, match="'SparkSession' object has no attribute 'columns'"
+    ):
+        Check(CheckLevel.WARNING, "test_order_validate_args").is_complete(
+            "id"
+        ).validate(spark, df)
+
+
+def test_spark_session_in_arg(spark):
+    df = spark.range(10).alias("id")
+    with pytest.raises(
+        Exception,
+        match="The function requires to pass a spark session as arg",
+    ):
+        Check(CheckLevel.WARNING, "test_spark_session_in_arg").is_complete(
+            "id"
+        ).validate(df, "spark")
+
+
+# __ PANDAS DATAFRAME TESTS __
+
+
+def test_return_pandas_dataframe():
+    df = pd.DataFrame({"id": [1, 2], "desc": ["1", "2"]})
+    rs = (
+        Check(CheckLevel.WARNING, "test_column_name_pandas")
+        .is_complete("id")
+        .validate(df)
+    )
+    # assert isinstance(rs, pd.DataFrame)
+    pass  # To complete when pandas_validation.py done
+
+
+def test_empty_dictionary_pandas():
+    df = pd.DataFrame({"id": [1, 2], "desc": ["1", "2"]})
+    with pytest.raises(
+        Exception,
+        match="Check is empty. Add validations i.e. is_complete, is_unique, etc.",
+    ):
+        Check(CheckLevel.WARNING, "test_empty_observation_pandas").validate(df)
+
+
+def test_column_name_validation_pandas():
+    df = pd.DataFrame({"id": [1, 2], "desc": ["1", "2"]})
     with pytest.raises(Exception) as e:
         Check(CheckLevel.WARNING, "test_empty_observation").is_complete("ide").validate(
-            spark, df
+            df
         )
         assert "Column(s): ide not in dataframe" == str(e)
-
-
-def test_date_column_validation(spark):
-    pass
-
-
-def test_timestamp_column_validation(spark):
-    pass
-
-
-def test_observe_no_compute(spark):
-    df = (
-        spark.range(10)
-        .alias("id")
-        .withColumn("desc", F.lit(F.col("id").cast("string")))
-    )
-    rs = (
-        Check(CheckLevel.WARNING, "test_empty_observation")
-        .is_unique("id")
-        .validate(spark, df)
-    )
-    assert isinstance(rs, DataFrame)

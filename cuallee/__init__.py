@@ -38,12 +38,6 @@ class Rule:
         return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}"
 
 
-@dataclass(frozen=True)
-class ComputeInstruction:
-    rule: Rule
-    expression: Column
-
-
 class Check:
     def __init__(
         self, level: CheckLevel, name: str, execution_date: datetime = datetime.today()
@@ -56,7 +50,7 @@ class Check:
 
     def __repr__(self):
         return (
-            f"Check(level:{self.level}, desc:{self.name}, rules:{len(self._compute)})"
+            f"Check(level:{self.level}, desc:{self.name}, rules:{len(self._rule)})"
         )
 
     def _generate_rule_key_id(

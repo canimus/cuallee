@@ -14,5 +14,5 @@ COPY sparker.py .
 
 RUN mkdir -p /usr/src/data
 VOLUME /usr/src/data
-ENV SPARK_VERSION="3.2.2"
+ENV SPARK_VERSION="3.3.0"
 ENTRYPOINT ["python", "/usr/src/sparker.py"]

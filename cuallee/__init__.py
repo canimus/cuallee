@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, List, Optional, Tuple, Union, Dict
 
 from pyspark.sql import DataFrame, Column
+import pyspark.sql.functions as F
 
 
 class CheckLevel(enum.Enum):
@@ -22,16 +23,17 @@ class CheckDataType(enum.Enum):
     TIMESTAMP = 4
 
 
-@dataclass(frozen=True)
+@dataclass
 class Rule:
     method: str
     column: Union[Tuple, str]
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
+    status: str = None
 
     def __repr__(self):
-        return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}"
+        return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
 
 
 @dataclass(frozen=True)
@@ -47,6 +49,7 @@ class Check:
     ):
         self._rule: Dict[str, Rule] = {}
         self._compute: Dict[str, ComputeInstruction] = {}
+        self._validation : str = ''
         self.level = level
         self.name = name
         self.date = execution_date
@@ -284,7 +287,7 @@ class Check:
         self._rule[key] = Rule("satisfies", "N/A", predicate, CheckDataType.AGNOSTIC)
         return self
 
-    def validate(self, dataframe: DataFrame, *arg):
+    def validate(self, dataframe: DataFrame, *arg) -> DataFrame:
         """Compute all rules in this check for specific data frame"""
 
         # Check the dictionnary is not empty
@@ -305,15 +308,35 @@ class Check:
 
         # Check dataframe is spark dataframe
         if isinstance(dataframe, DataFrame):
-            from .spark.spark_validation import compute_summary
+            from .spark.spark_validation import compute_summary, _get_rule_status
             from pyspark.sql import SparkSession
 
             spark = arg[0]
             assert isinstance(
                 arg[0], SparkSession
             ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
-            return compute_summary(self, dataframe, spark)
+            summary = compute_summary(self, dataframe, spark)
+            _get_rule_status(self, summary)
+            return summary
         elif isinstance(dataframe, pd.DataFrame):
             from .pandas.pandas_validation import pd_compute_summary
-
             return pd_compute_summary(dataframe, self)
+
+
+    def sampling(self, dataframe: DataFrame, status: str = 'FAIL', method: Union[tuple[str], str] = None, *arg) -> DataFrame:
+
+        # Validate all rule
+
+        # Validate DataFrame
+
+        # Check dataframe is spark dataframe
+        if isinstance(dataframe, DataFrame):
+            from .spark.spark_validation import get_record_sample
+            from pyspark.sql import SparkSession
+            spark = arg[0]
+            assert isinstance(
+                arg[0], SparkSession
+            ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
+            return get_record_sample(self, dataframe, spark, status, method)
+        else:
+            "I cannot do anything for you! :-("

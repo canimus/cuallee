@@ -48,7 +48,7 @@ if __name__ == "__main__":
     print("START:",start)
     print("END:",end)
     print("ELAPSED:", end-start)
-    print("RULES:", len(rule._integrate_compute().keys()))
+    print("RULES:", len(rule.rules))
     print("FRAMEWORK: cuallee [0.0.14]")
 # 0.10513386
 

@@ -5,12 +5,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
 from typing import Any, Callable, List, Optional, Tuple, Union, Dict
+from numpy import isin
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column, Row
 from toolz import compose, valfilter  # type: ignore
-
+from itertools import chain
 from . import dataframe as D
 
 import logging
@@ -47,6 +48,7 @@ class Rule:
 class ComputeInstruction:
     rule: Rule
     expression: Union[Column, Callable]
+    predicate: Union[Column, Callable] = None
 
 
 class Check:
@@ -62,13 +64,27 @@ class Check:
         self.rows = -1
 
     def __repr__(self):
-        return (
-            f"Check(level:{self.level}, desc:{self.name}, rules:{self._total_rules()})"
-        )
+        return f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
 
-    def _total_rules(self):
+    @property
+    def sum(self):
         """Collect compute, unique and union type of rules"""
         return len(self._integrate_compute().keys())
+
+    @property
+    def rules(self):
+        """Returns all rules defined for check"""
+        return list(map(lambda x: x.rule, self._integrate_compute().values()))
+
+    @property
+    def expressions(self):
+        """Returns all summary expressions for validation"""
+        return list(map(lambda x: x.expression, self._integrate_compute().values()))
+
+    @property
+    def predicates(self):
+        """Returns all filtering predicates for negative samples"""
+        return list(filter(lambda x: x is not None,map(lambda x: x.predicate, self._integrate_compute().values())))
 
     def _generate_rule_key_id(
         self,
@@ -91,7 +107,7 @@ class Check:
 
     def _integrate_compute(self) -> Dict:
         """Unifies the compute dictionaries from observation and select forms"""
-        return {**self._unique, **self._compute, **self._union}
+        return {**self._compute, **self._unique, **self._union}
 
     @staticmethod
     def _compute_columns(columns: Union[str, List[str]]) -> List[str]:
@@ -113,6 +129,7 @@ class Check:
         self._compute[key] = ComputeInstruction(
             Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
             F.sum(F.col(f"`{column}`").isNotNull().cast("integer")),
+            F.col(f"`{column}`").isNull()
         )
         return self
 
@@ -554,7 +571,7 @@ class Check:
 
         return self
 
-    def validate(self, spark: SparkSession, dataframe: DataFrame):
+    def validate(self, spark: SparkSession, dataframe: DataFrame, metadata: dict = {}):
         """Compute all rules in this check for specific data frame"""
 
         # Merge `unique` and `compute` dict
@@ -648,7 +665,7 @@ class Check:
         _evaluate_status = lambda pass_rate, pass_threshold: (
             F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
         )
-
+        _metadata = F.create_map(*chain.from_iterable([(F.lit(k),F.lit(v)) for k,v in metadata.items()]))
         return (
             spark.createDataFrame(
                 [
@@ -667,9 +684,8 @@ class Check:
                 schema="id int, rule string, column string, value string, result string, pass_threshold string",
             )
             .select(
-                F.col("id"),
-                F.lit(self.date.strftime("%Y-%m-%d")).alias("date"),
-                F.lit(self.date.strftime("%H:%M:%S")).alias("time"),
+                F.col("id"),                
+                F.lit(self.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
                 F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
                 F.col("column"),
@@ -679,9 +695,18 @@ class Check:
                 (rows - F.col("result").cast("long")).alias("violations"),
                 _calculate_pass_rate(F.col("result")).alias("pass_rate"),
                 F.col("pass_threshold").cast(T.DoubleType()),
+                F.lit(_metadata).alias("metadata"),
             )
             .withColumn(
                 "status",
                 _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
             )
         )
+
+    def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
+        if not rule_index:
+            return reduce(DataFrame.unionAll, [dataframe.filter(predicate) for predicate in self.predicates]).drop_duplicates()
+        elif isinstance(rule_index, int):
+            return reduce(DataFrame.unionAll, [dataframe.filter(predicate) for index,predicate in enumerate(self.predicates, 1) if rule_index == index])
+        elif isinstance(rule_index, list):
+            return reduce(DataFrame.unionAll, [dataframe.filter(predicate) for index,predicate in enumerate(self.predicates, 1) if index in rule_index]).drop_duplicates()

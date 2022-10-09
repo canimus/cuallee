@@ -20,11 +20,11 @@ def test_are_complete_col_list(spark: SparkSession):
     assert rs.select("status").collect()[0][0] == "FAIL"
 
 
-def test_matches_regex(spark: SparkSession):
+def test_has_pattern(spark: SparkSession):
     df = spark.createDataFrame(
         [[1, "is_blue"], [2, "has_hat"], [3, "is_smart"]], ["ID", "desc"]
     )
-    c = Check(CheckLevel.WARNING, "matches_regex_test")
-    c.matches_regex("desc", "is")
+    c = Check(CheckLevel.WARNING, "has_pattern_test")
+    c.has_pattern("desc", "is")
     rs = c.validate(spark, df)
     assert rs.select("status").collect()[0][0] == "FAIL"

@@ -196,11 +196,11 @@ class Check:
         )
         return self
 
-    def matches_regex(self, column: str, value: str, pct: float = 1.0):
+    def has_pattern(self, column: str, value: str, pct: float = 1.0):
         """Validation for string type column matching regex expression"""
-        key = self._generate_rule_key_id("matches_regex", column, value, pct)
+        key = self._generate_rule_key_id("has_pattern", column, value, pct)
         self._compute[key] = ComputeInstruction(
-            Rule("matches_regex", column, value, CheckDataType.STRING, pct),
+            Rule("has_pattern", column, value, CheckDataType.STRING, pct),
             F.sum((F.length(F.regexp_extract(column, value, 0)) > 0).cast("integer")),
         )
         return self

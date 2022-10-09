@@ -52,11 +52,17 @@ class ComputeInstruction:
 
 class Check:
     def __init__(
-        self, level: CheckLevel, name: str, execution_date: datetime = datetime.today()
+        self,
+        level: Union[CheckLevel, int],
+        name: str,
+        execution_date: datetime = datetime.today(),
     ):
         self._compute: Dict[str, ComputeInstruction] = {}
         self._unique: Dict[str, ComputeInstruction] = {}
         self._union: Dict[str, ComputeInstruction] = {}
+        if isinstance(level, int):
+            level = CheckLevel(level)
+
         self.level = level
         self.name = name
         self.date = execution_date

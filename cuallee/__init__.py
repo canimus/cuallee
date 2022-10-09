@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
 from typing import Any, Callable, List, Optional, Tuple, Union, Dict
-from numpy import isin
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -48,7 +47,7 @@ class Rule:
 class ComputeInstruction:
     rule: Rule
     expression: Union[Column, Callable]
-    predicate: Union[Column, Callable] = None
+    predicate: Union[Column, Callable, None] = None
 
 
 class Check:
@@ -84,7 +83,12 @@ class Check:
     @property
     def predicates(self):
         """Returns all filtering predicates for negative samples"""
-        return list(filter(lambda x: x is not None,map(lambda x: x.predicate, self._integrate_compute().values())))
+        return list(
+            filter(
+                lambda x: x is not None,
+                map(lambda x: x.predicate, self._integrate_compute().values()),
+            )
+        )
 
     def _generate_rule_key_id(
         self,
@@ -129,7 +133,7 @@ class Check:
         self._compute[key] = ComputeInstruction(
             Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
             F.sum(F.col(f"`{column}`").isNotNull().cast("integer")),
-            F.col(f"`{column}`").isNull()
+            F.col(f"`{column}`").isNull(),
         )
         return self
 
@@ -665,7 +669,9 @@ class Check:
         _evaluate_status = lambda pass_rate, pass_threshold: (
             F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
         )
-        _metadata = F.create_map(*chain.from_iterable([(F.lit(k),F.lit(v)) for k,v in metadata.items()]))
+        _metadata = F.create_map(
+            *chain.from_iterable([(F.lit(k), F.lit(v)) for k, v in metadata.items()])
+        )
         return (
             spark.createDataFrame(
                 [
@@ -684,7 +690,7 @@ class Check:
                 schema="id int, rule string, column string, value string, result string, pass_threshold string",
             )
             .select(
-                F.col("id"),                
+                F.col("id"),
                 F.lit(self.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
                 F.lit(self.name).alias("check"),
                 F.lit(self.level.name).alias("level"),
@@ -705,8 +711,25 @@ class Check:
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
         if not rule_index:
-            return reduce(DataFrame.unionAll, [dataframe.filter(predicate) for predicate in self.predicates]).drop_duplicates()
+            return reduce(
+                DataFrame.unionAll,
+                [dataframe.filter(predicate) for predicate in self.predicates],
+            ).drop_duplicates()
         elif isinstance(rule_index, int):
-            return reduce(DataFrame.unionAll, [dataframe.filter(predicate) for index,predicate in enumerate(self.predicates, 1) if rule_index == index])
+            return reduce(
+                DataFrame.unionAll,
+                [
+                    dataframe.filter(predicate)
+                    for index, predicate in enumerate(self.predicates, 1)
+                    if rule_index == index
+                ],
+            )
         elif isinstance(rule_index, list):
-            return reduce(DataFrame.unionAll, [dataframe.filter(predicate) for index,predicate in enumerate(self.predicates, 1) if index in rule_index]).drop_duplicates()
+            return reduce(
+                DataFrame.unionAll,
+                [
+                    dataframe.filter(predicate)
+                    for index, predicate in enumerate(self.predicates, 1)
+                    if index in rule_index
+                ],
+            ).drop_duplicates()

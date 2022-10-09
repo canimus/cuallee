@@ -1,4 +1,4 @@
-from pyspark.sql import SparkSession, DataFrame, Row, Observation
+from pyspark.sql import SparkSession, DataFrame, Row, Observation, Column
 from typing import Dict, Optional, Callable, Any, Union
 from toolz import valfilter  # type: ignore
 from functools import reduce
@@ -19,13 +19,8 @@ class Compute:
     def __repr__(self):
         return f"Compute(desc:{self.name})"
 
-    # def _single_value_rule(
-    #    self,
-    #    column: str,
-    #    value: Optional[Any],
-    #    operator: Callable,
-    # ):
-    #    return F.sum((operator(F.col(column), value)).cast("integer"))
+
+    # Helper functions:
 
     def _single_value_rule(
         self,
@@ -35,12 +30,18 @@ class Compute:
     ):
         return operator(F.col(column), value)
 
+    def _sum_predicate_to_integer(self, predicate: Column):
+        return F.sum(predicate.cast('integer'))
+
+
+    # Method functions
+
     def is_complete(self, rule: Rule):
         """Validation for non-null values in column"""
         predicate = F.col(f"`{rule.column}`").isNotNull()
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum(predicate.cast("integer")),
+            self._sum_predicate_to_integer(predicate),
             "observe",
         )
         return self.compute_instruction
@@ -89,7 +90,7 @@ class Compute:
         predicate = self._single_value_rule(rule.column, rule.value, operator.gt)
         self.compute_instruction = ComputeInstruction(
             predicate,
-            self._single_value_rule(rule.column, rule.value, operator.gt),
+            self._sum_predicate_to_integer(predicate),
             "observe",
         )
         return self.compute_instruction
@@ -99,7 +100,7 @@ class Compute:
         predicate = self._single_value_rule(rule.column, rule.value, operator.ge)
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum(predicate.cast("integer")),
+            self._sum_predicate_to_integer(predicate),
             "observe",
         )
         return self.compute_instruction
@@ -109,7 +110,7 @@ class Compute:
         predicate = self._single_value_rule(rule.column, rule.value, operator.lt)
         self.compute_instruction = ComputeInstruction(
             predicate,
-            self._single_value_rule(rule.column, rule.value, operator.lt),
+            self._sum_predicate_to_integer(predicate),
             "observe",
         )
         return self.compute_instruction
@@ -119,7 +120,7 @@ class Compute:
         predicate = self._single_value_rule(rule.column, rule.value, operator.le)
         self.compute_instruction = ComputeInstruction(
             predicate,
-            self._single_value_rule(rule.column, rule.value, operator.le),
+            self._sum_predicate_to_integer(predicate),
             "observe",
         )
         return self.compute_instruction
@@ -129,7 +130,7 @@ class Compute:
         predicate = self._single_value_rule(rule.column, rule.value, operator.eq)
         self.compute_instruction = ComputeInstruction(
             predicate,
-            self._single_value_rule(rule.column, rule.value, operator.eq),
+            self._sum_predicate_to_integer(predicate),
             "observe",
         )
         return self.compute_instruction
@@ -139,7 +140,7 @@ class Compute:
         predicate = F.length(F.regexp_extract(rule.column, rule.value, 0)) > 0
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum((predicate).cast("integer")),
+            self._sum_predicate_to_integer(predicate),
             "observe",
         )
         return self.compute_instruction

@@ -97,9 +97,16 @@ class Check:
         value: Any,
         coverage: float,
     ):
+        """A hash function to generate unique identifiers for rules"""
         return hashlib.blake2s(
             bytes(f"{method}{column}{value}{coverage}", "utf-8")
         ).hexdigest()
+
+    def _generate_rule_hash(self, rule: Rule):
+        """A hash funtion for unique rule identifiers"""
+        return self._generate_rule_key_id(
+            rule.method, rule.column, rule.value, rule.coverage
+        )
 
     def _single_value_rule(
         self,
@@ -129,12 +136,16 @@ class Check:
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
-        key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
+        rule = Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
+        predicate = F.col(f"`{column}`").isNull()
+        expression = F.sum(F.col(f"`{column}`").isNotNull().cast("integer"))
+        key = self._generate_rule_hash(rule)
         self._compute[key] = ComputeInstruction(
-            Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
-            F.sum(F.col(f"`{column}`").isNotNull().cast("integer")),
-            F.col(f"`{column}`").isNull(),
+            rule,
+            expression,
+            predicate,
         )
+        
         return self
 
     def are_complete(self, column: str, pct: float = 1.0):

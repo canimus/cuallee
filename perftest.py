@@ -22,7 +22,8 @@ def init():
     [rule.is_complete(name) for name in df.columns]
     [rule.is_greater_than(name, 0) for name in numeric_fields(df)]
     [rule.is_less_than(name, 1e4) for name in numeric_fields(df)]
-    # [rule.has_entropy(name, 1.0, 0.5) for name in numeric_fields(df)]
+    [rule.is_on_weekday(name, .7) for name in timestamp_fields(df)]
+    [rule.has_entropy(name, 1.0, 0.5) for name in numeric_fields(df)]
     [rule.is_between(name, (1000,2000)) for name in numeric_fields(df)]
     [rule.is_between(name, ("2000-01-01", "2022-12-31")) for name in timestamp_fields(df)]
     # for i in range(1000):
@@ -48,6 +49,6 @@ if __name__ == "__main__":
     print("END:",end)
     print("ELAPSED:", end-start)
     print("RULES:", len(rule._integrate_compute().keys()))
-    print("FRAMEWORK: cuallee [0.0.11]")
+    print("FRAMEWORK: cuallee [0.0.14]")
 # 0.10513386
 

@@ -1,3 +1,4 @@
+from numpy import isin
 import pyspark.sql.types as T
 from pyspark.sql.dataframe import DataFrame
 from typing import Collection, Union, Type
@@ -27,7 +28,9 @@ def string_fields(dataframe: DataFrame) -> Collection:
 
 def date_fields(dataframe: DataFrame) -> Collection:
     """Filter all date data types in data frame and returns field names"""
-    return _field_type_filter(dataframe, T.DateType)
+    return set(
+        [f.name for f in dataframe.schema.fields if isinstance(f.dataType, T.DateType) or isinstance(f.dataType, T.TimestampType) or isinstance(f.dataType, T.TimestampNTZType)]  # type: ignore
+    )
 
 
 def timestamp_fields(dataframe: DataFrame) -> Collection:

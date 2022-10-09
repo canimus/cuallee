@@ -87,7 +87,9 @@ class Check:
         value: Optional[Any],
         operator: Callable,
     ):
-        return F.sum((operator(F.col(column), value)).cast("integer"))
+        if isinstance(column, str):
+            column = F.col(column)
+        return F.sum((operator(column, value)).cast("integer"))
 
     def _integrate_compute(self) -> Dict:
         """Unifies the compute dictionaries from observation and select forms"""
@@ -241,7 +243,9 @@ class Check:
         )
         return self
 
-    def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
+    def is_between(
+        self, column: str, value: Tuple[Any], pct: float = 1.0
+    ):
         """Validation of a column between a range"""
 
         # Create tuple if user pass list
@@ -273,6 +277,106 @@ class Check:
         self._compute[key] = ComputeInstruction(
             Rule("is_contained_in", column, value, check),
             F.sum((F.col(column).isin(list(value))).cast(T.LongType())),
+        )
+        return self
+
+    def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
+        """Vaidation of column value in set of given values"""
+        return self.is_contained_in(column, value, pct)
+
+    def is_on_weekday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is in a Mon-Fri time range"""
+        key = self._generate_rule_key_id("is_on_weekday", column, "Mon-Fri", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct),
+            F.sum(F.dayofweek(f"`{column}`").between(2,6).cast("integer")),
+        )
+        return self
+
+    def is_on_weekend(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is in a Sat-Sun time range"""
+        key = self._generate_rule_key_id("is_on_weekend", column, "Sat-Sun", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct),
+            F.sum(F.dayofweek(f"`{column}`").isin([1,7]).cast("integer")),
+        )
+        return self
+
+    def is_on_monday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Mon"""
+        key = self._generate_rule_key_id("is_on_monday", column, "Mon", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct),
+            F.sum((F.dayofweek(f"`{column}`") == 2).cast("integer")),
+        )
+        return self
+
+    def is_on_tuesday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Tue"""
+        key = self._generate_rule_key_id("is_on_tuesday", column, "Tue", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct),
+            F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
+        )
+        return self
+
+    def is_on_wednesday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Wed"""
+        key = self._generate_rule_key_id("is_on_wednesday", column, "Wed", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct),
+            F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
+        )
+        return self
+
+    def is_on_thursday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Thu"""
+        key = self._generate_rule_key_id("is_on_thursday", column, "Thu", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct),
+            F.sum((F.dayofweek(f"`{column}`") == 4).cast("integer")),
+        )
+        return self
+
+    def is_on_friday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Fri"""
+        key = self._generate_rule_key_id("is_on_friday", column, "Fri", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct),
+            F.sum((F.dayofweek(f"`{column}`") == 5).cast("integer")),
+        )
+        return self
+
+    def is_on_saturday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Sat"""
+        key = self._generate_rule_key_id("is_on_saturday", column, "Sat", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct),
+            F.sum((F.dayofweek(f"`{column}`") == 7).cast("integer")),
+        )
+        return self
+
+    def is_on_sunday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Sun"""
+        key = self._generate_rule_key_id("is_on_sunday", column, "Sun", pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct),
+            F.sum((F.dayofweek(f"`{column}`") == 1).cast("integer")),
+        )
+        return self
+
+    def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0
+    ):
+        """Validation of a datetime column between an hour interval"""
+
+        # Create tuple if user pass list
+        if isinstance(value, List):
+            value = tuple(value)
+
+        key = self._generate_rule_key_id("is_on_schedule", column, value, pct)
+        self._compute[key] = ComputeInstruction(
+            Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct),
+            F.sum(F.hour(column).between(*value).cast("integer")),  # type: ignore
         )
         return self
 
@@ -416,6 +520,24 @@ class Check:
 
         self._union[key] = ComputeInstruction(
             Rule("has_entropy", column, value, CheckDataType.AGNOSTIC), _execute
+        )
+
+        return self
+
+    def has_weekday_continuity(self, column: str, pct: float = 1.0):
+        """Validates that there is no missing dates using only week days in the date/timestamp column"""
+        key = self._generate_rule_key_id("has_weekday_continuity", column, "⊂{Mon-Fri}", pct)
+
+        def _execute(dataframe: DataFrame):
+            _weekdays = lambda x: x.filter(F.dayofweek(column).isin([2,3,4,5,6]))
+            _date_only = lambda x: x.select(F.to_date(column).alias(column))
+            full_interval = dataframe.select(F.explode(F.sequence(F.min(column), F.max(column), F.expr("interval 1 day"))).alias(column)).transform(_weekdays).transform(_date_only)
+            return (
+                full_interval.join(dataframe.transform(_date_only), column, how="left_anti").select((F.expr(f"{dataframe.count()} - count(distinct({column}))")).alias(key))
+            )
+
+        self._union[key] = ComputeInstruction(
+            Rule("has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct), _execute
         )
 
         return self

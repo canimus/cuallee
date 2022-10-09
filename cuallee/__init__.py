@@ -145,7 +145,7 @@ class Check:
             expression,
             predicate,
         )
-        
+
         return self
 
     def are_complete(self, column: str, pct: float = 1.0):

@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Any, List, Optional, Tuple, Union, Dict
 
 from pyspark.sql import DataFrame, Column
-import pyspark.sql.functions as F
 
 
 class CheckLevel(enum.Enum):
@@ -49,7 +48,7 @@ class Check:
     ):
         self._rule: Dict[str, Rule] = {}
         self._compute: Dict[str, ComputeInstruction] = {}
-        self._validation : str = ''
+        self._validation: str = ""
         self.level = level
         self.name = name
         self.date = execution_date
@@ -320,10 +319,16 @@ class Check:
             return summary
         elif isinstance(dataframe, pd.DataFrame):
             from .pandas.pandas_validation import pd_compute_summary
+
             return pd_compute_summary(dataframe, self)
 
-
-    def sampling(self, dataframe: DataFrame, status: str = 'FAIL', method: Union[tuple[str], str] = None, *arg) -> DataFrame:
+    def sampling(
+        self,
+        dataframe: DataFrame,
+        *arg,
+        status: str = "FAIL",
+        method: Union[tuple[str], str] = None,
+    ) -> DataFrame:
 
         # Validate all rule
 
@@ -333,6 +338,7 @@ class Check:
         if isinstance(dataframe, DataFrame):
             from .spark.spark_validation import get_record_sample
             from pyspark.sql import SparkSession
+
             spark = arg[0]
             assert isinstance(
                 arg[0], SparkSession

@@ -1,4 +1,4 @@
-from pyspark.sql import SparkSession, DataFrame, Row, Observation, Column
+from pyspark.sql import SparkSession, DataFrame, Row, Observation
 from typing import Dict, Optional, Callable, Any, Union
 from toolz import valfilter  # type: ignore
 from functools import reduce
@@ -19,13 +19,21 @@ class Compute:
     def __repr__(self):
         return f"Compute(desc:{self.name})"
 
+    # def _single_value_rule(
+    #    self,
+    #    column: str,
+    #    value: Optional[Any],
+    #    operator: Callable,
+    # ):
+    #    return F.sum((operator(F.col(column), value)).cast("integer"))
+
     def _single_value_rule(
         self,
         column: str,
         value: Optional[Any],
         operator: Callable,
     ):
-        return F.sum((operator(F.col(column), value)).cast("integer"))
+        return operator(F.col(column), value)
 
     def is_complete(self, rule: Rule):
         """Validation for non-null values in column"""
@@ -56,7 +64,9 @@ class Compute:
 
     def is_unique(self, rule: Rule):  # To Do with Predicate
         """Validation for unique values in column"""
-        predicate = F.col(f"`{rule.column}`").isNotNull() #F.count_distinct(F.col(rule.column))
+        predicate = F.col(
+            f"`{rule.column}`"
+        ).isNotNull()  # F.count_distinct(F.col(rule.column))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.count_distinct(F.col(rule.column)),
@@ -89,7 +99,7 @@ class Compute:
         predicate = self._single_value_rule(rule.column, rule.value, operator.ge)
         self.compute_instruction = ComputeInstruction(
             predicate,
-            self._single_value_rule(rule.column, rule.value, operator.ge),
+            F.sum(predicate.cast("integer")),
             "observe",
         )
         return self.compute_instruction
@@ -421,21 +431,36 @@ def compute_summary(
 def _get_rule_status(check: Check, summary_dataframe: DataFrame):
     """Update the rule status after computing summary"""
     for index, rule in enumerate(check._rule.values(), 1):
-        rule.status = summary_dataframe.filter(F.col('id') == index).select('status').first().status
+        rule.status = (
+            summary_dataframe.filter(F.col("id") == index)
+            .select("status")
+            .first()
+            .status
+        )
     return check
 
 
-def get_record_sample(check: Check, dataframe: DataFrame, spark: SparkSession, status: str = 'FAIL', method: Union[tuple[str], str] = None) -> DataFrame:
+def get_record_sample(
+    check: Check,
+    dataframe: DataFrame,
+    spark: SparkSession,
+    status: str = "FAIL",
+    method: Union[tuple[str], str] = None,
+) -> DataFrame:
     """Give a sample of malformed rows"""
 
     # Filters
-    _sample = lambda x: (x.status == status) if method == None else (x.status == status) & (x.method in method)
+    _sample = (
+        lambda x: (x.status == status)
+        if method is None
+        else (x.status == status) & (x.method in method)
+    )
 
     sample_dataframe = spark.createDataFrame([], schema=dataframe.schema)
 
     for hash_key in valfilter(_sample, check._rule).keys():
-        sample_dataframe = sample_dataframe.unionByName(dataframe.filter(
-        ~check._compute[hash_key].predicate
-        ))
+        sample_dataframe = sample_dataframe.unionByName(
+            dataframe.filter(~check._compute[hash_key].predicate)
+        )
 
-    return sample_dataframe
+    return sample_dataframe.distinct()

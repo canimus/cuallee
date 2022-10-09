@@ -497,11 +497,11 @@ class Check:
         )
         return self
 
-    def satisfies(self, predicate: str, pct: float = 1.0):
+    def satisfies(self, predicate: str, column: str, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
-        key = self._generate_rule_key_id("satisfies", "N/A", predicate, pct)
+        key = self._generate_rule_key_id("satisfies", column, predicate, pct)
         self._compute[key] = ComputeInstruction(
-            Rule("satisfies", "N/A", predicate, CheckDataType.AGNOSTIC),
+            Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct),
             F.sum(F.expr(predicate).cast("integer")),
         )
         return self

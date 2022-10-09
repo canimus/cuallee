@@ -89,7 +89,7 @@ check.validate(spark, df).first().status == "FAIL"
 This is a very fresh implementation using the `Observation` API in PySpark `v3.3.0`.
 The next round validations in the roadmap include more practical use cases:
 - `between_years(y1, y2)`
-- `is_on_business_day(col)`
+- `is_on_weekday(col)`
 - `is_on_weekend(col)`
 - `is_on_schedule(col, hour_00, hour_24)`
 - `is_in_millions(col)`

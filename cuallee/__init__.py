@@ -542,6 +542,7 @@ class Check:
                 F.col("rule"),
                 F.col("value"),
                 F.lit(rows).alias("rows"),
+                (rows - F.col("result").cast("long")).alias("violations"),
                 _calculate_pass_rate(F.col("result")).alias("pass_rate"),
                 F.col("pass_threshold").cast(T.DoubleType()),
             )

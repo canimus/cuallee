@@ -1,5 +1,5 @@
-from pyspark.sql import SparkSession, DataFrame, Row, Observation
-from typing import Dict, Optional, Callable, Any
+from pyspark.sql import SparkSession, DataFrame, Row, Observation, Column
+from typing import Dict, Optional, Callable, Any, Union
 from toolz import valfilter  # type: ignore
 from functools import reduce
 
@@ -17,7 +17,7 @@ class Compute:
         self.compute_instruction = ComputeInstruction
 
     def __repr__(self):
-        return f"Compute(desc:{self.name}, compute_instructions:{len({**self._observe, **self._unique, **self._union})})"
+        return f"Compute(desc:{self.name})"
 
     def _single_value_rule(
         self,
@@ -56,7 +56,7 @@ class Compute:
 
     def is_unique(self, rule: Rule):  # To Do with Predicate
         """Validation for unique values in column"""
-        predicate = F.count_distinct(F.col(rule.column))
+        predicate = F.col(f"`{rule.column}`").isNotNull() #F.count_distinct(F.col(rule.column))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.count_distinct(F.col(rule.column)),
@@ -418,5 +418,24 @@ def compute_summary(
     )
 
 
-def malformed_records() -> DataFrame:
-    return "I am a malformed record"
+def _get_rule_status(check: Check, summary_dataframe: DataFrame):
+    """Update the rule status after computing summary"""
+    for index, rule in enumerate(check._rule.values(), 1):
+        rule.status = summary_dataframe.filter(F.col('id') == index).select('status').first().status
+    return check
+
+
+def get_record_sample(check: Check, dataframe: DataFrame, spark: SparkSession, status: str = 'FAIL', method: Union[tuple[str], str] = None) -> DataFrame:
+    """Give a sample of malformed rows"""
+
+    # Filters
+    _sample = lambda x: (x.status == status) if method == None else (x.status == status) & (x.method in method)
+
+    sample_dataframe = spark.createDataFrame([], schema=dataframe.schema)
+
+    for hash_key in valfilter(_sample, check._rule).keys():
+        sample_dataframe = sample_dataframe.unionByName(dataframe.filter(
+        ~check._compute[hash_key].predicate
+        ))
+
+    return sample_dataframe

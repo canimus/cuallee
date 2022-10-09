@@ -82,6 +82,11 @@ check.validate(spark, df).first().status == "FAIL"
 - `is_between(col, date_1, date_2)`
 - `has_min_by(col2, col1, value)`
 - `satisfies(predicate, coverage)`
+- `is_on_weekday(col)`
+- `is_on_weekend(col)`
+- `is_on_schedule(col, hour_00, hour_24)`
+- `has_entropy(col)`
+- `has_correlation(col1, col2, value)`
 
 
 ## Roadmap
@@ -89,13 +94,8 @@ check.validate(spark, df).first().status == "FAIL"
 This is a very fresh implementation using the `Observation` API in PySpark `v3.3.0`.
 The next round validations in the roadmap include more practical use cases:
 - `between_years(y1, y2)`
-- `is_on_weekday(col)`
-- `is_on_weekend(col)`
-- `is_on_schedule(col, hour_00, hour_24)`
 - `is_in_millions(col)`
 - `is_in_billions(col)`
-- `has_entropy(col)`
-- `has_correlation(col1, col2, value)`
 - `has_mutual_information(col1, col2)`
 
 

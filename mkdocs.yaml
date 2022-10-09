@@ -1,0 +1,52 @@
+site_name: cuallee
+nav:
+    - Introduction: index.md
+    - Checks: check.md
+    - Advanced: advanced.md
+    - Validate: validate.md
+theme:
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.expand
+  name: material
+
+  palette: 
+
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  icon:
+    logo: material/marker-check
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - codehilite
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - attr_list
+  - pymdownx.keys
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - def_list
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.tasklist:
+      custom_checkbox: true

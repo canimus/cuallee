@@ -1,4 +1,3 @@
-from numpy import isin
 import pyspark.sql.types as T
 from pyspark.sql.dataframe import DataFrame
 from typing import Collection, Union, Type

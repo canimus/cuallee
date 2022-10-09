@@ -34,3 +34,6 @@ type: # Verify static types
 
 unit: # Run unit test
 	@pytest test/unit
+
+twine: # Upload to python index
+	@twine upload dist/*

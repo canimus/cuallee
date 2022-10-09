@@ -1,5 +1,4 @@
-from pyspark.sql import SparkSession, DataFrame, Column, Row, Observation
-from dataclasses import dataclass
+from pyspark.sql import SparkSession, DataFrame, Row, Observation
 from typing import Dict, Optional, Callable, Any
 from toolz import valfilter  # type: ignore
 from functools import reduce
@@ -8,22 +7,14 @@ import operator
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-from cuallee import Check, Rule, CheckDataType
+from cuallee import Check, Rule, CheckDataType, ComputeInstruction
 from cuallee import dataframe as D
-
-
-@dataclass(frozen=True)
-class ComputeInstruction:
-    predicate: Column
-    expression: Column
 
 
 class Compute:
     def __init__(self, name: str):
-        self._observe: Dict[str, ComputeInstruction] = {}
-        self._unique: Dict[str, ComputeInstruction] = {}
-        self._union: Dict[str, ComputeInstruction] = {}
         self.name = name
+        self.compute_instruction = ComputeInstruction
 
     def __repr__(self):
         return f"Compute(desc:{self.name}, compute_instructions:{len({**self._observe, **self._unique, **self._union})})"
@@ -36,19 +27,20 @@ class Compute:
     ):
         return F.sum((operator(F.col(column), value)).cast("integer"))
 
-    def is_complete(self, key: str, rule: Rule):
+    def is_complete(self, rule: Rule):
         """Validation for non-null values in column"""
         predicate = F.col(f"`{rule.column}`").isNotNull()
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast("integer")),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def are_complete(self, key: str, rule: Rule):  # To Do with Predicate
+    def are_complete(self, rule: Rule):  # To Do with Predicate
         """Validation for non-null values in a group of columns"""
         predicate = [F.col(f"`{c}`").isNotNull() for c in rule.column]
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             reduce(
                 operator.add,
@@ -58,205 +50,224 @@ class Compute:
                 ],
             )
             / len(rule.column),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def is_unique(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_unique(self, rule: Rule):  # To Do with Predicate
         """Validation for unique values in column"""
         predicate = F.count_distinct(F.col(rule.column))
-        self._unique[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.count_distinct(F.col(rule.column)),
+            "select",
         )
-        return self
+        return self.compute_instruction
 
-    def are_unique(self, key: str, rule: Rule):  # To Do with Predicate
+    def are_unique(self, rule: Rule):  # To Do with Predicate
         """Validation for unique values in a group of columns"""
         predicate = F.count_distinct(*[F.col(c) for c in rule.column])
-        self._unique[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.count_distinct(*[F.col(c) for c in rule.column]),
+            "select",
         )
-        return self
+        return self.compute_instruction
 
-    def is_greater_than(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_greater_than(self, rule: Rule):  # To Do with Predicate
         """Validation for numeric greater than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.gt)
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.gt),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def is_greater_or_equal_than(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_greater_or_equal_than(self, rule: Rule):  # To Do with Predicate
         """Validation for numeric greater or equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.ge)
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.ge),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def is_less_than(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_less_than(self, rule: Rule):  # To Do with Predicate
         """Validation for numeric less than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.lt)
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.lt),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def is_less_or_equal_than(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_less_or_equal_than(self, rule: Rule):  # To Do with Predicate
         """Validation for numeric less or equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.le)
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.le),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def is_equal_than(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_equal_than(self, rule: Rule):  # To Do with Predicate
         """Validation for numeric column equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.eq)
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             self._single_value_rule(rule.column, rule.value, operator.eq),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def matches_regex(self, key: str, rule: Rule):  # To Do with Predicate
+    def matches_regex(self, rule: Rule):  # To Do with Predicate
         """Validation for string type column matching regex expression"""
         predicate = F.length(F.regexp_extract(rule.column, rule.value, 0)) > 0
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum((predicate).cast("integer")),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def has_min(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_min(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s minimum value"""
         predicate = F.min(F.col(rule.column)).eqNullSafe(rule.value)
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.min(F.col(rule.column)) == rule.value,
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def has_max(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_max(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s maximum value"""
         predicate = F.max(F.col(rule.column)) == rule.value
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.max(F.col(rule.column)) == rule.value,
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def has_std(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_std(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s standard deviation"""
         predicate = F.stddev_pop(F.col(rule.column)) == rule.value
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.stddev_pop(F.col(rule.column)) == rule.value,
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def has_mean(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_mean(self, rule: Rule):  # To Do with Predicate
         """Validation of a column's average/mean"""
         predicate = F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value)
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def is_between(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_between(self, rule: Rule):  # To Do with Predicate
         """Validation of a column between a range"""
         predicate = F.col(rule.column).between(*rule.value).cast("integer")
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate),  # type: ignore
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def is_contained_in(self, key: str, rule: Rule):  # To Do with Predicate
+    def is_contained_in(self, rule: Rule):  # To Do with Predicate
         """Validation of column value in set of given values"""
         predicate = F.col(rule.column).isin(list(rule.value))
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def has_percentile(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_percentile(self, rule: Rule):  # To Do with Predicate
         """Validation of a column percentile value"""
         predicate = F.percentile_approx(
             F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.value[1], rule.value[2]
         ).eqNullSafe(rule.value[0])
-        self._unique[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.percentile_approx(
                 F.col(f"`{rule.column}`").cast(T.DoubleType()),
                 rule.value[1],
                 rule.value[2],
             ).eqNullSafe(rule.value[0]),
+            "select",
         )
-        return self
+        return self.compute_instruction
 
-    def has_max_by(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_max_by(self, rule: Rule):  # To Do with Predicate
         """Validation of a column maximum based on other column maximum"""
         predicate = F.max_by(rule.column[1], rule.column[0]) == rule.value
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.max_by(rule.column[1], rule.column[0]) == rule.value,
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def has_min_by(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_min_by(self, rule: Rule):  # To Do with Predicate
         """Validation of a column minimum based on other column minimum"""
         predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.min_by(rule.column[1], rule.column[0]) == rule.value,
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
-    def has_correlation(self, key: str, rule: Rule):  # To Do with Predicate
+    def has_correlation(self, rule: Rule):  # To Do with Predicate
         """Validates the correlation between 2 columns with some tolerance"""
         predicate = F.corr(
             F.col(f"`{rule.column[0]}`").cast(T.DoubleType()),
             F.col(f"`{rule.column[1]}`").cast(T.DoubleType()),
         ).eqNullSafe(F.lit(rule.value))
-        self._unique[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.corr(
                 F.col(f"`{rule.column[0]}`").cast(T.DoubleType()),
                 F.col(f"`{rule.column[1]}`").cast(T.DoubleType()),
             ).eqNullSafe(F.lit(rule.value)),
+            "select",
         )
-        return self
+        return self.compute_instruction
 
-    def satisfies(self, key: str, rule: Rule):  # To Do with Predicate
+    def satisfies(self, rule: Rule):  # To Do with Predicate
         """Validation of a column satisfying a SQL-like predicate"""
         predicate = F.expr(rule.value).cast("integer")
-        self._observe[key] = ComputeInstruction(
+        self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(F.expr(rule.value).cast("integer")),
+            "observe",
         )
-        return self
+        return self.compute_instruction
 
 
-def compute_summary(
-    spark: SparkSession, dataframe: DataFrame, check: Check
-) -> DataFrame:
-    """Compute all rules in this check for specific data frame"""
-
-    # Create expression dictionnaries
+def _get_compute_dict(check: Check) -> Dict:
+    """Create dictionnary containing compute instruction for each rule."""
     compute = Compute(check.name)
     for k, v in check._rule.items():
-        f = operator.methodcaller(v.method, k, v)
-        f(compute)
+        f = operator.methodcaller(v.method, v)
+        check._compute[k] = f(compute)
+    return check
 
-    # Pre-Validation of numeric data types
+
+def _validate_dataTypes(check: Check, dataframe: DataFrame):
+    """Validate the datatype of each column according to the CheckDataType of the rule's method"""
     _col = operator.attrgetter("column")
     _numeric = lambda x: x.data_type.name == CheckDataType.NUMERIC.name
     _date = lambda x: x.data_type.name == CheckDataType.DATE.name
@@ -281,46 +292,87 @@ def compute_summary(
         )
     ).issubset(D.timestamp_fields(dataframe))
 
-    # Compute the expression
-    if compute._observe:
-        observation = Observation(compute.name)
+
+def _compute_observe_method(check: Check, dataframe: DataFrame):
+    """Compute rules throught spark Observation"""
+    # Filter expression directed to observe
+    _observe = lambda x: x.compute_method == "observe"
+    observe = valfilter(_observe, check._compute)
+
+    if observe:
+        observation = Observation(check.name)
 
         df_observation = dataframe.observe(
             observation,
             *[
                 compute_instruction.expression.alias(hash_key)
-                for hash_key, compute_instruction in compute._observe.items()
+                for hash_key, compute_instruction in observe.items()
             ],
         )
         rows = df_observation.count()
-        observation_result = observation.get
+        # observation_result = observation.get
+        return rows, observation.get
     else:
-        observation_result = {}
+        # observation_result = {}
         rows = dataframe.count()
+        return rows, {}
 
-    unique_result = (
+
+def _compute_select_method(check: Check, dataframe: DataFrame):
+    """Compute rules throught spark select"""
+
+    # Filter expression directed to select
+    _select = lambda x: x.compute_method == "select"
+    select = valfilter(_select, check._compute)
+
+    return (
         dataframe.select(
             *[
                 compute_instrunction.expression.alias(hash_key)
-                for hash_key, compute_instrunction in compute._unique.items()
+                for hash_key, compute_instrunction in select.items()
             ]
         )
         .first()
         .asDict()  # type: ignore
     )
 
-    union_result = (
+
+def _compute_transform_method(check: Check, dataframe: DataFrame):
+    """Compute rules throught spark transform"""
+
+    # Filter expression directed to transform
+    _transform = lambda x: x.compute_method == "transform"
+    transform = valfilter(_transform, check._compute)
+
+    return (
         dataframe.select(
             *[
                 compute_instrunction.expression.alias(hash_key)
-                for hash_key, compute_instrunction in compute._union.items()
+                for hash_key, compute_instrunction in transform.items()
             ]
         )
         .first()
         .asDict()  # type: ignore
     )
 
-    unified_results = {**observation_result, **unique_result, **union_result}
+
+def compute_summary(
+    check: Check, dataframe: DataFrame, spark: SparkSession
+) -> DataFrame:
+    """Compute all rules in this check for specific data frame"""
+
+    # Create expression dictionnaries
+    _get_compute_dict(check)
+
+    # Pre-Validation of data types
+    _validate_dataTypes(check, dataframe)
+
+    # Compute the expression
+    rows, observation_result = _compute_observe_method(check, dataframe)
+    select_result = _compute_select_method(check, dataframe)
+    transform_result = _compute_transform_method(check, dataframe)
+
+    unified_results = {**observation_result, **select_result, **transform_result}
 
     _calculate_pass_rate = lambda observed_column: (
         F.when(observed_column == "false", F.lit(0.0))

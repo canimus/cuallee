@@ -55,6 +55,17 @@ def test_spark_session_in_arg(spark):
         ).validate(df, "spark")
 
 
+def test_update_rule_status_spark(spark):
+    df = spark.range(10).alias("id")
+    rs = Check(CheckLevel.WARNING, "test_spark_session_in_arg").is_complete("id")
+    for v in rs._rule.values():
+        assert v.status == None
+    rs.validate(df, spark)
+    for v in rs._rule.values():
+        assert isinstance(v.status, str)
+        assert v.status == "PASS"
+
+
 # __ PANDAS DATAFRAME TESTS __
 
 

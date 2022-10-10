@@ -307,13 +307,31 @@ class Check:
 
         # Check dataframe is spark dataframe
         if isinstance(dataframe, DataFrame):
-            from .spark.spark_validation import compute_summary, _get_rule_status
+            from .spark.spark_validation import (
+                compute_summary,
+                _get_rule_status,
+                _get_spark_version,
+                _get_compute_dict,
+                _validate_dataTypes,
+            )
             from pyspark.sql import SparkSession
 
+            # Check SparkSession is available
             spark = arg[0]
             assert isinstance(
                 arg[0], SparkSession
             ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
+
+            # Create compute dictionary
+            _get_compute_dict(self)
+
+            # Check Spark Version
+            _get_spark_version(self, spark)
+
+            # Pre-Validation of data types
+            _validate_dataTypes(self, dataframe)
+
+            # Compute
             summary = compute_summary(self, dataframe, spark)
             _get_rule_status(self, summary)
             return summary

@@ -86,6 +86,8 @@ df = spark.read.parquet("temp/taxi/*.parquet")
 [check.is_between(name, (1000,2000)) for name in D.numeric_fields(df)] 
 
 # Confirm 22 years of data
-[check.is_between(name, ("2000-01-01", "2022-12-31")) for name in D.timestamp_fields(df)] 
+[check.is_between(name, ("2000-01-01", "2022-12-31")) for name in D.timestamp_fields(df)]
 
+# Validation
+check.validate(spark, df)
 ```

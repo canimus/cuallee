@@ -8,3 +8,7 @@ temp/
 cuallee/cuallee.egg-info
 cuallee.egg-info/
 dist/
+
+
+# Testing
+.coverage

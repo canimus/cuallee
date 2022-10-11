@@ -3,6 +3,7 @@ import pyspark.sql.functions as F
 
 from pyspark.sql import DataFrame
 from typing import Tuple, Dict
+from toolz import valfilter  # type: ignore
 
 from cuallee import Check, CheckLevel
 from cuallee.spark import spark_validation as SV
@@ -29,6 +30,23 @@ def test_get_compute_dictionary(spark):
     rs = SV._get_compute_dict(c)
     assert len(c._compute) == len(c._rule)
     assert set(c._compute.keys()) == set(c._rule.keys())
+
+
+def test_overwrite_observe_method(spark):
+    c = (
+        Check(CheckLevel.WARNING, "test_overwrite_observe_method")
+        .is_complete("id")
+        .is_unique("id")
+        .is_greater_or_equal_than("id", 2)
+    )
+    SV._get_compute_dict(c)
+    _observe = lambda x: x.compute_method == 'observe'
+    _select = lambda x: x.compute_method == 'select'
+    assert len(valfilter(_observe, c._compute)) == 2
+    assert len(valfilter(_select, c._compute)) == 1
+    SV._overwrite_observe_method(c)
+    assert len(valfilter(_observe, c._compute)) == 0
+    assert len(valfilter(_select, c._compute)) == 3
 
 
 def test_numeric_column_validation(spark):
@@ -159,7 +177,8 @@ def test_get_sample_custom_status(spark):
 
 
 ##__ ToDo __
-
+def test_get_spark_version():
+    pass
 
 def test_compute_class():
     pass

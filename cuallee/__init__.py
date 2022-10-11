@@ -35,7 +35,7 @@ class Rule:
         return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
 
 
-@dataclass(frozen=True)
+@dataclass
 class ComputeInstruction:
     predicate: Column
     expression: Column

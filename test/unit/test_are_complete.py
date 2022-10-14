@@ -37,7 +37,7 @@ def test_column_names_with_dots(spark: SparkSession, check: Check):
     check.are_complete((col1, col2))
 
     # Validate columns in ComputeInstruction
-    assert eval(check.validate(spark, df).select("column").first().column) == (
+    assert eval(check.validate(df).select("column").first().column) == (
         col1,
         col2,
     ), "Invalid column names with dots"
@@ -50,7 +50,7 @@ def test_column_names_with_spaces(spark: SparkSession, check: Check):
     check.are_complete((col1, col2))
 
     # Validate columns in ComputeInstruction
-    assert eval(check.validate(spark, df).select("column").first().column) == (
+    assert eval(check.validate(df).select("column").first().column) == (
         col1,
         col2,
     ), "Invalid column names with spaces"

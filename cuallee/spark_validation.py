@@ -134,7 +134,7 @@ class Compute:
         )
         return self.compute_instruction
 
-    def matches_regex(self, rule: Rule):  # To Do with Predicate
+    def has_pattern(self, rule: Rule):  # To Do with Predicate
         """Validation for string type column matching regex expression"""
         predicate = F.length(F.regexp_extract(rule.column, rule.value, 0)) > 0
         self.compute_instruction = ComputeInstruction(
@@ -298,7 +298,7 @@ def _get_spark_version(check: Check, spark: SparkSession):
 def _column_set_comparison(check: Check, dataframe: DataFrame, columns, filter):
     """Compair type of the columns passed in rules and present in dataframe."""
     return set(
-        Check._compute_columns(
+        check._compute_columns(
             map(columns, valfilter(filter, check._rule).values())  # type: ignore
         )
     ).difference(D.numeric_fields(dataframe))

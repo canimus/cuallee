@@ -16,5 +16,5 @@ def test_regex_field(spark):
     check = Check(CheckLevel.ERROR, "RegExTest")
     check.has_pattern("name", r".*s$")
     assert (
-        check.validate(spark, df).first().violations == 1
+        check.validate(df).first().violations == 1
     ), "Uno should violate the expression"

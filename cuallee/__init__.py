@@ -117,37 +117,20 @@ class Check:
             )
         )
 
-    def _remove_rule_and_compute(self, key: str):
-        """Remove a key from rules and compute dictionaries"""
-        [collection.pop(key) for collection in [self._rule, self._compute] if key in collection.keys()]
 
-    def add_rule(self, method: str, *arg):
-        """Add a new rule to the Check class."""
-        return operator.methodcaller(method, *arg)(self)
+    def _compute_columns(self, columns: Union[str, List[str]]) -> List[str]:
+        """Confirm that all compute columns exists in dataframe"""
 
-    def delete_rule_by_key(self, keys: Union[str, List[str]]):
-        """Delete rules from self._rule and self._compute dictionnary based on keys."""
-        if isinstance(keys, str):
-            keys = [keys]
-        
-        map(self._remove_rule_and_compute, keys)
-        return self
+        def _normalize_columns(col: Union[str, List[str]], agg: List[str]) -> List[str]:
+            """Recursive consilidation of compute columns"""
+            if isinstance(col, str):
+                agg.append(col)
+            else:
+                [_normalize_columns(inner_col, agg) for inner_col in col]
+            return agg
 
+        return _normalize_columns(columns, [])
 
-    def delete_rule_by(
-        self,
-        rule_attribute: Literal["method", "column", "coverage"],
-        values: Union[List[str], List[float]],
-    ):
-        """Delete rule based on method(s) or column name(s) or coverage value(s)."""
-        if not isinstance(values, List):
-            values = [values]
-
-        _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
-        map(self._remove_rule_and_compute, valfilter(_filter, self._rule).keys())
-        return self
-
-    
     def _generate_rule_key_id(
         self,
         method: str,
@@ -166,19 +149,35 @@ class Check:
             rule.method, rule.column, rule.value, rule.coverage
         )
 
-    @staticmethod
-    def _compute_columns(columns: Union[str, List[str]]) -> List[str]:
-        """Confirm that all compute columns exists in dataframe"""
+    def _remove_rule_and_compute(self, key: str):
+        """Remove a key from rules and compute dictionaries"""
+        [collection.pop(key) for collection in [self._rule, self._compute] if key in collection.keys()]
 
-        def _normalize_columns(col: Union[str, List[str]], agg: List[str]) -> List[str]:
-            """Recursive consilidation of compute columns"""
-            if isinstance(col, str):
-                agg.append(col)
-            else:
-                [_normalize_columns(inner_col, agg) for inner_col in col]
-            return agg
+    def add_rule(self, method: str, *arg):
+        """Add a new rule to the Check class."""
+        return operator.methodcaller(method, *arg)(self)
 
-        return _normalize_columns(columns, [])
+    def delete_rule_by_key(self, keys: Union[str, List[str]]):
+        """Delete rules from self._rule and self._compute dictionnary based on keys."""
+        if isinstance(keys, str):
+            keys = [keys]
+        
+        map(self._remove_rule_and_compute, keys)
+        return self
+
+
+    def delete_rule_by_attribute(
+        self,
+        rule_attribute: Literal["method", "column", "coverage"],
+        values: Union[List[str], List[float]],
+    ):
+        """Delete rule based on method(s) or column name(s) or coverage value(s)."""
+        if not isinstance(values, List):
+            values = [values]
+
+        _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
+        map(self._remove_rule_and_compute, valfilter(_filter, self._rule).keys())
+        return self
 
     def is_complete(
         self, column: str, pct: float = 1.0
@@ -605,7 +604,7 @@ class Check:
         self._rule[key] = rule
         return self
 
-    def validate(self, dataframe: DataFrame):
+    def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):
         """Compute all rules in this check for specific data frame"""
 
         # Stop execution if the there is no rules in the check
@@ -618,7 +617,7 @@ class Check:
         # Obtain a set of columns required for rules
         # flattening str columns and tuple columns
         column_set = set(
-            Check._compute_columns(
+            self._compute_columns(
                 list(map(operator.attrgetter("column"), rules))
             )
         )
@@ -628,7 +627,7 @@ class Check:
 
         # Check dataframe is spark dataframe
         if isinstance(dataframe, DataFrame):
-            from .spark.spark_validation import (
+            from .spark_validation import (
                 compute_summary,
                 _get_rule_status,
                 _get_spark_version,

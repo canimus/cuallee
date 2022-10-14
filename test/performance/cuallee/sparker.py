@@ -11,7 +11,7 @@ for i in range(1000):
     check.is_greater_than("fare_amount", i)
 
 start = datetime.now()
-check.validate(spark, df).show(n=1000, truncate=False)
+check.validate(df).show(n=1000, truncate=False)
 end = datetime.now()
 elapsed = end - start
 print("START:", start)

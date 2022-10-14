@@ -6,7 +6,7 @@ from typing import Tuple, Dict
 from toolz import valfilter  # type: ignore
 
 from cuallee import Check, CheckLevel
-from cuallee.spark import spark_validation as SV
+from cuallee import spark_validation as SV
 
 
 def test_compute_summary_return_dataframe(spark):
@@ -68,8 +68,8 @@ def test_string_column_validation(spark):
     df = spark.range(10).alias("id").withColumn("desc", F.lit("red"))
     c = (
         Check(CheckLevel.WARNING, "test_col_not_string")
-        .matches_regex("id", "2")
-        .matches_regex("desc", "red")
+        .has_pattern("id", "2")
+        .has_pattern("desc", "red")
     )
     with pytest.raises(AssertionError, match="are not strings"):
         SV._validate_dataTypes(c, df)
@@ -102,7 +102,7 @@ def test_observe_no_compute(spark):
     rs = (
         Check(CheckLevel.WARNING, "test_empty_observation")
         .is_unique("id")
-        .validate(df, spark)
+        .validate(df)
     )
     assert isinstance(rs, DataFrame)
 
@@ -154,7 +154,7 @@ def test_get_df_sample_return_dataframe(spark):
         .is_complete("id")
         .is_unique("id")
     )
-    c.validate(df, spark)
+    c.validate(df)
     rs = SV.get_record_sample(c, df, spark)
     assert isinstance(rs, DataFrame)
 
@@ -167,7 +167,7 @@ def test_get_sample_custom_status(spark):
         .is_complete("desc")
         .is_greater_or_equal_than("id", 2)
     )
-    c.validate(df, spark)
+    c.validate(df)
     rs_fail = SV.get_record_sample(c, df, spark)
     rs_pass = SV.get_record_sample(c, df, spark, status="PASS")
     rs_method = SV.get_record_sample(c, df, spark, method="is_complete")

@@ -40,7 +40,7 @@ def test_between_dates(spark):
     )
     assert (
         check.is_between("date", ("2022-01-01", "2022-01-10"))
-        .validate(spark, df)
+        .validate(df)
         .first()
         .status
     )

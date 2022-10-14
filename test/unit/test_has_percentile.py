@@ -12,4 +12,4 @@ def test_integer_casting(spark: SparkSession, check: Check):
     check.has_percentile("id", 4.0, 0.5)
 
     # Validate columns in ComputeInstruction
-    assert "status" in check.validate(spark, df).first().asDict()
+    assert "status" in check.validate(df).first().asDict()

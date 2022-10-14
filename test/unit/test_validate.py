@@ -12,7 +12,7 @@ def test_return_spark_dataframe(spark):
     rs = (
         Check(CheckLevel.WARNING, "test_spark_dataframe")
         .is_complete("id")
-        .validate(df, spark)
+        .validate(df)
     )
     assert isinstance(rs, DataFrame)
 
@@ -23,36 +23,36 @@ def test_empty_dictionary_spark(spark):
         Exception,
         match="Check is empty. Add validations i.e. is_complete, is_unique, etc.",
     ):
-        Check(CheckLevel.WARNING, "test_empty_observation_spark").validate(df, spark)
+        Check(CheckLevel.WARNING, "test_empty_observation_spark").validate(df)
 
 
 def test_column_name_validation_spark(spark):
     df = spark.range(10).alias("id")
     with pytest.raises(Exception, match="not in dataframe"):
         Check(CheckLevel.WARNING, "test_column_name_spark").is_complete("ide").validate(
-            df, spark
+            df
         )
 
 
-def test_order_validate_args(spark):
-    df = spark.range(10).alias("id")
-    with pytest.raises(
-        AttributeError, match="'SparkSession' object has no attribute 'columns'"
-    ):
-        Check(CheckLevel.WARNING, "test_order_validate_args").is_complete(
-            "id"
-        ).validate(spark, df)
+# def test_order_validate_args(spark):
+#     df = spark.range(10).alias("id")
+#     with pytest.raises(
+#         AttributeError, match="'SparkSession' object has no attribute 'columns'"
+#     ):
+#         Check(CheckLevel.WARNING, "test_order_validate_args").is_complete(
+#             "id"
+#         ).validate(df)
 
 
-def test_spark_session_in_arg(spark):
-    df = spark.range(10).alias("id")
-    with pytest.raises(
-        Exception,
-        match="The function requires to pass a spark session as arg",
-    ):
-        Check(CheckLevel.WARNING, "test_spark_session_in_arg").is_complete(
-            "id"
-        ).validate(df, "spark")
+# def test_spark_session_in_arg(spark):
+#     df = spark.range(10).alias("id")
+#     with pytest.raises(
+#         Exception,
+#         match="The function requires to pass a spark session as arg",
+#     ):
+#         Check(CheckLevel.WARNING, "test_spark_session_in_arg").is_complete(
+#             "id"
+#         ).validate(df, "spark")
 
 
 def test_update_rule_status_spark(spark):
@@ -60,7 +60,7 @@ def test_update_rule_status_spark(spark):
     rs = Check(CheckLevel.WARNING, "test_spark_session_in_arg").is_complete("id")
     for v in rs._rule.values():
         assert v.status == None
-    rs.validate(df, spark)
+    rs.validate(df)
     for v in rs._rule.values():
         assert isinstance(v.status, str)
         assert v.status == "PASS"

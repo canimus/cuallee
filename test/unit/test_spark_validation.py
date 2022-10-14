@@ -75,11 +75,11 @@ def test_string_column_validation(spark):
         SV._validate_dataTypes(c, df)
 
 
-def test_date_column_validation(spark):  # ToDo when got a case
+def test_date_column_validation(spark):  # TODO: when got a case
     pass
 
 
-def test_timestamp_column_validation(spark):  # ToDo when got a case
+def test_timestamp_column_validation(spark):  # TODO: when got a case
     pass
 
 
@@ -129,7 +129,7 @@ def test_transform_method_return_dict(spark):
     select = SV._compute_transform_method(SV._get_compute_dict(c), df)
     # assert isinstance(select, Dict)
     # assert len(select) == 1
-    pass  # To Do when method with transform
+    pass  # TODO: when method with transform
 
 
 def test_update_rule_status(spark):
@@ -176,7 +176,7 @@ def test_get_sample_custom_status(spark):
     assert rs_method.count() == 1
 
 
-##__ ToDo __
+##__ TODO: __
 def test_get_spark_version():
     pass
 

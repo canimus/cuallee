@@ -4,9 +4,13 @@ import operator
 import pandas as pd  # type: ignore
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, List, Optional, Tuple, Union, Dict
+from typing import Any, List, Optional, Tuple, Union, Dict, Literal, Annotated, get_type_hints, get_origin, get_args
+from toolz import valfilter  # type: ignore
+from functools import wraps
 
 from pyspark.sql import DataFrame, Column
+
+from cuallee.helper_functions import _delete_dict_entry
 
 
 class CheckLevel(enum.Enum):
@@ -23,12 +27,45 @@ class CheckDataType(enum.Enum):
 
 
 @dataclass
+class ValueRange:
+    min: float
+    max: float
+    default_value: float = 1.0
+
+
+def check_annotations(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        """ Perform runtime annotation checking for ValueRange type"""
+        # Get type hints from function
+        type_hints = get_type_hints(func, include_extras=True)
+        for param, hint in type_hints.items():
+            # Only process annotated types
+            if get_origin(hint) is Annotated:
+                # Get base type and additional arguments
+                hint_type, hint_args = get_args(hint)
+                # Process ValueRange arg only
+                if isinstance(hint_args, ValueRange):
+                    # If no pct passed, used default pct value
+                    if kwargs.get(param) == None:
+                        actual_value = hint_args.default_value 
+                    else:
+                        actual_value = kwargs.get(param)
+                    if not (hint_args.min < actual_value <= hint_args.max):
+                        raise ValueError(f'Pct value must be in range ]{hint_args.min}, {hint_args.max}]')
+        # execute function once all checks passed
+        return func(*args, **kwargs)
+
+    return wrapped
+
+
+@dataclass
 class Rule:
     method: str
     column: Union[Tuple, str]
     value: Optional[Any]
     data_type: CheckDataType
-    coverage: float = 1.0
+    coverage: Annotated[float, ValueRange(0.0, 1.0)]
     status: str = None
 
     def __repr__(self):
@@ -57,6 +94,53 @@ class Check:
     def __repr__(self):
         return f"Check(level:{self.level}, desc:{self.name}, rules:{len(self._rule)})"
 
+    def _add_rule(self, method: str, *arg):
+        """Add a new rule to the Check class."""
+        f = operator.methodcaller(method, *arg)
+        return f(self)
+
+    def _delete_rule_by_key(self, keys: List[str]):
+        """Delete rules from self._rule and self._compute dictionnary based on keys."""
+        if isinstance(keys, str):
+            keys = [keys]
+        _delete_dict_entry(keys, self._rule, self._compute)
+        return self
+
+    def _delete_rule_by(self, attr: Literal['method', 'column', 'coverage'], values: Union[List[str], List[float]]):
+        """Delete rule based on method(s) or column name(s) or coverage value(s)."""
+        if not isinstance(values, List):
+            values = [values]
+
+            if attr == 'method':
+                _filter = lambda x: x.method in values
+            elif attr == 'column':
+                _filter = lambda x: x.column in values
+            else:
+                _filter = lambda x: x.coverage in values
+
+            _delete_dict_entry(
+                valfilter(_filter, self._rule).keys(), self._rule, self._compute
+            )
+        return self
+
+    def _delete_individual_rule(
+        self,
+        method: str,
+        column: Union[Tuple, str],
+        value: Optional[Any],
+        coverage: float = 1.0,
+    ):
+        _method = lambda x: x.method == method
+        _column = lambda x: x.column == column
+        _value = lambda x: x.value == value
+        _coverage = lambda x: x.coverage == coverage 
+        _filter = _method &_column & _value & _coverage
+        _delete_dict_entry(valfilter(_filter, self._rule).keys(), self._rule, self._compute)
+        return self
+
+    def _modify_rule_by_key(self, key):
+        pass
+
     def _generate_rule_key_id(
         self,
         method: str,
@@ -82,7 +166,8 @@ class Check:
 
         return _normalize_columns(columns, [])
 
-    def is_complete(self, column: str, pct: float = 1.0):
+    @check_annotations
+    def is_complete(self, column: str, /,pct: Annotated[float, ValueRange(0.0, 1.0)] = 1.0):
         """Validation for non-null values in column"""
         key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
         self._rule[key] = Rule(

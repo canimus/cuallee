@@ -40,8 +40,8 @@ def test_overwrite_observe_method(spark):
         .is_greater_or_equal_than("id", 2)
     )
     SV._get_compute_dict(c)
-    _observe = lambda x: x.compute_method == 'observe'
-    _select = lambda x: x.compute_method == 'select'
+    _observe = lambda x: x.compute_method == "observe"
+    _select = lambda x: x.compute_method == "select"
     assert len(valfilter(_observe, c._compute)) == 2
     assert len(valfilter(_select, c._compute)) == 1
     SV._overwrite_observe_method(c)
@@ -179,6 +179,7 @@ def test_get_sample_custom_status(spark):
 ##__ ToDo __
 def test_get_spark_version():
     pass
+
 
 def test_compute_class():
     pass

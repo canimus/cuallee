@@ -295,16 +295,53 @@ def _get_spark_version(check: Check, spark: SparkSession):
         _overwrite_observe_method(check)
 
 
-def _column_set_comparison(check: Check, dataframe: DataFrame, columns, filter):
+def _column_set_comparison(check: Check, dataframe: DataFrame, columns, filter: Callable, fn: Callable):
     """Compair type of the columns passed in rules and present in dataframe."""
     return set(
         check._compute_columns(
             map(columns, valfilter(filter, check._rule).values())  # type: ignore
         )
-    ).difference(D.numeric_fields(dataframe))
+    ).difference(fn(dataframe))
+
+import pyspark.sql.types as T
+from pyspark.sql.dataframe import DataFrame
+from typing import Collection, Union, Type
 
 
-def _validate_dataTypes(check: Check, dataframe: DataFrame):
+def _field_type_filter(
+    dataframe: DataFrame,
+    field_type: Union[
+        Type[T.DateType], Type[T.NumericType], Type[T.TimestampType], Type[T.StringType]
+    ],
+) -> Collection:
+    """Internal method to search for column names based on data type"""
+    return set(
+        [f.name for f in dataframe.schema.fields if isinstance(f.dataType, field_type)]  # type: ignore
+    )
+
+
+def numeric_fields(dataframe: DataFrame) -> Collection:
+    """Filter all numeric data types in data frame and returns field names"""
+    return _field_type_filter(dataframe, T.NumericType)
+
+
+def string_fields(dataframe: DataFrame) -> Collection:
+    """Filter all numeric data types in data frame and returns field names"""
+    return _field_type_filter(dataframe, T.StringType)
+
+
+def date_fields(dataframe: DataFrame) -> Collection:
+    """Filter all date data types in data frame and returns field names"""
+    return set(
+        [f.name for f in dataframe.schema.fields if isinstance(f.dataType, T.DateType) or isinstance(f.dataType, T.TimestampType) or isinstance(f.dataType, T.TimestampNTZType)]  # type: ignore
+    )
+
+
+def timestamp_fields(dataframe: DataFrame) -> Collection:
+    """Filter all date data types in data frame and returns field names"""
+    return _field_type_filter(dataframe, T.TimestampType)
+
+def _validate_data_types(check: Check, dataframe: DataFrame):
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
     _col = operator.attrgetter("column")
     _numeric = lambda x: x.data_type.name == CheckDataType.NUMERIC.name
@@ -312,16 +349,16 @@ def _validate_dataTypes(check: Check, dataframe: DataFrame):
     _timestamp = lambda x: x.data_type.name == CheckDataType.TIMESTAMP.name
     _string = lambda x: x.data_type.name == CheckDataType.STRING.name
     # Numeric Validation
-    non_numeric = _column_set_comparison(check, dataframe, _col, _numeric)
+    non_numeric = _column_set_comparison(check, dataframe, _col, _numeric, numeric_fields)
     assert len(non_numeric) == 0, f"Column(s): {non_numeric} are not numeric"
     # String Validation
-    non_string = _column_set_comparison(check, dataframe, _col, _string)
+    non_string = _column_set_comparison(check, dataframe, _col, _string, string_fields)
     assert len(non_string) == 0, f"Column(s): {non_string} are not strings"
     # Date Validation
-    non_date = _column_set_comparison(check, dataframe, _col, _date)
+    non_date = _column_set_comparison(check, dataframe, _col, _date, date_fields)
     assert len(non_date) == 0, f"Column(s): {non_date} are not dates"
     # Timestamp validation
-    non_timestamp = _column_set_comparison(check, dataframe, _col, _timestamp)
+    non_timestamp = _column_set_comparison(check, dataframe, _col, _timestamp, timestamp_fields)
     assert len(non_timestamp) == 0, f"Column(s): {non_timestamp} are not timestamps"
 
 
@@ -434,6 +471,7 @@ def compute_summary(
             F.col("rule"),
             F.col("value"),
             F.lit(rows).alias("rows"),
+            (rows - F.col("result").cast("long")).alias("violations"),
             _calculate_pass_rate(F.col("result")).alias("pass_rate"),
             F.col("pass_threshold").cast(T.DoubleType()),
         )

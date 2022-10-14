@@ -632,7 +632,7 @@ class Check:
                 _get_rule_status,
                 _get_spark_version,
                 _get_compute_dict,
-                _validate_dataTypes,
+                _validate_data_types,
             )
             from pyspark.sql import SparkSession
 
@@ -649,11 +649,12 @@ class Check:
 
             # Create compute dictionary
             _get_compute_dict(self)
+            
             # Check Spark Version
             _get_spark_version(self, spark)
 
             # Pre-Validation of data types
-            _validate_dataTypes(self, dataframe)
+            _validate_data_types(self, dataframe)
 
             # Compute
             summary = compute_summary(self, dataframe, spark)

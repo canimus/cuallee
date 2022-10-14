@@ -167,7 +167,7 @@ class Check:
         return _normalize_columns(columns, [])
 
     @check_annotations
-    def is_complete(self, column: str, /,pct: Annotated[float, ValueRange(0.0, 1.0)] = 1.0):
+    def is_complete(self, column: str, /, pct: Annotated[float, ValueRange(0.0, 1.0)] = 1.0):
         """Validation for non-null values in column"""
         key = self._generate_rule_key_id("is_complete", column, "N/A", pct)
         self._rule[key] = Rule(
@@ -175,7 +175,8 @@ class Check:
         )
         return self
 
-    def are_complete(self, column: str, pct: float = 1.0):
+    @check_annotations
+    def are_complete(self, column: str, /, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         # if isinstance(column, List):
         #    column = tuple(column)
@@ -185,13 +186,15 @@ class Check:
         )
         return self
 
-    def is_unique(self, column: str, pct: float = 1.0):
+    @check_annotations
+    def is_unique(self, column: str, /, pct: float = 1.0):
         """Validation for unique values in column"""
         key = self._generate_rule_key_id("is_unique", column, "N/A", pct)
         self._rule[key] = Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)
         return self
 
-    def are_unique(self, column: Tuple[str], pct: float = 1.0):
+    @check_annotations
+    def are_unique(self, column: Tuple[str], /, pct: float = 1.0):
         """Validation for unique values in a group of columns"""
         if isinstance(column, List):
             column = tuple(column)
@@ -199,7 +202,8 @@ class Check:
         self._rule[key] = Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)
         return self
 
-    def is_greater_than(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def is_greater_than(self, column: str, value: float, /, pct: float = 1.0):
         """Validation for numeric greater than value"""
         key = self._generate_rule_key_id("is_greater_than", column, value, pct)
         self._rule[key] = Rule(
@@ -207,7 +211,8 @@ class Check:
         )
         return self
 
-    def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def is_greater_or_equal_than(self, column: str, value: float, /, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
         key = self._generate_rule_key_id("is_greater_or_equal_than", column, value, pct)
         self._rule[key] = Rule(
@@ -215,7 +220,8 @@ class Check:
         )
         return self
 
-    def is_less_than(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def is_less_than(self, column: str, value: float, /, pct: float = 1.0):
         """Validation for numeric less than value"""
         key = self._generate_rule_key_id("is_less_than", column, value, pct)
         self._rule[key] = Rule(
@@ -223,7 +229,8 @@ class Check:
         )
         return self
 
-    def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def is_less_or_equal_than(self, column: str, value: float, /, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
         key = self._generate_rule_key_id("is_less_or_equal_than", column, value, pct)
         self._rule[key] = Rule(
@@ -231,13 +238,15 @@ class Check:
         )
         return self
 
-    def is_equal_than(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def is_equal_than(self, column: str, value: float, /, pct: float = 1.0):
         """Validation for numeric column equal than value"""
         key = self._generate_rule_key_id("is_equal", column, value, pct)
         self._rule[key] = Rule("is_equal", column, value, CheckDataType.NUMERIC, pct)
         return self
 
-    def matches_regex(self, column: str, value: str, pct: float = 1.0):
+    @check_annotations
+    def matches_regex(self, column: str, value: str, /, pct: float = 1.0):
         """Validation for string type column matching regex expression"""
         key = self._generate_rule_key_id("matches_regex", column, value, pct)
         self._rule[key] = Rule(
@@ -245,31 +254,36 @@ class Check:
         )
         return self
 
-    def has_min(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def has_min(self, column: str, value: float, /, pct: float = 1.0):
         """Validation of a column’s minimum value"""
         key = self._generate_rule_key_id("has_min", column, value, pct)
         self._rule[key] = Rule("has_min", column, value, CheckDataType.NUMERIC)
         return self
 
-    def has_max(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def has_max(self, column: str, value: float, /, pct: float = 1.0):
         """Validation of a column’s maximum value"""
         key = self._generate_rule_key_id("has_max", column, value, pct)
         self._rule[key] = Rule("has_max", column, value, CheckDataType.NUMERIC)
         return self
 
-    def has_std(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def has_std(self, column: str, value: float, /, pct: float = 1.0):
         """Validation of a column’s standard deviation"""
         key = self._generate_rule_key_id("has_std", column, value, pct)
         self._rule[key] = Rule("has_std", column, value, CheckDataType.NUMERIC)
         return self
 
-    def has_mean(self, column: str, value: float, pct: float = 1.0):
+    @check_annotations
+    def has_mean(self, column: str, value: float, /, pct: float = 1.0):
         """Validation of a column's average/mean"""
         key = self._generate_rule_key_id("has_mean", column, value, pct)
         self._rule[key] = Rule("has_mean", column, value, CheckDataType.NUMERIC)
         return self
 
-    def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
+    @check_annotations
+    def is_between(self, column: str, value: Tuple[Any], /, pct: float = 1.0):
         """Validation of a column between a range"""
 
         # Create tuple if user pass list
@@ -280,8 +294,9 @@ class Check:
         self._rule[key] = Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct)
         return self
 
+    @check_annotations
     def is_contained_in(
-        self, column: str, value: Tuple[str, int, float], pct: float = 1.0
+        self, column: str, value: Tuple[str, int, float], /, pct: float = 1.0
     ):
         """Validation of column value in set of given values"""
         # Create tuple if user pass list
@@ -298,12 +313,13 @@ class Check:
         self._rule[key] = Rule("is_contained_in", column, value, check)
         return self
 
+    @check_annotations
     def has_percentile(
         self,
         column: str,
         value: float,
         percentile: float,
-        precision: int = 10000,
+        precision: int = 10000, /,
         pct: float = 1.0,
     ):
         """Validation of a column percentile value"""
@@ -319,8 +335,9 @@ class Check:
         )
         return self
 
+    @check_annotations
     def has_max_by(
-        self, column_source: str, column_target: str, value: float, pct: float = 1.0
+        self, column_source: str, column_target: str, value: float, /, pct: float = 1.0
     ):
         """Validation of a column maximum based on other column maximum"""
         key = self._generate_rule_key_id(
@@ -334,8 +351,9 @@ class Check:
         )
         return self
 
+    @check_annotations
     def has_min_by(
-        self, column_source: str, column_target: str, value: float, pct: float = 1.0
+        self, column_source: str, column_target: str, value: float, /, pct: float = 1.0
     ):
         """Validation of a column minimum based on other column minimum"""
         key = self._generate_rule_key_id(
@@ -349,8 +367,9 @@ class Check:
         )
         return self
 
+    @check_annotations
     def has_correlation(
-        self, column_left: str, column_right: str, value: float, pct: float = 1.0
+        self, column_left: str, column_right: str, value: float, /, pct: float = 1.0
     ):
         """Validates the correlation between 2 columns with some tolerance"""
 
@@ -365,7 +384,8 @@ class Check:
         )
         return self
 
-    def satisfies(self, predicate: str, pct: float = 1.0):
+    @check_annotations
+    def satisfies(self, predicate: str, /, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
         key = self._generate_rule_key_id("satisfies", "N/A", predicate, pct)
         self._rule[key] = Rule("satisfies", "N/A", predicate, CheckDataType.AGNOSTIC)

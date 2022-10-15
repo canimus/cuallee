@@ -6,7 +6,6 @@ from operator import attrgetter as at
 from toolz import compose
 
 
-
 def test_column_input_tuple(spark: SparkSession, check: Check):
     df = spark.range(10).withColumn("id2", F.col("id") * 10)
     col1 = "id"

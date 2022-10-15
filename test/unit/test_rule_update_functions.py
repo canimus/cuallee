@@ -109,6 +109,3 @@ def test_delete_rule_by_coverage(spark):
     c.delete_rule_by_attribute("coverage", 1.0)
     assert len(c._rule) == 0
     assert len(c._compute) == 0
-
-
-

@@ -100,9 +100,7 @@ def test_observe_method_return_tuple(spark):
 def test_observe_no_compute(spark):
     df = spark.range(10).alias("id")
     rs = (
-        Check(CheckLevel.WARNING, "test_empty_observation")
-        .is_unique("id")
-        .validate(df)
+        Check(CheckLevel.WARNING, "test_empty_observation").is_unique("id").validate(df)
     )
     assert isinstance(rs, DataFrame)
 

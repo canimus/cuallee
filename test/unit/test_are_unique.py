@@ -6,6 +6,4 @@ def test_multiple_uniqueness(spark):
     df = spark.range(10).withColumn("id2", F.col("id") + 10)
     check = Check(CheckLevel.WARNING, "AreUniqueValues")
     check.are_unique(("id", "id2"))
-    assert (
-        check.validate(df).first().status == "PASS"
-    ), "Invalid duplicated record"
+    assert check.validate(df).first().status == "PASS", "Invalid duplicated record"

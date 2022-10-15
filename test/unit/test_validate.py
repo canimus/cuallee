@@ -10,9 +10,7 @@ from cuallee import Check, CheckLevel
 def test_return_spark_dataframe(spark):
     df = spark.range(10).alias("id")
     rs = (
-        Check(CheckLevel.WARNING, "test_spark_dataframe")
-        .is_complete("id")
-        .validate(df)
+        Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id").validate(df)
     )
     assert isinstance(rs, DataFrame)
 

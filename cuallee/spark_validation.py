@@ -1,12 +1,10 @@
 import operator
-import re
 from functools import reduce
 from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import Column, DataFrame, Observation, Row, SparkSession
-from pyspark.sql.dataframe import DataFrame
 from toolz import valfilter  # type: ignore
 
 from cuallee import Check, CheckDataType, ComputeInstruction, Rule
@@ -356,14 +354,19 @@ class Compute:
 
     def has_weekday_continuity(self, rule: Rule):
         predicate = None
+
         def _execute(dataframe: DataFrame, key: str):
-            _weekdays = lambda x: x.filter(F.dayofweek(rule.column).isin([2, 3, 4, 5, 6]))
+            _weekdays = lambda x: x.filter(
+                F.dayofweek(rule.column).isin([2, 3, 4, 5, 6])
+            )
             _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))
             full_interval = (
                 dataframe.select(
                     F.explode(
                         F.sequence(
-                            F.min(rule.column), F.max(rule.column), F.expr("interval 1 day")
+                            F.min(rule.column),
+                            F.max(rule.column),
+                            F.expr("interval 1 day"),
                         )
                     ).alias(rule.column)
                 )
@@ -373,16 +376,17 @@ class Compute:
             return full_interval.join(
                 dataframe.transform(_date_only), rule.column, how="left_anti"
             ).select(
-                (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(key)
+                (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
+                    key
+                )
             )
 
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=_execute,
-            compute_method="transform"
+            predicate=predicate, expression=_execute, compute_method="transform"
         )
 
         return self.compute_instruction
+
 
 def _column_set_comparison(
     rules: Dict[str, Rule],

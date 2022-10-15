@@ -1,33 +1,18 @@
 import enum
 import hashlib
+import logging
 import operator
-import pandas as pd  # type: ignore
 from dataclasses import dataclass
 from datetime import datetime
-from typing import (
-    Any,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    Dict,
-    Literal,
-    Callable,
-    Annotated,
-    get_type_hints,
-    get_origin,
-    get_args,
-)
-from toolz import valfilter  # type: ignore
 from functools import reduce
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-from pyspark.sql import DataFrame, Observation, SparkSession, Column, Row
-from toolz import compose, valfilter  # type: ignore
-from itertools import chain
+from pyspark.sql import Column, DataFrame
+from toolz import valfilter  # type: ignore
+
+import pandas as pd  # type: ignore
+
 from .utils import get_column_set
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +55,7 @@ class ComputeInstruction:
 
     def __repr__(self):
         return f"ComputeInstruction({self.compute_method})"
+
 
 class Check:
     def __init__(
@@ -138,7 +124,11 @@ class Check:
 
     def _remove_rule_and_compute(self, key: str):
         """Remove a key from rules and compute dictionaries"""
-        [collection.pop(key) for collection in [self._rule, self._compute] if key in collection.keys()]
+        [
+            collection.pop(key)
+            for collection in [self._rule, self._compute]
+            if key in collection.keys()
+        ]
 
     def add_rule(self, method: str, *arg):
         """Add a new rule to the Check class."""
@@ -148,10 +138,9 @@ class Check:
         """Delete rules from self._rule and self._compute dictionnary based on keys."""
         if isinstance(keys, str):
             keys = [keys]
-        
+
         [self._remove_rule_and_compute(key) for key in keys]
         return self
-
 
     def delete_rule_by_attribute(
         self,
@@ -163,12 +152,13 @@ class Check:
             values = [values]
 
         _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
-        [self._remove_rule_and_compute(key) for key in valfilter(_filter, self._rule).keys()]
+        [
+            self._remove_rule_and_compute(key)
+            for key in valfilter(_filter, self._rule).keys()
+        ]
         return self
 
-    def is_complete(
-        self, column: str, pct: float = 1.0
-    ):
+    def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
         rule = Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
         key = self._generate_rule_hash(rule)
@@ -179,13 +169,12 @@ class Check:
     def are_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         if isinstance(column, List):
-           column = tuple(column)
+            column = tuple(column)
         rule = Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
         key = self._generate_rule_hash(rule)
         self._rule[key] = rule
         return self
 
-    
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
         rule = Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)
@@ -193,7 +182,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def are_unique(self, column: Tuple[str], pct: float = 1.0):
         """Validation for unique values in a group of columns"""
         if isinstance(column, List):
@@ -203,7 +191,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater than value"""
         rule = Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct)
@@ -211,15 +198,15 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
-        rule = Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
+        rule = Rule(
+            "is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct
+        )
         key = self._generate_rule_hash(rule)
         self._rule[key] = rule
         return self
 
-    
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less than value"""
         rule = Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct)
@@ -227,7 +214,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
         rule = Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
@@ -235,7 +221,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric column equal than value"""
         rule = Rule("is_equal_than", column, value, CheckDataType.NUMERIC, pct)
@@ -249,11 +234,11 @@ class Check:
         key = self._generate_rule_hash(rule)
         self._rule[key] = rule
         return self
-        
+
         # ComputeInstruction(
         #     Rule("has_pattern", column, value, CheckDataType.STRING, pct),
         #     F.sum((F.length(F.regexp_extract(column, value, 0)) > 0).cast("integer")),
-    
+
     def has_min(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s minimum value"""
         rule = Rule("has_min", column, value, CheckDataType.NUMERIC)
@@ -261,7 +246,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def has_max(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s maximum value"""
         rule = Rule("has_max", column, value, CheckDataType.NUMERIC)
@@ -269,7 +253,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def has_std(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s standard deviation"""
         rule = Rule("has_std", column, value, CheckDataType.NUMERIC)
@@ -277,7 +260,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def has_mean(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column's average/mean"""
         rule = Rule("has_mean", column, value, CheckDataType.NUMERIC)
@@ -285,7 +267,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
 
@@ -298,7 +279,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def is_contained_in(
         self, column: str, value: Tuple[str, int, float], pct: float = 1.0
     ):
@@ -437,7 +417,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def has_percentile(
         self,
         column: str,
@@ -458,7 +437,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def has_max_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
@@ -473,7 +451,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def has_min_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
@@ -488,7 +465,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-    
     def has_correlation(
         self, column_left: str, column_right: str, value: float, pct: float = 1.0
     ):
@@ -565,7 +541,9 @@ class Check:
 
     def has_weekday_continuity(self, column: str, pct: float = 1.0):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
-        rule = Rule("has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct)
+        rule = Rule(
+            "has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct
+        )
         key = self._generate_rule_hash(rule)
 
         # def _execute(dataframe: DataFrame):
@@ -591,7 +569,6 @@ class Check:
         self._rule[key] = rule
         return self
 
-
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):
         """Compute all rules in this check for specific data frame"""
 
@@ -605,9 +582,7 @@ class Check:
         # Obtain a set of columns required for rules
         # flattening str columns and tuple columns
         column_set = set(
-            get_column_set(
-                list(map(operator.attrgetter("column"), rules))
-            )
+            get_column_set(list(map(operator.attrgetter("column"), rules)))
         )
 
         unknown_columns = column_set.difference(set(dataframe.columns))
@@ -615,8 +590,9 @@ class Check:
 
         # Check dataframe is spark dataframe
         if isinstance(dataframe, DataFrame):
-            import cuallee.spark_validation as SV
             from pyspark.sql import SparkSession
+
+            import cuallee.spark_validation as SV
 
             # Check SparkSession is available
             if "spark" in globals():
@@ -639,20 +615,19 @@ class Check:
             #     self._compute = {} # new with select only
             # SV._get_spark_version(self, spark)
 
-
             # Pre-Validation of data types
-            assert SV.validate_data_types(self._rule, dataframe), "Invalid data types found"
+            assert SV.validate_data_types(
+                self._rule, dataframe
+            ), "Invalid data types found"
 
             # Compute
             return SV.summary(self, dataframe, spark)
             # _get_rule_status(self, summary)
-            
+
         elif isinstance(dataframe, pd.DataFrame):
             from .pandas.pandas_validation import pd_compute_summary
 
             return pd_compute_summary(dataframe, self)
-
-
 
         #     df_observation = dataframe.observe(
         #         observation,
@@ -760,7 +735,6 @@ class Check:
                     if index in rule_index
                 ],
             ).drop_duplicates()
-            
 
     # def sampling(
     #     self,

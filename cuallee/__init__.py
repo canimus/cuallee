@@ -26,8 +26,7 @@ import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column, Row
 from toolz import compose, valfilter  # type: ignore
 from itertools import chain
-from . import dataframe as D
-
+from .utils import get_column_set
 import logging
 
 logger = logging.getLogger(__name__)
@@ -69,6 +68,8 @@ class ComputeInstruction:
     expression: Column
     compute_method: str
 
+    def __repr__(self):
+        return f"ComputeInstruction({self.compute_method})"
 
 class Check:
     def __init__(
@@ -95,17 +96,17 @@ class Check:
     @property
     def sum(self):
         """Collect compute, unique and union type of rules"""
-        return len(self._rule().keys())
+        return len(self._rule.keys())
 
     @property
     def rules(self):
         """Returns all rules defined for check"""
-        return list(self._rule().values())
+        return list(self._rule.values())
 
     @property
     def expressions(self):
         """Returns all summary expressions for validation"""
-        return list(map(lambda x: x.expression, self._compute().values()))
+        return list(map(lambda x: x.expression, self._compute.values()))
 
     @property
     def predicates(self):
@@ -113,23 +114,9 @@ class Check:
         return list(
             filter(
                 lambda x: x is not None,
-                map(lambda x: x.predicate, self._compute().values()),
+                map(lambda x: x.predicate, self._compute.values()),
             )
         )
-
-
-    def _compute_columns(self, columns: Union[str, List[str]]) -> List[str]:
-        """Confirm that all compute columns exists in dataframe"""
-
-        def _normalize_columns(col: Union[str, List[str]], agg: List[str]) -> List[str]:
-            """Recursive consilidation of compute columns"""
-            if isinstance(col, str):
-                agg.append(col)
-            else:
-                [_normalize_columns(inner_col, agg) for inner_col in col]
-            return agg
-
-        return _normalize_columns(columns, [])
 
     def _generate_rule_key_id(
         self,
@@ -162,7 +149,7 @@ class Check:
         if isinstance(keys, str):
             keys = [keys]
         
-        map(self._remove_rule_and_compute, keys)
+        [self._remove_rule_and_compute(key) for key in keys]
         return self
 
 
@@ -176,7 +163,7 @@ class Check:
             values = [values]
 
         _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
-        map(self._remove_rule_and_compute, valfilter(_filter, self._rule).keys())
+        [self._remove_rule_and_compute(key) for key in valfilter(_filter, self._rule).keys()]
         return self
 
     def is_complete(
@@ -604,6 +591,7 @@ class Check:
         self._rule[key] = rule
         return self
 
+
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):
         """Compute all rules in this check for specific data frame"""
 
@@ -617,7 +605,7 @@ class Check:
         # Obtain a set of columns required for rules
         # flattening str columns and tuple columns
         column_set = set(
-            self._compute_columns(
+            get_column_set(
                 list(map(operator.attrgetter("column"), rules))
             )
         )
@@ -627,13 +615,7 @@ class Check:
 
         # Check dataframe is spark dataframe
         if isinstance(dataframe, DataFrame):
-            from .spark_validation import (
-                compute_summary,
-                _get_rule_status,
-                _get_spark_version,
-                _get_compute_dict,
-                _validate_data_types,
-            )
+            import cuallee.spark_validation as SV
             from pyspark.sql import SparkSession
 
             # Check SparkSession is available
@@ -648,18 +630,23 @@ class Check:
             ), "The function requires to pass a spark session available, or in an environment with Apache Spark"
 
             # Create compute dictionary
-            _get_compute_dict(self)
-            
+            self._compute = SV.compute(self._rule)
+
             # Check Spark Version
-            _get_spark_version(self, spark)
+            # TODO: Requires re-implementation of imports in the the module
+            # if not SV.is_observe_capable(spark.version):
+            #     # NO: replace the compute_methods
+            #     self._compute = {} # new with select only
+            # SV._get_spark_version(self, spark)
+
 
             # Pre-Validation of data types
-            _validate_data_types(self, dataframe)
+            assert SV.validate_data_types(self._rule, dataframe), "Invalid data types found"
 
             # Compute
-            summary = compute_summary(self, dataframe, spark)
-            _get_rule_status(self, summary)
-            return summary
+            return SV.summary(self, dataframe, spark)
+            # _get_rule_status(self, summary)
+            
         elif isinstance(dataframe, pd.DataFrame):
             from .pandas.pandas_validation import pd_compute_summary
 

@@ -10,10 +10,10 @@ from cuallee import Check, CheckLevel
 def test_return_spark_dataframe(spark):
     df = spark.range(10).alias("id")
     rs = Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id")
-    rs.validate(df, spark)
-    assert isinstance(rs.sampling(df, spark), DataFrame)
+    assert isinstance(rs.samples(rs.validate(df)), DataFrame)
 
 
+@pytest.mark.skip
 def test_order_validate_args(spark):
     df = spark.range(10).alias("id")
     with pytest.raises(
@@ -24,6 +24,7 @@ def test_order_validate_args(spark):
         ).sampling(spark, df).show()
 
 
+@pytest.mark.skip
 def test_spark_session_in_arg(spark):
     df = spark.range(10).alias("id")
     with pytest.raises(

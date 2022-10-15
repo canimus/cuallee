@@ -1,26 +1,25 @@
-from pyspark.sql import SparkSession, DataFrame, Row, Observation, Column
-from typing import Dict, Optional, Callable, Any, Tuple, Union
-from toolz import valfilter  # type: ignore
-from functools import reduce
-
 import operator
 import re
+from functools import reduce
+from typing import (Any, Callable, Collection, Dict, Optional, Tuple, Type,
+                    Union)
+
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
+from pyspark.sql import Column, DataFrame, Observation, Row, SparkSession
+from pyspark.sql.dataframe import DataFrame
+from toolz import valfilter  # type: ignore
 
-from cuallee import Check, Rule, CheckDataType, ComputeInstruction
-from cuallee import dataframe as D
+from cuallee import Check, CheckDataType, ComputeInstruction, Rule
+from cuallee.utils import get_column_set
 
 
 class Compute:
-    def __init__(self, name: str):
-        self.name = name
+    def __init__(self):
         self.compute_instruction = ComputeInstruction
 
     def __repr__(self):
-        return f"Compute(desc:{self.name})"
-
-    # Helper functions:
+        return self.compute_instruction
 
     def _single_value_rule(
         self,
@@ -267,45 +266,13 @@ class Compute:
         return self.compute_instruction
 
 
-def _get_compute_dict(check: Check) -> Dict:
-    """Create dictionnary containing compute instruction for each rule."""
-    compute = Compute(check.name)
-    for k, v in check._rule.items():
-        f = operator.methodcaller(v.method, v)
-        check._compute[k] = f(compute)
-    return check
-
-
-def _overwrite_observe_method(check: Check):
-    """Overwrite the observe method to select."""
-    for v in check._compute.values():
-        if v.compute_method == "observe":
-            v.compute_method = "select"
-        else:
-            v.compute_method = v.compute_method
-
-
-def _get_spark_version(check: Check, spark: SparkSession):
-    """Check spark version and overwrite compute method if needed."""
-    e = re.compile(r"(\d+).(\d+).(\d+)")
-    major, minor, low = list(map(int, e.match(spark.version).groups()))
-    if major >= 3 & minor >= 3 & low >= 0:
-        pass
-    else:
-        _overwrite_observe_method(check)
-
-
-def _column_set_comparison(check: Check, dataframe: DataFrame, columns, filter: Callable, fn: Callable):
+def _column_set_comparison(rules: Dict[str, Rule], dataframe: DataFrame, columns, filter: Callable, fn: Callable):
     """Compair type of the columns passed in rules and present in dataframe."""
     return set(
-        check._compute_columns(
-            map(columns, valfilter(filter, check._rule).values())  # type: ignore
+        get_column_set(
+            map(columns, valfilter(filter, rules).values())  # type: ignore
         )
     ).difference(fn(dataframe))
-
-import pyspark.sql.types as T
-from pyspark.sql.dataframe import DataFrame
-from typing import Collection, Union, Type
 
 
 def _field_type_filter(
@@ -318,6 +285,87 @@ def _field_type_filter(
     return set(
         [f.name for f in dataframe.schema.fields if isinstance(f.dataType, field_type)]  # type: ignore
     )
+
+def _compute_observe_method(compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame) -> Tuple[int, Dict]:
+    """Compute rules throught spark Observation"""
+    # Filter expression directed to observe
+    _observe = lambda x: x.compute_method == "observe"
+    observe = valfilter(_observe, compute_set)
+
+    if observe:
+        observation = Observation("observation")
+
+        df_observation = dataframe.observe(
+            observation,
+            *[
+                compute_instruction.expression.alias(hash_key)
+                for hash_key, compute_instruction in observe.items()
+            ],
+        )
+        rows = df_observation.count()
+        # observation_result = observation.get
+        return rows, observation.get
+    else:
+        # observation_result = {}
+        rows = dataframe.count()
+        return rows, {}
+
+
+def _compute_select_method(compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame) -> Dict:
+    """Compute rules throught spark select"""
+
+    # Filter expression directed to select
+    _select = lambda x: x.compute_method == "select"
+    select = valfilter(_select, compute_set)
+
+    return (
+        dataframe.select(
+            *[
+                compute_instrunction.expression.alias(hash_key)
+                for hash_key, compute_instrunction in select.items()
+            ]
+        )
+        .first()
+        .asDict()  # type: ignore
+    )
+
+
+def _compute_transform_method(compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame) -> Dict:
+    """Compute rules throught spark transform"""
+
+    # Filter expression directed to transform
+    _transform = lambda x: x.compute_method == "transform"
+    transform = valfilter(_transform, compute_set)
+
+    return (
+        dataframe.select(
+            *[
+                compute_instrunction.expression.alias(hash_key)
+                for hash_key, compute_instrunction in transform.items()
+            ]
+        )
+        .first()
+        .asDict()  # type: ignore
+    )
+        
+
+# def _overwrite_observe_method(compute: Dict[str, ComputeInstruction]):
+#     """Overwrite the observe method to select."""
+#     for compute_instruction in compute.values():
+#         if compute_instruction.compute_method == "observe":
+#             compute_instruction.compute_method = "select"
+#         else:
+#             compute_instruction.compute_method = compute_instruction.compute_method
+
+
+# def is_observe_capable(version: str):
+#     """Check spark version and overwrite compute method if needed."""
+#     e = re.compile(r"(\d+).(\d+).(\d+)")
+#     major, minor, low = list(map(int, e.match(version).groups()))
+#     if major >= 3 & minor >= 3 & low >= 0:
+#         return True
+#     else:
+#         return False
 
 
 def numeric_fields(dataframe: DataFrame) -> Collection:
@@ -341,7 +389,8 @@ def timestamp_fields(dataframe: DataFrame) -> Collection:
     """Filter all date data types in data frame and returns field names"""
     return _field_type_filter(dataframe, T.TimestampType)
 
-def _validate_data_types(check: Check, dataframe: DataFrame):
+
+def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame):
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
     _col = operator.attrgetter("column")
     _numeric = lambda x: x.data_type.name == CheckDataType.NUMERIC.name
@@ -349,91 +398,33 @@ def _validate_data_types(check: Check, dataframe: DataFrame):
     _timestamp = lambda x: x.data_type.name == CheckDataType.TIMESTAMP.name
     _string = lambda x: x.data_type.name == CheckDataType.STRING.name
     # Numeric Validation
-    non_numeric = _column_set_comparison(check, dataframe, _col, _numeric, numeric_fields)
+    non_numeric = _column_set_comparison(rules, dataframe, _col, _numeric, numeric_fields)
     assert len(non_numeric) == 0, f"Column(s): {non_numeric} are not numeric"
     # String Validation
-    non_string = _column_set_comparison(check, dataframe, _col, _string, string_fields)
+    non_string = _column_set_comparison(rules, dataframe, _col, _string, string_fields)
     assert len(non_string) == 0, f"Column(s): {non_string} are not strings"
     # Date Validation
-    non_date = _column_set_comparison(check, dataframe, _col, _date, date_fields)
+    non_date = _column_set_comparison(rules, dataframe, _col, _date, date_fields)
     assert len(non_date) == 0, f"Column(s): {non_date} are not dates"
     # Timestamp validation
-    non_timestamp = _column_set_comparison(check, dataframe, _col, _timestamp, timestamp_fields)
+    non_timestamp = _column_set_comparison(rules, dataframe, _col, _timestamp, timestamp_fields)
     assert len(non_timestamp) == 0, f"Column(s): {non_timestamp} are not timestamps"
+    return True
 
 
-def _compute_observe_method(check: Check, dataframe: DataFrame) -> Tuple[int, Dict]:
-    """Compute rules throught spark Observation"""
-    # Filter expression directed to observe
-    _observe = lambda x: x.compute_method == "observe"
-    observe = valfilter(_observe, check._compute)
+def compute(rules : Dict[str,Rule]) -> Dict:
+    """Create dictionnary containing compute instruction for each rule."""
+    return {k: operator.methodcaller(v.method, v)(Compute()) for k, v in rules.items()}
 
-    if observe:
-        observation = Observation(check.name)
-
-        df_observation = dataframe.observe(
-            observation,
-            *[
-                compute_instruction.expression.alias(hash_key)
-                for hash_key, compute_instruction in observe.items()
-            ],
-        )
-        rows = df_observation.count()
-        # observation_result = observation.get
-        return rows, observation.get
-    else:
-        # observation_result = {}
-        rows = dataframe.count()
-        return rows, {}
-
-
-def _compute_select_method(check: Check, dataframe: DataFrame) -> Dict:
-    """Compute rules throught spark select"""
-
-    # Filter expression directed to select
-    _select = lambda x: x.compute_method == "select"
-    select = valfilter(_select, check._compute)
-
-    return (
-        dataframe.select(
-            *[
-                compute_instrunction.expression.alias(hash_key)
-                for hash_key, compute_instrunction in select.items()
-            ]
-        )
-        .first()
-        .asDict()  # type: ignore
-    )
-
-
-def _compute_transform_method(check: Check, dataframe: DataFrame) -> Dict:
-    """Compute rules throught spark transform"""
-
-    # Filter expression directed to transform
-    _transform = lambda x: x.compute_method == "transform"
-    transform = valfilter(_transform, check._compute)
-
-    return (
-        dataframe.select(
-            *[
-                compute_instrunction.expression.alias(hash_key)
-                for hash_key, compute_instrunction in transform.items()
-            ]
-        )
-        .first()
-        .asDict()  # type: ignore
-    )
-
-
-def compute_summary(
+def summary(
     check: Check, dataframe: DataFrame, spark: SparkSession
 ) -> DataFrame:
     """Compute all rules in this check for specific data frame"""
 
     # Compute the expression
-    rows, observation_result = _compute_observe_method(check, dataframe)
-    select_result = _compute_select_method(check, dataframe)
-    transform_result = _compute_transform_method(check, dataframe)
+    rows, observation_result = _compute_observe_method(check._compute, dataframe)
+    select_result = _compute_select_method(check._compute, dataframe)
+    transform_result = _compute_transform_method(check._compute, dataframe)
 
     unified_results = {**observation_result, **select_result, **transform_result}
 
@@ -463,8 +454,7 @@ def compute_summary(
         )
         .select(
             F.col("id"),
-            F.lit(check.date.strftime("%Y-%m-%d")).alias("date"),
-            F.lit(check.date.strftime("%H:%M:%S")).alias("time"),
+            F.lit(check.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
             F.lit(check.name).alias("check"),
             F.lit(check.level.name).alias("level"),
             F.col("column"),
@@ -482,48 +472,48 @@ def compute_summary(
     )
 
 
-def _get_rule_status(check: Check, summary_dataframe: DataFrame):
-    """Update the rule status after computing summary"""
-    for index, rule in enumerate(check._rule.values(), 1):
-        rule.status = (
-            summary_dataframe.filter(F.col("id") == index)
-            .select("status")
-            .first()
-            .status
-        )
-    return check
+# def _get_rule_status(check: Check, summary_dataframe: DataFrame):
+#     """Update the rule status after computing summary"""
+#     for index, rule in enumerate(check._rule.values(), 1):
+#         rule.status = (
+#             summary_dataframe.filter(F.col("id") == index)
+#             .select("status")
+#             .first()
+#             .status
+#         )
+#     return check
 
 
-def get_record_sample(
-    check: Check,
-    dataframe: DataFrame,
-    spark: SparkSession,
-    status: str = "FAIL",
-    method: Union[tuple[str], str] = None,
-) -> DataFrame:
-    """Give a sample of malformed rows"""
+# def get_record_sample(
+#     check: Check,
+#     dataframe: DataFrame,
+#     spark: SparkSession,
+#     status: str = "FAIL",
+#     method: Union[tuple[str], str] = None,
+# ) -> DataFrame:
+#     """Give a sample of malformed rows"""
 
-    # Filters
-    _sample = (
-        lambda x: (x.status == "FAIL")
-        if method is None
-        else (x.status == "FAIL") & (x.method in method)
-    )
+#     # Filters
+#     _sample = (
+#         lambda x: (x.status == "FAIL")
+#         if method is None
+#         else (x.status == "FAIL") & (x.method in method)
+#     )
 
-    if status == "FAIL":
+#     if status == "FAIL":
 
-        sample_dataframe = spark.createDataFrame([], schema=dataframe.schema)
+#         sample_dataframe = spark.createDataFrame([], schema=dataframe.schema)
 
-        for hash_key in valfilter(_sample, check._rule).keys():
-            sample_dataframe = sample_dataframe.unionByName(
-                dataframe.filter(~check._compute[hash_key].predicate)
-            )
+#         for hash_key in valfilter(_sample, check._rule).keys():
+#             sample_dataframe = sample_dataframe.unionByName(
+#                 dataframe.filter(~check._compute[hash_key].predicate)
+#             )
 
-        return sample_dataframe.distinct()
-    else:
-        sample_dataframe = dataframe
-        for hash_key in valfilter(_sample, check._rule).keys():
-            sample_dataframe = sample_dataframe.filter(
-                check._compute[hash_key].predicate
-            )
-        return sample_dataframe
+#         return sample_dataframe.distinct()
+#     else:
+#         sample_dataframe = dataframe
+#         for hash_key in valfilter(_sample, check._rule).keys():
+#             sample_dataframe = sample_dataframe.filter(
+#                 check._compute[hash_key].predicate
+#             )
+#         return sample_dataframe

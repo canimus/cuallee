@@ -14,7 +14,7 @@ clean: # Remove workspace files
 	@python -c "print('Cleaning: 👌')"
 
 cov: # Run test and coverage
-	coverage run -m pytest tests/unit
+	coverage run -m pytest test/unit
 	coverage xml -o temp/coverage.xml
 
 flake: # Lint code

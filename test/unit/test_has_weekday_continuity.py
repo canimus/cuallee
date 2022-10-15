@@ -15,7 +15,7 @@ def test_missing_one_weekday(spark):
     check.has_weekday_continuity("ts")
 
     assert (
-        check.validate(spark, df).first().violations == 1
+        check.validate(df).first().violations == 1
     ), "Incorrect calculation of continuity on business days"
 
 
@@ -33,5 +33,5 @@ def test_missing_two_weekdays(spark):
     check.has_weekday_continuity("ts")
 
     assert (
-        check.validate(spark, df).first().violations == 2
+        check.validate(df).first().violations == 2
     ), "Incorrect calculation of continuity on business days"

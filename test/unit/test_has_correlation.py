@@ -17,7 +17,7 @@ def test_positive_correlation(spark: SparkSession):
     check.has_correlation("id", "id2", 1.0)
     logger.info(check)
     logger.info(df.collect())
-    test_result_row = check.validate(spark, df).first()
+    test_result_row = check.validate(df).first()
     logger.info(str(test_result_row))
     logger.info("STATUS")
     logger.info("*" * 100)
@@ -32,11 +32,11 @@ def test_no_correlation(spark: SparkSession):
         pd.DataFrame({"id": np.arange(10), "id2": np.random.randn(10)})
     )
     check.has_correlation("id", "id2", 1.0)
-    assert check.validate(spark, df).first().status == "FAIL"
+    assert check.validate(df).first().status == "FAIL"
 
 
 def test_correlation_value(spark: SparkSession):
     check = Check(CheckLevel.WARNING, "PyTestCheck")
     df = spark.range(10).withColumn("id2", F.col("id") * 10)
     check.has_correlation("id", "id2", 1.0)
-    assert str(check.validate(spark, df).first().value) == "1.0"
+    assert str(check.validate(df).first().value) == "1.0"

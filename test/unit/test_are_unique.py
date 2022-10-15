@@ -7,5 +7,5 @@ def test_multiple_uniqueness(spark):
     check = Check(CheckLevel.WARNING, "AreUniqueValues")
     check.are_unique(("id", "id2"))
     assert (
-        check.validate(spark, df).first().status == "PASS"
+        check.validate(df).first().status == "PASS"
     ), "Invalid duplicated record"

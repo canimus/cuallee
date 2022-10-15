@@ -13,5 +13,5 @@ def test_all_thursday(spark):
     check.is_on_thursday("ts")
 
     assert (
-        check.validate(spark, df).first().violations == 9
+        check.validate(df).first().violations == 9
     ), "Incorrect calulation of Thursday filters"

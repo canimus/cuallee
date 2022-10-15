@@ -9,7 +9,7 @@ def test_string_is_contained_in(spark: SparkSession):
     df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["ID", "desc"])
     c = Check(CheckLevel.WARNING, "is_contained_in_string_test")
     c.is_contained_in("desc", ("blue", "red"))
-    rs = c.validate(spark, df).first()
+    rs = c.validate(df).first()
     assert rs.status == "FAIL"
 
 
@@ -19,5 +19,5 @@ def test_number_is_contained_in(spark: SparkSession):
     )
     c = Check(CheckLevel.WARNING, "is_contained_in_number_test")
     c.is_contained_in("value", (10, 15, 17))
-    rs = c.validate(spark, df)
+    rs = c.validate(df)
     assert rs.select("status").first().status == "PASS"

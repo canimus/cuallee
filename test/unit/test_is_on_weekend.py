@@ -13,5 +13,5 @@ def test_all_weekends(spark):
     check.is_on_weekend("ts")
 
     assert (
-        check.validate(spark, df).first().violations == 6
+        check.validate(df).first().violations == 6
     ), "Incorrect calulation of Weekend filters"

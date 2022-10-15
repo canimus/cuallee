@@ -1,18 +1,32 @@
 import enum
 import hashlib
 import operator
+import pandas as pd  # type: ignore
 from dataclasses import dataclass
 from datetime import datetime
+from typing import (
+    Any,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Dict,
+    Literal,
+    Callable,
+    Annotated,
+    get_type_hints,
+    get_origin,
+    get_args,
+)
+from toolz import valfilter  # type: ignore
 from functools import reduce
-from typing import Any, Callable, List, Optional, Tuple, Union, Dict
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame, Observation, SparkSession, Column, Row
 from toolz import compose, valfilter  # type: ignore
 from itertools import chain
-from . import dataframe as D
-
+from .utils import get_column_set
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,24 +45,31 @@ class CheckDataType(enum.Enum):
     TIMESTAMP = 4
 
 
-@dataclass(frozen=True)
+@dataclass
 class Rule:
     method: str
     column: Union[Tuple, str]
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
+    status: str = None
+
+    def __post_init__(self):
+        if (self.coverage <= 0) or (self.coverage > 1):
+            raise ValueError("Coverage should be between 0 and 1")
 
     def __repr__(self):
-        return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}"
+        return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
 
 
-@dataclass(frozen=True)
+@dataclass
 class ComputeInstruction:
-    rule: Rule
-    expression: Union[Column, Callable]
-    predicate: Union[Column, Callable, None] = None
+    predicate: Union[Column, None]
+    expression: Column
+    compute_method: str
 
+    def __repr__(self):
+        return f"ComputeInstruction({self.compute_method})"
 
 class Check:
     def __init__(
@@ -57,9 +78,10 @@ class Check:
         name: str,
         execution_date: datetime = datetime.today(),
     ):
+        """A container of data quality rules."""
+        self._rule: Dict[str, Rule] = {}
         self._compute: Dict[str, ComputeInstruction] = {}
-        self._unique: Dict[str, ComputeInstruction] = {}
-        self._union: Dict[str, ComputeInstruction] = {}
+
         if isinstance(level, int):
             level = CheckLevel(level)
 
@@ -74,17 +96,17 @@ class Check:
     @property
     def sum(self):
         """Collect compute, unique and union type of rules"""
-        return len(self._integrate_compute().keys())
+        return len(self._rule.keys())
 
     @property
     def rules(self):
         """Returns all rules defined for check"""
-        return list(map(lambda x: x.rule, self._integrate_compute().values()))
+        return list(self._rule.values())
 
     @property
     def expressions(self):
         """Returns all summary expressions for validation"""
-        return list(map(lambda x: x.expression, self._integrate_compute().values()))
+        return list(map(lambda x: x.expression, self._compute.values()))
 
     @property
     def predicates(self):
@@ -92,7 +114,7 @@ class Check:
         return list(
             filter(
                 lambda x: x is not None,
-                map(lambda x: x.predicate, self._integrate_compute().values()),
+                map(lambda x: x.predicate, self._compute.values()),
             )
         )
 
@@ -114,171 +136,156 @@ class Check:
             rule.method, rule.column, rule.value, rule.coverage
         )
 
-    def _single_value_rule(
+    def _remove_rule_and_compute(self, key: str):
+        """Remove a key from rules and compute dictionaries"""
+        [collection.pop(key) for collection in [self._rule, self._compute] if key in collection.keys()]
+
+    def add_rule(self, method: str, *arg):
+        """Add a new rule to the Check class."""
+        return operator.methodcaller(method, *arg)(self)
+
+    def delete_rule_by_key(self, keys: Union[str, List[str]]):
+        """Delete rules from self._rule and self._compute dictionnary based on keys."""
+        if isinstance(keys, str):
+            keys = [keys]
+        
+        [self._remove_rule_and_compute(key) for key in keys]
+        return self
+
+
+    def delete_rule_by_attribute(
         self,
-        column: str,
-        value: Optional[Any],
-        operator: Callable,
+        rule_attribute: Literal["method", "column", "coverage"],
+        values: Union[List[str], List[float]],
     ):
-        return F.sum((operator(F.col(column), value)).cast("integer"))
+        """Delete rule based on method(s) or column name(s) or coverage value(s)."""
+        if not isinstance(values, List):
+            values = [values]
 
-    def _integrate_compute(self) -> Dict:
-        """Unifies the compute dictionaries from observation and select forms"""
-        return {**self._compute, **self._unique, **self._union}
+        _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
+        [self._remove_rule_and_compute(key) for key in valfilter(_filter, self._rule).keys()]
+        return self
 
-    @staticmethod
-    def _compute_columns(columns: Union[str, List[str]]) -> List[str]:
-        """Confirm that all compute columns exists in dataframe"""
-
-        def _normalize_columns(col: Union[str, List[str]], agg: List[str]) -> List[str]:
-            """Recursive consilidation of compute columns"""
-            if isinstance(col, str):
-                agg.append(col)
-            else:
-                [_normalize_columns(inner_col, agg) for inner_col in col]
-            return agg
-
-        return _normalize_columns(columns, [])
-
-    def is_complete(self, column: str, pct: float = 1.0):
+    def is_complete(
+        self, column: str, pct: float = 1.0
+    ):
         """Validation for non-null values in column"""
         rule = Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
-        predicate = F.col(f"`{column}`").isNull()
-        expression = F.sum(F.col(f"`{column}`").isNotNull().cast("integer"))
         key = self._generate_rule_hash(rule)
-        self._compute[key] = ComputeInstruction(
-            rule,
-            expression,
-            predicate,
-        )
+        self._rule[key] = rule
 
         return self
 
     def are_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
-        # if isinstance(column, List):
-        #    column = tuple(column)
-        key = self._generate_rule_key_id("are_complete", column, "N/A", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct),
-            reduce(
-                operator.add,
-                [F.sum(F.col(f"`{c}`").isNotNull().cast("integer")) for c in column],
-            )
-            / len(column),
-        )
+        if isinstance(column, List):
+           column = tuple(column)
+        rule = Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
-        key = self._generate_rule_key_id("is_unique", column, "N/A", pct)
-        self._unique[key] = ComputeInstruction(
-            Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct),
-            F.count_distinct(F.col(column)),
-        )
+        rule = Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def are_unique(self, column: Tuple[str], pct: float = 1.0):
         """Validation for unique values in a group of columns"""
         if isinstance(column, List):
             column = tuple(column)
-        key = self._generate_rule_key_id("are_unique", column, "N/A", pct)
-        self._unique[key] = ComputeInstruction(
-            Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct),
-            F.count_distinct(*[F.col(c) for c in column]),
-        )
+        rule = Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater than value"""
-        key = self._generate_rule_key_id("is_greater_than", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct),
-            self._single_value_rule(column, value, operator.gt),
-        )
+        rule = Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
-        key = self._generate_rule_key_id("is_greater_or_equal_than", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct),
-            self._single_value_rule(column, value, operator.ge),
-        )
+        rule = Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less than value"""
-        key = self._generate_rule_key_id("is_less_than", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct),
-            self._single_value_rule(column, value, operator.lt),
-        )
+        rule = Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
-        key = self._generate_rule_key_id("is_less_or_equal_than", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct),
-            self._single_value_rule(column, value, operator.le),
-        )
+        rule = Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric column equal than value"""
-        key = self._generate_rule_key_id("is_equal", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_equal", column, value, CheckDataType.NUMERIC, pct),
-            self._single_value_rule(column, value, operator.eq),
-        )
+        rule = Rule("is_equal_than", column, value, CheckDataType.NUMERIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
     def has_pattern(self, column: str, value: str, pct: float = 1.0):
         """Validation for string type column matching regex expression"""
-        key = self._generate_rule_key_id("has_pattern", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("has_pattern", column, value, CheckDataType.STRING, pct),
-            F.sum((F.length(F.regexp_extract(column, value, 0)) > 0).cast("integer")),
-        )
+        rule = Rule("has_pattern", column, value, CheckDataType.STRING, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
-
+        
+        # ComputeInstruction(
+        #     Rule("has_pattern", column, value, CheckDataType.STRING, pct),
+        #     F.sum((F.length(F.regexp_extract(column, value, 0)) > 0).cast("integer")),
+    
     def has_min(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s minimum value"""
-        key = self._generate_rule_key_id("has_min", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("has_min", column, value, CheckDataType.NUMERIC),
-            F.min(F.col(column)) == value,
-        )
+        rule = Rule("has_min", column, value, CheckDataType.NUMERIC)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def has_max(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s maximum value"""
-        key = self._generate_rule_key_id("has_max", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("has_max", column, value, CheckDataType.NUMERIC),
-            F.max(F.col(column)) == value,
-        )
+        rule = Rule("has_max", column, value, CheckDataType.NUMERIC)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def has_std(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column’s standard deviation"""
-        key = self._generate_rule_key_id("has_std", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("has_std", column, value, CheckDataType.NUMERIC),
-            F.stddev_pop(F.col(column)) == value,
-        )
+        rule = Rule("has_std", column, value, CheckDataType.NUMERIC)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def has_mean(self, column: str, value: float, pct: float = 1.0):
         """Validation of a column's average/mean"""
-        key = self._generate_rule_key_id("has_mean", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("has_mean", column, value, CheckDataType.NUMERIC),
-            F.mean(F.col(f"`{column}`")).eqNullSafe(value),
-        )
+        rule = Rule("has_mean", column, value, CheckDataType.NUMERIC)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
 
@@ -286,13 +293,12 @@ class Check:
         if isinstance(value, List):
             value = tuple(value)
 
-        key = self._generate_rule_key_id("is_between", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct),
-            F.sum(F.col(column).between(*value).cast("integer")),  # type: ignore
-        )
+        rule = Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def is_contained_in(
         self, column: str, value: Tuple[str, int, float], pct: float = 1.0
     ):
@@ -307,11 +313,9 @@ class Check:
         else:
             check = CheckDataType.NUMERIC
 
-        key = self._generate_rule_key_id("is_contained_in", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_contained_in", column, value, check),
-            F.sum((F.col(column).isin(list(value))).cast(T.LongType())),
-        )
+        rule = Rule("is_contained_in", column, value, check)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
@@ -320,83 +324,101 @@ class Check:
 
     def is_on_weekday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is in a Mon-Fri time range"""
-        key = self._generate_rule_key_id("is_on_weekday", column, "Mon-Fri", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct),
-            F.sum(F.dayofweek(f"`{column}`").between(2, 6).cast("integer")),
-        )
+        rule = Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct),
+        #     F.sum(F.dayofweek(f"`{column}`").between(2, 6).cast("integer")),
+        # )
         return self
 
     def is_on_weekend(self, column: str, pct: float = 1.0):
         """Validates a datetime column is in a Sat-Sun time range"""
-        key = self._generate_rule_key_id("is_on_weekend", column, "Sat-Sun", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct),
-            F.sum(F.dayofweek(f"`{column}`").isin([1, 7]).cast("integer")),
-        )
+        rule = Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct),
+        #     F.sum(F.dayofweek(f"`{column}`").isin([1, 7]).cast("integer")),
+        # )
         return self
 
     def is_on_monday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Mon"""
-        key = self._generate_rule_key_id("is_on_monday", column, "Mon", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct),
-            F.sum((F.dayofweek(f"`{column}`") == 2).cast("integer")),
-        )
+        rule = Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct),
+        #     F.sum((F.dayofweek(f"`{column}`") == 2).cast("integer")),
+        # )
         return self
 
     def is_on_tuesday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Tue"""
-        key = self._generate_rule_key_id("is_on_tuesday", column, "Tue", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct),
-            F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
-        )
+        rule = Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct),
+        #     F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
+        # )
         return self
 
     def is_on_wednesday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Wed"""
-        key = self._generate_rule_key_id("is_on_wednesday", column, "Wed", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct),
-            F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
-        )
+        rule = Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct),
+        #     F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
+        # )
         return self
 
     def is_on_thursday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Thu"""
-        key = self._generate_rule_key_id("is_on_thursday", column, "Thu", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct),
-            F.sum((F.dayofweek(f"`{column}`") == 4).cast("integer")),
-        )
+        rule = Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct),
+        #     F.sum((F.dayofweek(f"`{column}`") == 4).cast("integer")),
+        # )
         return self
 
     def is_on_friday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Fri"""
-        key = self._generate_rule_key_id("is_on_friday", column, "Fri", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct),
-            F.sum((F.dayofweek(f"`{column}`") == 5).cast("integer")),
-        )
+        rule = Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct),
+        #     F.sum((F.dayofweek(f"`{column}`") == 5).cast("integer")),
+        # )
         return self
 
     def is_on_saturday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Sat"""
-        key = self._generate_rule_key_id("is_on_saturday", column, "Sat", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct),
-            F.sum((F.dayofweek(f"`{column}`") == 7).cast("integer")),
-        )
+        rule = Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct),
+        #     F.sum((F.dayofweek(f"`{column}`") == 7).cast("integer")),
+        # )
         return self
 
     def is_on_sunday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Sun"""
-        key = self._generate_rule_key_id("is_on_sunday", column, "Sun", pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct),
-            F.sum((F.dayofweek(f"`{column}`") == 1).cast("integer")),
-        )
+        rule = Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct),
+        #     F.sum((F.dayofweek(f"`{column}`") == 1).cast("integer")),
+        # )
         return self
 
     def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0):
@@ -406,13 +428,16 @@ class Check:
         if isinstance(value, List):
             value = tuple(value)
 
-        key = self._generate_rule_key_id("is_on_schedule", column, value, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct),
-            F.sum(F.hour(column).between(*value).cast("integer")),  # type: ignore
-        )
+        rule = Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct)
+        key = self._generate_rule_hash(rule)
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct),
+        #     F.sum(F.hour(column).between(*value).cast("integer")),  # type: ignore
+        # )
+        self._rule[key] = rule
         return self
 
+    
     def has_percentile(
         self,
         column: str,
@@ -422,309 +447,294 @@ class Check:
         pct: float = 1.0,
     ):
         """Validation of a column percentile value"""
-        key = self._generate_rule_key_id(
-            "has_percentile", column, (value, percentile, precision), pct
+        rule = Rule(
+            "has_percentile",
+            column,
+            (value, percentile, precision),
+            CheckDataType.NUMERIC,
+            pct,
         )
-        self._unique[key] = ComputeInstruction(
-            Rule(
-                "has_percentile",
-                column,
-                (value, percentile, precision),
-                CheckDataType.NUMERIC,
-                pct,
-            ),
-            F.percentile_approx(
-                F.col(f"`{column}`").cast(T.DoubleType()), percentile, precision
-            ).eqNullSafe(value),
-        )
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def has_max_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
         """Validation of a column maximum based on other column maximum"""
-        key = self._generate_rule_key_id(
-            "has_max_by", (column_source, column_target), value, pct
+        rule = Rule(
+            "has_max_by",
+            (column_source, column_target),
+            value,
+            CheckDataType.NUMERIC,
         )
-        self._compute[key] = ComputeInstruction(
-            Rule(
-                "has_max_by",
-                (column_source, column_target),
-                value,
-                CheckDataType.NUMERIC,
-            ),
-            F.max_by(column_target, column_source) == value,
-        )
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def has_min_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
         """Validation of a column minimum based on other column minimum"""
-        key = self._generate_rule_key_id(
-            "has_min_by", (column_source, column_target), value, pct
+        rule = Rule(
+            "has_min_by",
+            (column_source, column_target),
+            value,
+            CheckDataType.NUMERIC,
         )
-        self._compute[key] = ComputeInstruction(
-            Rule(
-                "has_min_by",
-                (column_source, column_target),
-                value,
-                CheckDataType.NUMERIC,
-            ),
-            F.min_by(column_target, column_source) == value,
-        )
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
+    
     def has_correlation(
         self, column_left: str, column_right: str, value: float, pct: float = 1.0
     ):
         """Validates the correlation between 2 columns with some tolerance"""
-
-        key = self._generate_rule_key_id(
-            "has_correlation", (column_left, column_right), value, pct
+        rule = Rule(
+            "has_correlation",
+            (column_left, column_right),
+            value,
+            CheckDataType.NUMERIC,
         )
-        self._unique[key] = ComputeInstruction(
-            Rule(
-                "has_correlation",
-                (column_left, column_right),
-                value,
-                CheckDataType.NUMERIC,
-            ),
-            F.corr(
-                F.col(f"`{column_left}`").cast(T.DoubleType()),
-                F.col(f"`{column_right}`").cast(T.DoubleType()),
-            ).eqNullSafe(F.lit(value)),
-        )
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
         return self
 
     def satisfies(self, predicate: str, column: str, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
-        key = self._generate_rule_key_id("satisfies", column, predicate, pct)
-        self._compute[key] = ComputeInstruction(
-            Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct),
-            F.sum(F.expr(predicate).cast("integer")),
-        )
+        rule = Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct)
+        key = self._generate_rule_hash(rule)
+        self._rule[key] = rule
+        # self._compute[key] = ComputeInstruction(
+        #     Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct),
+        #     F.sum(F.expr(predicate).cast("integer")),
+        # )
         return self
 
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
         """Validation for entropy calculation on continuous values"""
-        key = self._generate_rule_key_id("has_entropy", column, value, tolerance)
+        rule = Rule("has_entropy", column, value, CheckDataType.AGNOSTIC)
+        key = self._generate_rule_hash(rule)
 
-        def _execute(dataframe: DataFrame):
-            return (
-                dataframe.groupby(column)
-                .count()
-                .select(F.collect_list("count").alias("freq"))
-                .select(
-                    F.col("freq"),
-                    F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),
-                )
-                .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
-                .withColumn("n_labels", F.size("probs"))
-                .withColumn("log_labels", F.log("n_labels"))
-                .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
-                .withColumn(
-                    "log_classes",
-                    F.transform("probs", lambda x: F.log((x / x) * F.col("n_labels"))),
-                )
-                .withColumn("entropy_vals", F.arrays_zip("probs", "log_prob"))
-                .withColumn(
-                    "product_prob",
-                    F.transform(
-                        "entropy_vals",
-                        lambda x: x.getItem("probs") * x.getItem("log_prob"),
-                    ),
-                )
-                .select(
-                    (
-                        F.aggregate(
-                            "product_prob", F.lit(0.0), lambda acc, x: acc + x
-                        ).alias("p")
-                        / F.col("log_labels")
-                        * -1
-                    ).alias("entropy")
-                )
-                .select(
-                    F.expr(
-                        f"entropy BETWEEN {value-tolerance} AND {value+tolerance}"
-                    ).alias(key)
-                )
-            )
+        # def _execute(dataframe: DataFrame):
+        #     return (
+        #         dataframe.groupby(column)
+        #         .count()
+        #         .select(F.collect_list("count").alias("freq"))
+        #         .select(
+        #             F.col("freq"),
+        #             F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),
+        #         )
+        #         .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
+        #         .withColumn("n_labels", F.size("probs"))
+        #         .withColumn("log_labels", F.log("n_labels"))
+        #         .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
+        #         .withColumn(
+        #             "log_classes",
+        #             F.transform("probs", lambda x: F.log((x / x) * F.col("n_labels"))),
+        #         )
+        #         .withColumn("entropy_vals", F.arrays_zip("probs", "log_prob"))
+        #         .withColumn(
+        #             "product_prob",
+        #             F.transform(
+        #                 "entropy_vals",
+        #                 lambda x: x.getItem("probs") * x.getItem("log_prob"),
+        #             ),
+        #         )
+        #         .select(
+        #             (
+        #                 F.aggregate(
+        #                     "product_prob", F.lit(0.0), lambda acc, x: acc + x
+        #                 ).alias("p")
+        #                 / F.col("log_labels")
+        #                 * -1
+        #             ).alias("entropy")
+        #         )
+        #         .select(
+        #             F.expr(
+        #                 f"entropy BETWEEN {value-tolerance} AND {value+tolerance}"
+        #             ).alias(key)
+        #         )
+        #     )
 
-        self._union[key] = ComputeInstruction(
-            Rule("has_entropy", column, value, CheckDataType.AGNOSTIC), _execute
-        )
-
+        self._rule[key] = rule
         return self
 
     def has_weekday_continuity(self, column: str, pct: float = 1.0):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
-        key = self._generate_rule_key_id(
-            "has_weekday_continuity", column, "⊂{Mon-Fri}", pct
-        )
+        rule = Rule("has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct)
+        key = self._generate_rule_hash(rule)
 
-        def _execute(dataframe: DataFrame):
-            _weekdays = lambda x: x.filter(F.dayofweek(column).isin([2, 3, 4, 5, 6]))
-            _date_only = lambda x: x.select(F.to_date(column).alias(column))
-            full_interval = (
-                dataframe.select(
-                    F.explode(
-                        F.sequence(
-                            F.min(column), F.max(column), F.expr("interval 1 day")
-                        )
-                    ).alias(column)
-                )
-                .transform(_weekdays)
-                .transform(_date_only)
-            )
-            return full_interval.join(
-                dataframe.transform(_date_only), column, how="left_anti"
-            ).select(
-                (F.expr(f"{dataframe.count()} - count(distinct({column}))")).alias(key)
-            )
+        # def _execute(dataframe: DataFrame):
+        #     _weekdays = lambda x: x.filter(F.dayofweek(column).isin([2, 3, 4, 5, 6]))
+        #     _date_only = lambda x: x.select(F.to_date(column).alias(column))
+        #     full_interval = (
+        #         dataframe.select(
+        #             F.explode(
+        #                 F.sequence(
+        #                     F.min(column), F.max(column), F.expr("interval 1 day")
+        #                 )
+        #             ).alias(column)
+        #         )
+        #         .transform(_weekdays)
+        #         .transform(_date_only)
+        #     )
+        #     return full_interval.join(
+        #         dataframe.transform(_date_only), column, how="left_anti"
+        #     ).select(
+        #         (F.expr(f"{dataframe.count()} - count(distinct({column}))")).alias(key)
+        #     )
 
-        self._union[key] = ComputeInstruction(
-            Rule(
-                "has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct
-            ),
-            _execute,
-        )
-
+        self._rule[key] = rule
         return self
 
-    def validate(self, spark: SparkSession, dataframe: DataFrame, metadata: dict = {}):
+
+    def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):
         """Compute all rules in this check for specific data frame"""
 
-        # Merge `unique` and `compute` dict
-        unified_rules = self._integrate_compute()
-        rule_expressions = unified_rules.values()
-        # Check the dictionnary is not empty
+        # Stop execution if the there is no rules in the check
         assert (
-            unified_rules
+            self._rule
         ), "Check is empty. Add validations i.e. is_complete, is_unique, etc."
 
-        # Check dataframe is spark dataframe
-        assert isinstance(
-            dataframe, DataFrame
-        ), "Cualle operates only with Spark Dataframes"
+        rules = self._rule.values()
 
-        # Pre-validate column names
-        _col = compose(operator.attrgetter("column"), operator.attrgetter("rule"))
-        column_set = set(Check._compute_columns(list(map(_col, rule_expressions))))
+        # Obtain a set of columns required for rules
+        # flattening str columns and tuple columns
+        column_set = set(
+            get_column_set(
+                list(map(operator.attrgetter("column"), rules))
+            )
+        )
+
         unknown_columns = column_set.difference(set(dataframe.columns))
         assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
-        # Pre-Validation of numeric data types
+        # Check dataframe is spark dataframe
+        if isinstance(dataframe, DataFrame):
+            import cuallee.spark_validation as SV
+            from pyspark.sql import SparkSession
 
-        _numeric = lambda x: x.rule.data_type == CheckDataType.NUMERIC
-        _date = lambda x: x.rule.data_type == CheckDataType.DATE
-        _timestamp = lambda x: x.rule.data_type == CheckDataType.TIMESTAMP
-        _string = lambda x: x.rule.data_type == CheckDataType.STRING
-        assert set(
-            Check._compute_columns(
-                map(_col, valfilter(_numeric, unified_rules).values())  # type: ignore
-            )
-        ).issubset(D.numeric_fields(dataframe))
-        assert set(
-            Check._compute_columns(
-                map(_col, valfilter(_string, unified_rules).values())  # type: ignore
-            )
-        ).issubset(D.string_fields(dataframe))
-        assert set(
-            Check._compute_columns(map(_col, valfilter(_date, unified_rules).values()))  # type: ignore
-        ).issubset(D.date_fields(dataframe))
-        assert set(
-            Check._compute_columns(
-                map(_col, valfilter(_timestamp, unified_rules).values())  # type: ignore
-            )
-        ).issubset(D.timestamp_fields(dataframe))
+            # Check SparkSession is available
+            if "spark" in globals():
+                # Enabler for execution in Databricks
+                spark = globals()["spark"]
+            else:
+                spark = SparkSession.builder.getOrCreate()
 
-        if self._compute:
-            observation = Observation(self.name)
-            for k, v in self._compute.items():
-                logger.info(str(v.expression))
+            assert isinstance(
+                spark, SparkSession
+            ), "The function requires to pass a spark session available, or in an environment with Apache Spark"
 
-            df_observation = dataframe.observe(
-                observation,
-                *[
-                    compute_instruction.expression.alias(hash_key)  # type: ignore
-                    for hash_key, compute_instruction in self._compute.items()
-                ],
-            )
-            rows = df_observation.count()
-            observation_result = observation.get
-            logger.info(observation_result)
-        else:
-            observation_result = {}
-            rows = dataframe.count()
+            # Create compute dictionary
+            self._compute = SV.compute(self._rule)
 
-        self.rows = rows
+            # Check Spark Version
+            # TODO: Requires re-implementation of imports in the the module
+            # if not SV.is_observe_capable(spark.version):
+            #     # NO: replace the compute_methods
+            #     self._compute = {} # new with select only
+            # SV._get_spark_version(self, spark)
 
-        unique_observe = (
-            dataframe.select(
-                *[
-                    compute_instrunction.expression.alias(hash_key)  # type: ignore
-                    for hash_key, compute_instrunction in self._unique.items()
-                ]
-            )
-            .first()
-            .asDict()  # type: ignore
-        )
 
-        union_observe = {
-            k: operator.attrgetter(k)(compute_instruction.expression(dataframe).first())  # type: ignore
-            for k, compute_instruction in self._union.items()
-        }
+            # Pre-Validation of data types
+            assert SV.validate_data_types(self._rule, dataframe), "Invalid data types found"
 
-        unified_results = {**unique_observe, **observation_result, **union_observe}
+            # Compute
+            return SV.summary(self, dataframe, spark)
+            # _get_rule_status(self, summary)
+            
+        elif isinstance(dataframe, pd.DataFrame):
+            from .pandas.pandas_validation import pd_compute_summary
 
-        _calculate_pass_rate = lambda observed_column: (
-            F.when(observed_column == "false", F.lit(0.0))
-            .when(observed_column == "true", F.lit(1.0))
-            .otherwise(observed_column.cast(T.DoubleType()) / self.rows)  # type: ignore
-        )
-        _evaluate_status = lambda pass_rate, pass_threshold: (
-            F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
-        )
-        _metadata = F.create_map(
-            *chain.from_iterable([(F.lit(k), F.lit(v)) for k, v in metadata.items()])
-        )
-        return (
-            spark.createDataFrame(
-                [
-                    Row(  # type: ignore
-                        index,
-                        compute_instruction.rule.method,
-                        str(compute_instruction.rule.column),
-                        str(compute_instruction.rule.value),
-                        unified_results[hash_key],
-                        compute_instruction.rule.coverage,
-                    )
-                    for index, (hash_key, compute_instruction) in enumerate(
-                        unified_rules.items(), 1
-                    )
-                ],
-                schema="id int, rule string, column string, value string, result string, pass_threshold string",
-            )
-            .select(
-                F.col("id"),
-                F.lit(self.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
-                F.lit(self.name).alias("check"),
-                F.lit(self.level.name).alias("level"),
-                F.col("column"),
-                F.col("rule"),
-                F.col("value"),
-                F.lit(rows).alias("rows"),
-                (rows - F.col("result").cast("long")).alias("violations"),
-                _calculate_pass_rate(F.col("result")).alias("pass_rate"),
-                F.col("pass_threshold").cast(T.DoubleType()),
-                F.lit(_metadata).alias("metadata"),
-            )
-            .withColumn(
-                "status",
-                _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
-            )
-        )
+            return pd_compute_summary(dataframe, self)
+
+
+
+        #     df_observation = dataframe.observe(
+        #         observation,
+        #         *[
+        #             compute_instruction.expression.alias(hash_key)  # type: ignore
+        #             for hash_key, compute_instruction in self._compute.items()
+        #         ],
+        #     )
+        #     rows = df_observation.count()
+        #     observation_result = observation.get
+        #     logger.info(observation_result)
+        # else:
+        #     observation_result = {}
+        #     rows = dataframe.count()
+
+        # self.rows = rows
+
+        # unique_observe = (
+        #     dataframe.select(
+        #         *[
+        #             compute_instrunction.expression.alias(hash_key)  # type: ignore
+        #             for hash_key, compute_instrunction in self._unique.items()
+        #         ]
+        #     )
+        #     .first()
+        #     .asDict()  # type: ignore
+        # )
+
+        # union_observe = {
+        #     k: operator.attrgetter(k)(compute_instruction.expression(dataframe).first())  # type: ignore
+        #     for k, compute_instruction in self._union.items()
+        # }
+
+        # unified_results = {**unique_observe, **observation_result, **union_observe}
+
+        # _calculate_pass_rate = lambda observed_column: (
+        #     F.when(observed_column == "false", F.lit(0.0))
+        #     .when(observed_column == "true", F.lit(1.0))
+        #     .otherwise(observed_column.cast(T.DoubleType()) / self.rows)  # type: ignore
+        # )
+        # _evaluate_status = lambda pass_rate, pass_threshold: (
+        #     F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
+        # )
+        # _metadata = F.create_map(
+        #     *chain.from_iterable([(F.lit(k), F.lit(v)) for k, v in metadata.items()])
+        # )
+        # return (
+        #     spark.createDataFrame(
+        #         [
+        #             Row(  # type: ignore
+        #                 index,
+        #                 compute_instruction.rule.method,
+        #                 str(compute_instruction.rule.column),
+        #                 str(compute_instruction.rule.value),
+        #                 unified_results[hash_key],
+        #                 compute_instruction.rule.coverage,
+        #             )
+        #             for index, (hash_key, compute_instruction) in enumerate(
+        #                 unified_rules.items(), 1
+        #             )
+        #         ],
+        #         schema="id int, rule string, column string, value string, result string, pass_threshold string",
+        #     )
+        #     .select(
+        #         F.col("id"),
+        #         F.lit(self.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
+        #         F.lit(self.name).alias("check"),
+        #         F.lit(self.level.name).alias("level"),
+        #         F.col("column"),
+        #         F.col("rule"),
+        #         F.col("value"),
+        #         F.lit(rows).alias("rows"),
+        #         (rows - F.col("result").cast("long")).alias("violations"),
+        #         _calculate_pass_rate(F.col("result")).alias("pass_rate"),
+        #         F.col("pass_threshold").cast(T.DoubleType()),
+        #         F.lit(_metadata).alias("metadata"),
+        #     )
+        #     .withColumn(
+        #         "status",
+        #         _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
+        #     )
+        # )
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
         if not rule_index:
@@ -750,3 +760,29 @@ class Check:
                     if index in rule_index
                 ],
             ).drop_duplicates()
+            
+
+    # def sampling(
+    #     self,
+    #     dataframe: DataFrame,
+    #     *arg,
+    #     status: str = "FAIL",
+    #     method: Union[tuple[str], str] = None,
+    # ) -> DataFrame:
+
+    #     # Validate all rule
+
+    #     # Validate DataFrame
+
+    #     # Check dataframe is spark dataframe
+    #     if isinstance(dataframe, DataFrame):
+    #         from .spark.spark_validation import get_record_sample
+    #         from pyspark.sql import SparkSession
+
+    #         spark = arg[0]
+    #         assert isinstance(
+    #             arg[0], SparkSession
+    #         ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
+    #         return get_record_sample(self, dataframe, spark, status, method)
+    #     else:
+    #         "I cannot do anything for you! :'-("

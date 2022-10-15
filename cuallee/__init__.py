@@ -90,6 +90,11 @@ class Check:
         return list(self._rule.values())
 
     @property
+    def keys(self):
+        """Returns blake2s unique identifiers of rules"""
+        return list(self._rule.keys())
+
+    @property
     def expressions(self):
         """Returns all summary expressions for validation"""
         return list(map(lambda x: x.expression, self._compute.values()))

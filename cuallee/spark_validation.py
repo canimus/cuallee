@@ -1,8 +1,7 @@
 import operator
 import re
 from functools import reduce
-from typing import (Any, Callable, Collection, Dict, Optional, Tuple, Type,
-                    Union)
+from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -265,13 +264,136 @@ class Compute:
         )
         return self.compute_instruction
 
+    def is_on_weekday(self, rule: Rule):
+        """Validates a datetime column is in a Mon-Fri time range"""
+        predicate = F.dayofweek(f"`{rule.column}`").between(2, 6)
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
 
-def _column_set_comparison(rules: Dict[str, Rule], dataframe: DataFrame, columns, filter: Callable, fn: Callable):
+    def is_on_weekend(self, rule: Rule):
+        """Validates a datetime column is in a Sat-Sun time range"""
+        predicate = F.dayofweek(f"`{rule.column}`").isin([1, 7])
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def is_on_monday(self, rule: Rule):
+        """Validates a datetime column is on Mon"""
+        predicate = F.dayofweek(f"`{rule.column}`") == 2
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def is_on_tuesday(self, rule: Rule):
+        """Validates a datetime column is on Tue"""
+        predicate = F.dayofweek(f"`{rule.column}`") == 3
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def is_on_wednesday(self, rule: Rule):
+        """Validates a datetime column is on Wed"""
+        predicate = F.dayofweek(f"`{rule.column}`") == 4
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def is_on_thursday(self, rule: Rule):
+        """Validates a datetime column is on Thu"""
+        predicate = F.dayofweek(f"`{rule.column}`") == 5
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def is_on_friday(self, rule: Rule):
+        """Validates a datetime column is on Fri"""
+        predicate = F.dayofweek(f"`{rule.column}`") == 6
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def is_on_saturday(self, rule: Rule):
+        """Validates a datetime column is on Sat"""
+        predicate = F.dayofweek(f"`{rule.column}`") == 7
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def is_on_sunday(self, rule: Rule):
+        """Validates a datetime column is on Sun"""
+        predicate = F.dayofweek(f"`{rule.column}`") == 1
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=F.sum(predicate.cast("integer")),
+            compute_method="observe",
+        )
+        return self.compute_instruction
+
+    def has_weekday_continuity(self, rule: Rule):
+        predicate = None
+        def _execute(dataframe: DataFrame, key: str):
+            _weekdays = lambda x: x.filter(F.dayofweek(rule.column).isin([2, 3, 4, 5, 6]))
+            _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))
+            full_interval = (
+                dataframe.select(
+                    F.explode(
+                        F.sequence(
+                            F.min(rule.column), F.max(rule.column), F.expr("interval 1 day")
+                        )
+                    ).alias(rule.column)
+                )
+                .transform(_weekdays)
+                .transform(_date_only)
+            )
+            return full_interval.join(
+                dataframe.transform(_date_only), rule.column, how="left_anti"
+            ).select(
+                (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(key)
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate,
+            expression=_execute,
+            compute_method="transform"
+        )
+
+        return self.compute_instruction
+
+def _column_set_comparison(
+    rules: Dict[str, Rule],
+    dataframe: DataFrame,
+    columns,
+    filter: Callable,
+    fn: Callable,
+):
     """Compair type of the columns passed in rules and present in dataframe."""
     return set(
-        get_column_set(
-            map(columns, valfilter(filter, rules).values())  # type: ignore
-        )
+        get_column_set(map(columns, valfilter(filter, rules).values()))  # type: ignore
     ).difference(fn(dataframe))
 
 
@@ -286,7 +408,10 @@ def _field_type_filter(
         [f.name for f in dataframe.schema.fields if isinstance(f.dataType, field_type)]  # type: ignore
     )
 
-def _compute_observe_method(compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame) -> Tuple[int, Dict]:
+
+def _compute_observe_method(
+    compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame
+) -> Tuple[int, Dict]:
     """Compute rules throught spark Observation"""
     # Filter expression directed to observe
     _observe = lambda x: x.compute_method == "observe"
@@ -311,7 +436,9 @@ def _compute_observe_method(compute_set: Dict[str, ComputeInstruction], datafram
         return rows, {}
 
 
-def _compute_select_method(compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame) -> Dict:
+def _compute_select_method(
+    compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame
+) -> Dict:
     """Compute rules throught spark select"""
 
     # Filter expression directed to select
@@ -330,24 +457,30 @@ def _compute_select_method(compute_set: Dict[str, ComputeInstruction], dataframe
     )
 
 
-def _compute_transform_method(compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame) -> Dict:
+def _compute_transform_method(
+    compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame
+) -> Dict:
     """Compute rules throught spark transform"""
 
     # Filter expression directed to transform
     _transform = lambda x: x.compute_method == "transform"
     transform = valfilter(_transform, compute_set)
 
-    return (
-        dataframe.select(
-            *[
-                compute_instrunction.expression.alias(hash_key)
-                for hash_key, compute_instrunction in transform.items()
-            ]
-        )
-        .first()
-        .asDict()  # type: ignore
-    )
-        
+    # return (
+    #     dataframe.select(
+    #         *[
+    #             compute_instrunction.expression.alias(hash_key)
+    #             for hash_key, compute_instrunction in transform.items()
+    #         ]
+    #     )
+    #     .first()
+    #     .asDict()  # type: ignore
+    # )
+    return {
+        k: operator.attrgetter(k)(compute_instruction.expression(dataframe, k).first())  # type: ignore
+        for k, compute_instruction in transform.items()
+    }
+
 
 # def _overwrite_observe_method(compute: Dict[str, ComputeInstruction]):
 #     """Overwrite the observe method to select."""
@@ -398,7 +531,9 @@ def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame):
     _timestamp = lambda x: x.data_type.name == CheckDataType.TIMESTAMP.name
     _string = lambda x: x.data_type.name == CheckDataType.STRING.name
     # Numeric Validation
-    non_numeric = _column_set_comparison(rules, dataframe, _col, _numeric, numeric_fields)
+    non_numeric = _column_set_comparison(
+        rules, dataframe, _col, _numeric, numeric_fields
+    )
     assert len(non_numeric) == 0, f"Column(s): {non_numeric} are not numeric"
     # String Validation
     non_string = _column_set_comparison(rules, dataframe, _col, _string, string_fields)
@@ -407,18 +542,19 @@ def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame):
     non_date = _column_set_comparison(rules, dataframe, _col, _date, date_fields)
     assert len(non_date) == 0, f"Column(s): {non_date} are not dates"
     # Timestamp validation
-    non_timestamp = _column_set_comparison(rules, dataframe, _col, _timestamp, timestamp_fields)
+    non_timestamp = _column_set_comparison(
+        rules, dataframe, _col, _timestamp, timestamp_fields
+    )
     assert len(non_timestamp) == 0, f"Column(s): {non_timestamp} are not timestamps"
     return True
 
 
-def compute(rules : Dict[str,Rule]) -> Dict:
+def compute(rules: Dict[str, Rule]) -> Dict:
     """Create dictionnary containing compute instruction for each rule."""
     return {k: operator.methodcaller(v.method, v)(Compute()) for k, v in rules.items()}
 
-def summary(
-    check: Check, dataframe: DataFrame, spark: SparkSession
-) -> DataFrame:
+
+def summary(check: Check, dataframe: DataFrame, spark: SparkSession) -> DataFrame:
     """Compute all rules in this check for specific data frame"""
 
     # Compute the expression

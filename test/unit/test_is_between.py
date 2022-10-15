@@ -19,7 +19,7 @@ def test_between_args():
 def test_between_numbers(spark):
     check = Check(CheckLevel.WARNING, "CheckIsBetween")
     assert (
-        check.is_between("id", (0, 10)).validate(spark, spark.range(10)).first().status
+        check.is_between("id", (0, 10)).validate(spark.range(10)).first().status
     )
 
 
@@ -27,7 +27,7 @@ def test_between_number_with_pct(spark):
     check = Check(CheckLevel.WARNING, "CheckIsBetween")
     assert (
         check.is_between("id", (0, 5), pct=0.5)
-        .validate(spark, spark.range(10))
+        .validate(spark.range(10))
         .first()
         .status
     )

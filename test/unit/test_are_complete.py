@@ -6,28 +6,13 @@ from operator import attrgetter as at
 from toolz import compose
 
 
-def test_column_input_list(spark: SparkSession, check: Check):
-    df = spark.range(10).withColumn("id2", F.col("id") * 10)
-    col1 = "id"
-    col2 = "id2"
-    check.are_complete([col1, col2])
-
-    # Validate columns in ComputeInstruction
-    assert not isinstance(
-        list(check._compute.values())[0].rule.column, str
-    ), "Expected list of columns"
-
 
 def test_column_input_tuple(spark: SparkSession, check: Check):
     df = spark.range(10).withColumn("id2", F.col("id") * 10)
     col1 = "id"
     col2 = "id2"
     check.are_complete((col1, col2))
-
-    # Validate columns in ComputeInstruction
-    assert not isinstance(
-        list(check._compute.values())[0].rule.column, str
-    ), "Expected tuple of columns"
+    check.validate(df).first().status == "PASS"
 
 
 def test_column_names_with_dots(spark: SparkSession, check: Check):

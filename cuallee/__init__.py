@@ -178,8 +178,8 @@ class Check:
 
     def are_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
-        # if isinstance(column, List):
-        #    column = tuple(column)
+        if isinstance(column, List):
+           column = tuple(column)
         rule = Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
         key = self._generate_rule_hash(rule)
         self._rule[key] = rule

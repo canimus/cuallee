@@ -4,7 +4,7 @@ from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import Column, DataFrame, Observation, Row, SparkSession
+from pyspark.sql import Column, DataFrame, Observation, Row
 from toolz import valfilter, first  # type: ignore
 
 from cuallee import Check, CheckDataType, ComputeInstruction, Rule
@@ -265,6 +265,7 @@ class Compute:
     def has_entropy(self, rule: Rule):
         """Validation for entropy calculation on continuous values"""
         predicate = None
+
         def _execute(dataframe: DataFrame, key: str):
             return (
                 dataframe.groupby(rule.column)
@@ -305,10 +306,11 @@ class Compute:
                     ).alias(key)
                 )
             )
+
         self.compute_instruction = ComputeInstruction(
-        predicate,
-        _execute,
-        "transform",
+            predicate,
+            _execute,
+            "transform",
         )
         return self.compute_instruction
 
@@ -409,7 +411,7 @@ class Compute:
             predicate,
             F.sum(predicate.cast("integer")),
             "observe",
-            )
+        )
         return self.compute_instruction
 
     def has_weekday_continuity(self, rule: Rule):

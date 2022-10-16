@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
 from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union
+import logging
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -10,6 +11,7 @@ from toolz import valfilter, first  # type: ignore
 from cuallee import Check, CheckDataType, ComputeInstruction, Rule
 import cuallee.utils as cuallee_utils
 
+logger = logging.getLogger(__name__)
 
 class Compute:
     def __init__(self):
@@ -163,10 +165,11 @@ class Compute:
     def has_std(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s standard deviation"""
         predicate = F.stddev_pop(F.col(rule.column)) == rule.value
+        logger.debug(predicate)
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.stddev_pop(F.col(rule.column)) == rule.value,
-            "observe",
+            "select",
         )
         return self.compute_instruction
 
@@ -638,6 +641,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     transform_result = _compute_transform_method(check._compute, dataframe)
 
     unified_results = {**observation_result, **select_result, **transform_result}
+    logger.debug(unified_results)
 
     _calculate_pass_rate = lambda observed_column: (
         F.when(observed_column == "false", F.lit(0.0))
@@ -648,7 +652,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
     )
 
-    return (
+    result = (
         spark.createDataFrame(
             [
                 Row(  # type: ignore
@@ -681,6 +685,9 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
             _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
         )
     )
+
+    logger.debug(result.collect())
+    return result
 
 
 # def _get_rule_status(check: Check, summary_dataframe: DataFrame):

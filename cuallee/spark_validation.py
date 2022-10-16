@@ -262,6 +262,56 @@ class Compute:
         )
         return self.compute_instruction
 
+    def has_entropy(self, rule: Rule):
+        """Validation for entropy calculation on continuous values"""
+        predicate = None
+        def _execute(dataframe: DataFrame, key: str):
+            return (
+                dataframe.groupby(rule.column)
+                .count()
+                .select(F.collect_list("count").alias("freq"))
+                .select(
+                    F.col("freq"),
+                    F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),
+                )
+                .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
+                .withColumn("n_labels", F.size("probs"))
+                .withColumn("log_labels", F.log("n_labels"))
+                .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
+                .withColumn(
+                    "log_classes",
+                    F.transform("probs", lambda x: F.log((x / x) * F.col("n_labels"))),
+                )
+                .withColumn("entropy_vals", F.arrays_zip("probs", "log_prob"))
+                .withColumn(
+                    "product_prob",
+                    F.transform(
+                        "entropy_vals",
+                        lambda x: x.getItem("probs") * x.getItem("log_prob"),
+                    ),
+                )
+                .select(
+                    (
+                        F.aggregate(
+                            "product_prob", F.lit(0.0), lambda acc, x: acc + x
+                        ).alias("p")
+                        / F.col("log_labels")
+                        * -1
+                    ).alias("entropy")
+                )
+                .select(
+                    F.expr(
+                        f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"
+                    ).alias(key)
+                )
+            )
+        self.compute_instruction = ComputeInstruction(
+        predicate,
+        _execute,
+        "transform",
+        )
+        return self.compute_instruction
+
     def is_on_weekday(self, rule: Rule):
         """Validates a datetime column is in a Mon-Fri time range"""
         predicate = F.dayofweek(f"`{rule.column}`").between(2, 6)
@@ -350,6 +400,16 @@ class Compute:
             expression=F.sum(predicate.cast("integer")),
             compute_method="observe",
         )
+        return self.compute_instruction
+
+    def is_on_schedule(self, rule: Rule):
+        """Validation of a datetime column between an hour interval"""
+        predicate = F.hour(rule.column).between(*rule.value)
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.sum(predicate.cast("integer")),
+            "observe",
+            )
         return self.compute_instruction
 
     def has_weekday_continuity(self, rule: Rule):

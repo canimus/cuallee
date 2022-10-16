@@ -257,61 +257,6 @@ class Check:
         """Vaidation of column value in set of given values"""
         return self.is_contained_in(column, value, pct)
 
-    def is_on_weekday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is in a Mon-Fri time range"""
-        Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_weekend(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is in a Sat-Sun time range"""
-        Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_monday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Mon"""
-        Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_tuesday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Tue"""
-        Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_wednesday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Wed"""
-        Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_thursday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Thu"""
-        Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_friday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Fri"""
-        Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_saturday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Sat"""
-        Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_sunday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Sun"""
-        Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct) >> self._rule
-        return self
-
-    def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0):
-        """Validation of a datetime column between an hour interval"""
-
-        Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct) >> self._rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct),
-        #     F.sum(F.hour(column).between(*value).cast("integer")),  # type: ignore
-        # )
-        return self
-
     def has_percentile(
         self,
         column: str,
@@ -377,48 +322,57 @@ class Check:
 
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
         """Validation for entropy calculation on continuous values"""
-        Rule("has_entropy", column, value, CheckDataType.AGNOSTIC) >> self._rule
+        Rule("has_entropy", column, (value, tolerance), CheckDataType.AGNOSTIC) >> self._rule
+        return self
 
-        # def _execute(dataframe: DataFrame):
-        #     return (
-        #         dataframe.groupby(column)
-        #         .count()
-        #         .select(F.collect_list("count").alias("freq"))
-        #         .select(
-        #             F.col("freq"),
-        #             F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),
-        #         )
-        #         .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
-        #         .withColumn("n_labels", F.size("probs"))
-        #         .withColumn("log_labels", F.log("n_labels"))
-        #         .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
-        #         .withColumn(
-        #             "log_classes",
-        #             F.transform("probs", lambda x: F.log((x / x) * F.col("n_labels"))),
-        #         )
-        #         .withColumn("entropy_vals", F.arrays_zip("probs", "log_prob"))
-        #         .withColumn(
-        #             "product_prob",
-        #             F.transform(
-        #                 "entropy_vals",
-        #                 lambda x: x.getItem("probs") * x.getItem("log_prob"),
-        #             ),
-        #         )
-        #         .select(
-        #             (
-        #                 F.aggregate(
-        #                     "product_prob", F.lit(0.0), lambda acc, x: acc + x
-        #                 ).alias("p")
-        #                 / F.col("log_labels")
-        #                 * -1
-        #             ).alias("entropy")
-        #         )
-        #         .select(
-        #             F.expr(
-        #                 f"entropy BETWEEN {value-tolerance} AND {value+tolerance}"
-        #             ).alias(key)
-        #         )
-        #     )
+    def is_on_weekday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is in a Mon-Fri time range"""
+        Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_weekend(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is in a Sat-Sun time range"""
+        Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_monday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Mon"""
+        Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_tuesday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Tue"""
+        Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_wednesday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Wed"""
+        Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_thursday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Thu"""
+        Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_friday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Fri"""
+        Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_saturday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Sat"""
+        Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_sunday(self, column: str, pct: float = 1.0):
+        """Validates a datetime column is on Sun"""
+        Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct) >> self._rule
+        return self
+
+    def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0):
+        """Validation of a datetime column between an hour interval"""
+        Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct) >> self._rule
         return self
 
     def has_weekday_continuity(self, column: str, pct: float = 1.0):
@@ -426,26 +380,6 @@ class Check:
         Rule(
             "has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct
         ) >> self._rule
-
-        # def _execute(dataframe: DataFrame):
-        #     _weekdays = lambda x: x.filter(F.dayofweek(column).isin([2, 3, 4, 5, 6]))
-        #     _date_only = lambda x: x.select(F.to_date(column).alias(column))
-        #     full_interval = (
-        #         dataframe.select(
-        #             F.explode(
-        #                 F.sequence(
-        #                     F.min(column), F.max(column), F.expr("interval 1 day")
-        #                 )
-        #             ).alias(column)
-        #         )
-        #         .transform(_weekdays)
-        #         .transform(_date_only)
-        #     )
-        #     return full_interval.join(
-        #         dataframe.transform(_date_only), column, how="left_anti"
-        #     ).select(
-        #         (F.expr(f"{dataframe.count()} - count(distinct({column}))")).alias(key)
-        #     )
         return self
 
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):

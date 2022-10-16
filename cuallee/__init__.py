@@ -333,10 +333,6 @@ class Check:
     def satisfies(self, predicate: str, column: str, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
         Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct) >> self._rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct),
-        #     F.sum(F.expr(predicate).cast("integer")),
-        # )
         return self
 
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):

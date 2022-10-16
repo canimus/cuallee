@@ -11,7 +11,7 @@ from types import ModuleType
 import importlib
 
 from pyspark.sql import Column, DataFrame
-from toolz import valfilter  # type: ignore
+from toolz import valfilter, first  # type: ignore
 
 import cuallee.utils as cuallee_utils
 import pandas as pd  # type: ignore
@@ -608,11 +608,12 @@ class Check:
         if isinstance(dataframe, DataFrame):
             from pyspark.sql.session import SparkSession
 
-            # Check SparkSession is available
-            if "spark" in globals():
-                # Enabler for execution in Databricks
-                spark = globals()["spark"]
+            # Check SparkSession is available in environment through globals
+            if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
+                # Obtain the first spark session available in the globals
+                spark = first(spark_in_session.values())
             else:
+                # TODO: Check should have options for compute engine
                 spark = SparkSession.builder.getOrCreate()
 
             assert isinstance(

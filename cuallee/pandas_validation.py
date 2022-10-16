@@ -1,6 +1,6 @@
 from typing import Dict
 from cuallee import Check, Rule
-import pandas as pd # type: ignore
+import pandas as pd  # type: ignore
 
 
 def compute(rules: Dict[str, Rule]):

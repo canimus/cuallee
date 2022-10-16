@@ -5,12 +5,21 @@ import operator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
-from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, Union, Protocol
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    Protocol,
+)
 from types import ModuleType
 from numbers import Number
 import importlib
 
-from pyspark.sql import SparkSession, DataFrame, Column
+from pyspark.sql import SparkSession, DataFrame
 from toolz import valfilter  # type: ignore
 
 import cuallee.utils as cuallee_utils
@@ -41,7 +50,7 @@ class CheckStatus(enum.Enum):
 @dataclass
 class Rule:
     method: str
-    column: Union[str, Iterable[Union[str, int, float]]]
+    column: Union[str, List[str], Tuple[str, str]]
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
@@ -201,7 +210,7 @@ class Check:
         Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def are_complete(self, column: Union[List[str], Tuple[str]], pct: float = 1.0):
+    def are_complete(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
@@ -211,7 +220,7 @@ class Check:
         Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def are_unique(self, column: Tuple[str], pct: float = 1.0):
+    def are_unique(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """Validation for unique values in a group of columns"""
         Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
@@ -324,7 +333,7 @@ class Check:
         (
             Rule(
                 "has_max_by",
-                (column_source, column_target),
+                [column_source, column_target],
                 value,
                 CheckDataType.NUMERIC,
             )
@@ -339,7 +348,7 @@ class Check:
         (
             Rule(
                 "has_min_by",
-                (column_source, column_target),
+                [column_source, column_target],
                 value,
                 CheckDataType.NUMERIC,
             )
@@ -354,7 +363,7 @@ class Check:
         (
             Rule(
                 "has_correlation",
-                (column_left, column_right),
+                [column_left, column_right],
                 value,
                 CheckDataType.NUMERIC,
             )
@@ -496,4 +505,3 @@ class Check:
                     if index in rule_index
                 ],
             ).drop_duplicates()
-

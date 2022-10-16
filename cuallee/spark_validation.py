@@ -1,6 +1,6 @@
 import operator
 from functools import reduce
-from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union
+from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union, List
 import logging
 
 import pyspark.sql.functions as F
@@ -13,6 +13,7 @@ import cuallee.utils as cuallee_utils
 
 logger = logging.getLogger(__name__)
 
+
 class Compute:
     def __init__(self):
         self.compute_instruction = ComputeInstruction
@@ -22,11 +23,11 @@ class Compute:
 
     def _single_value_rule(
         self,
-        column: str,
+        column: Union[str, List[str], Tuple[str, str]],
         value: Optional[Any],
         operator: Callable,
     ):
-        return operator(F.col(column), value)
+        return operator(F.col(f"`{column}`"), value)
 
     def _sum_predicate_to_integer(self, predicate: Column):
         return F.sum(predicate.cast("integer"))
@@ -67,7 +68,7 @@ class Compute:
         ).isNotNull()  # F.count_distinct(F.col(rule.column))
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.count_distinct(F.col(rule.column)),
+            F.count_distinct(F.col(f"`{rule.column}`")),
             "select",
         )
         return self.compute_instruction
@@ -134,7 +135,10 @@ class Compute:
 
     def has_pattern(self, rule: Rule):  # To Do with Predicate
         """Validation for string type column matching regex expression"""
-        predicate = F.length(F.regexp_extract(rule.column, rule.value, 0)) > 0
+        predicate = (
+            F.length(F.regexp_extract(F.col(f"`{rule.column}`"), f"{rule.value}", 0))
+            > 0
+        )
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -144,48 +148,48 @@ class Compute:
 
     def has_min(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s minimum value"""
-        predicate = F.min(F.col(rule.column)).eqNullSafe(rule.value)
+        predicate = F.min(F.col(f"`{rule.column}`")).eqNullSafe(rule.value)  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.min(F.col(rule.column)) == rule.value,
+            F.min(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
             "observe",
         )
         return self.compute_instruction
 
     def has_max(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s maximum value"""
-        predicate = F.max(F.col(rule.column)) == rule.value
+        predicate = F.max(F.col(f"`{rule.column}`")) == rule.value  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.max(F.col(rule.column)) == rule.value,
+            F.max(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
             "observe",
         )
         return self.compute_instruction
 
     def has_std(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s standard deviation"""
-        predicate = F.stddev_pop(F.col(rule.column)) == rule.value
+        predicate = F.stddev_pop(F.col(f"`{rule.column}`")) == rule.value  # type: ignore
         logger.debug(predicate)
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.stddev_pop(F.col(rule.column)) == rule.value,
+            F.stddev_pop(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
             "select",
         )
         return self.compute_instruction
 
     def has_mean(self, rule: Rule):  # To Do with Predicate
         """Validation of a column's average/mean"""
-        predicate = F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value)
+        predicate = F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value)  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value),
+            F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value),  # type: ignore
             "observe",
         )
         return self.compute_instruction
 
     def is_between(self, rule: Rule):  # To Do with Predicate
         """Validation of a column between a range"""
-        predicate = F.col(rule.column).between(*rule.value).cast("integer")
+        predicate = F.col(f"`{rule.column}`").between(*rule.value).cast("integer")  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate),  # type: ignore
@@ -195,7 +199,7 @@ class Compute:
 
     def is_contained_in(self, rule: Rule):  # To Do with Predicate
         """Validation of column value in set of given values"""
-        predicate = F.col(rule.column).isin(list(rule.value))
+        predicate = F.col(f"`{rule.column}`").isin(list(rule.value))  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
@@ -206,35 +210,39 @@ class Compute:
     def has_percentile(self, rule: Rule):  # To Do with Predicate
         """Validation of a column percentile value"""
         predicate = F.percentile_approx(
-            F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.value[1], rule.value[2]
-        ).eqNullSafe(rule.value[0])
+            F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.value[1], rule.value[2]  # type: ignore
+        ).eqNullSafe(
+            rule.value[0]  # type: ignore
+        )
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.percentile_approx(
                 F.col(f"`{rule.column}`").cast(T.DoubleType()),
-                rule.value[1],
-                rule.value[2],
-            ).eqNullSafe(rule.value[0]),
+                rule.value[1],  # type: ignore
+                rule.value[2],  # type: ignore
+            ).eqNullSafe(
+                rule.value[0]  # type: ignore
+            ),
             "select",
         )
         return self.compute_instruction
 
     def has_max_by(self, rule: Rule):  # To Do with Predicate
         """Validation of a column maximum based on other column maximum"""
-        predicate = F.max_by(rule.column[1], rule.column[0]) == rule.value
+        predicate = F.max_by(rule.column[1], rule.column[0]) == rule.value  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.max_by(rule.column[1], rule.column[0]) == rule.value,
+            F.max_by(rule.column[1], rule.column[0]) == rule.value,  # type: ignore
             "observe",
         )
         return self.compute_instruction
 
     def has_min_by(self, rule: Rule):  # To Do with Predicate
         """Validation of a column minimum based on other column minimum"""
-        predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value
+        predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.min_by(rule.column[1], rule.column[0]) == rule.value,
+            F.min_by(rule.column[1], rule.column[0]) == rule.value,  # type: ignore
             "observe",
         )
         return self.compute_instruction
@@ -257,10 +265,10 @@ class Compute:
 
     def satisfies(self, rule: Rule):  # To Do with Predicate
         """Validation of a column satisfying a SQL-like predicate"""
-        predicate = F.expr(rule.value).cast("integer")
+        predicate = F.expr(f"{rule.value}").cast("integer")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum(F.expr(rule.value).cast("integer")),
+            F.sum(F.expr(rule.value).cast("integer")),  # type: ignore
             "observe",
         )
         return self.compute_instruction
@@ -271,7 +279,7 @@ class Compute:
 
         def _execute(dataframe: DataFrame, key: str):
             return (
-                dataframe.groupby(rule.column)
+                dataframe.groupby(F.col(f"`{rule.column}`"))
                 .count()
                 .select(F.collect_list("count").alias("freq"))
                 .select(
@@ -305,7 +313,7 @@ class Compute:
                 )
                 .select(
                     F.expr(
-                        f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"
+                        f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"  # type: ignore
                     ).alias(key)
                 )
             )
@@ -409,7 +417,7 @@ class Compute:
 
     def is_on_schedule(self, rule: Rule):
         """Validation of a datetime column between an hour interval"""
-        predicate = F.hour(rule.column).between(*rule.value)
+        predicate = F.hour(F.col(f"`{rule.column}`")).between(*rule.value)  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast("integer")),
@@ -422,24 +430,26 @@ class Compute:
 
         def _execute(dataframe: DataFrame, key: str):
             _weekdays = lambda x: x.filter(
-                F.dayofweek(rule.column).isin([2, 3, 4, 5, 6]) # type: ignore
+                F.dayofweek(rule.column).isin([2, 3, 4, 5, 6])  # type: ignore
             )
-            _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column)) # type: ignore
+            _date_only = lambda x: x.select(F.to_date(f"`{rule.column}`").alias(rule.column))  # type: ignore
             full_interval = (
                 dataframe.select(
                     F.explode(
                         F.sequence(
-                            F.min(rule.column), # type: ignore
-                            F.max(rule.column), # type: ignore
+                            F.min(F.col(f"`{rule.column}`")),  # type: ignore
+                            F.max(F.col(f"`{rule.column}`")),  # type: ignore
                             F.expr("interval 1 day"),
                         )
-                    ).alias(rule.column) # type: ignore
+                    ).alias(
+                        f"{rule.column}"
+                    )  # type: ignore
                 )
                 .transform(_weekdays)
                 .transform(_date_only)
             )
-            return full_interval.join( # type: ignore
-                dataframe.transform(_date_only), rule.column, how="left_anti" # type: ignore
+            return full_interval.join(  # type: ignore
+                dataframe.transform(_date_only), rule.column, how="left_anti"  # type: ignore
             ).select(
                 (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
                     key

@@ -68,9 +68,6 @@ class Rule:
                 # Enforce valid data type on DataFrame
                 self.data_type = CheckDataType.NUMERIC
 
-                # To prevent that a mix of integers and floats raise an error
-                self.value = tuple([float(i) for i in self.value])
-
             # All values can only be of one data type in a rule
             if not all(map(type, self.value)):
                 raise ValueError("Data types in rule values are inconsistent")

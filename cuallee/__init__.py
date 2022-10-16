@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union, Protocol
 from types import ModuleType
 import importlib
 
-from pyspark.sql import Column, DataFrame
+from pyspark.sql import SparkSession, DataFrame, Column
 from toolz import valfilter, first  # type: ignore
 
 import cuallee.utils as cuallee_utils
@@ -87,7 +87,7 @@ class ComputeEngine(Protocol):
     def validate_data_types(rules: Dict[str, Rule], dataframe: Any) -> bool:
         """Validates that all data types from checks match the dataframe with data"""
 
-    def summary(dataframe: Any) -> Any:
+    def summary(check: Any, dataframe: Any, spark: SparkSession) -> Any:
         """Computes all predicates and expressions for check summary"""
 
 
@@ -444,7 +444,7 @@ class Check:
 
         self._compute = self.compute_engine.compute(self._rule)
         assert self.compute_engine.validate_data_types(self._rule, dataframe)
-        return self.compute_engine.summary(dataframe)
+        return self.compute_engine.summary(self, dataframe, spark)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
         if not rule_index:

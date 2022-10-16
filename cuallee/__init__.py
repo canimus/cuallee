@@ -284,9 +284,12 @@ class Check:
         pct: float = 1.0,
     ):
         """Validation of column value in set of given values"""
-        
-        Rule("is_contained_in", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule
-        
+
+        (
+            Rule("is_contained_in", column, value, CheckDataType.AGNOSTIC, pct)
+            >> self._rule
+        )
+
         return self
 
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):

@@ -5,7 +5,7 @@ import operator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union, Protocol
+from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, Union, Protocol
 from types import ModuleType
 from numbers import Number
 import importlib
@@ -41,7 +41,7 @@ class CheckStatus(enum.Enum):
 @dataclass
 class Rule:
     method: str
-    column: Union[str, List[str], Tuple[str, str]]
+    column: Union[str, Iterable[Union[str, int, float]]]
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
@@ -82,8 +82,8 @@ class Rule:
 
 @dataclass
 class ComputeInstruction:
-    predicate: Union[Column, None]
-    expression: Column
+    predicate: Any
+    expression: Any
     compute_method: str
 
     def __repr__(self):
@@ -111,7 +111,7 @@ class Check:
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
         self._compute: Dict[str, ComputeInstruction] = {}
-        self.compute_engine: Union[ModuleType, None] = None
+        self.compute_engine: ModuleType
 
         if isinstance(level, int):
             # When the user is lazy and wants to do WARN=0, or ERR=1
@@ -467,7 +467,9 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
         self._compute = self.compute_engine.compute(self._rule)
-        assert self.compute_engine.validate_data_types(self._rule, dataframe), "Invalid data types between rules and dataframe"
+        assert self.compute_engine.validate_data_types(
+            self._rule, dataframe
+        ), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:

@@ -419,24 +419,24 @@ class Compute:
 
         def _execute(dataframe: DataFrame, key: str):
             _weekdays = lambda x: x.filter(
-                F.dayofweek(rule.column).isin([2, 3, 4, 5, 6])
+                F.dayofweek(rule.column).isin([2, 3, 4, 5, 6]) # type: ignore
             )
-            _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))
+            _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column)) # type: ignore
             full_interval = (
                 dataframe.select(
                     F.explode(
                         F.sequence(
-                            F.min(rule.column),
-                            F.max(rule.column),
+                            F.min(rule.column), # type: ignore
+                            F.max(rule.column), # type: ignore
                             F.expr("interval 1 day"),
                         )
-                    ).alias(rule.column)
+                    ).alias(rule.column) # type: ignore
                 )
                 .transform(_weekdays)
                 .transform(_date_only)
             )
-            return full_interval.join(
-                dataframe.transform(_date_only), rule.column, how="left_anti"
+            return full_interval.join( # type: ignore
+                dataframe.transform(_date_only), rule.column, how="left_anti" # type: ignore
             ).select(
                 (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
                     key

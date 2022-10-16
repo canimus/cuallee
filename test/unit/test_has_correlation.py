@@ -15,14 +15,7 @@ def test_positive_correlation(spark: SparkSession):
     check = Check(CheckLevel.WARNING, "PyTestCheck")
     df = spark.range(10).withColumn("id2", F.col("id") * 10)
     check.has_correlation("id", "id2", 1.0)
-    logger.info(check)
-    logger.info(df.collect())
     test_result_row = check.validate(df).first()
-    logger.info(str(test_result_row))
-    logger.info("STATUS")
-    logger.info("*" * 100)
-    logger.info(str(test_result_row.status))
-
     assert test_result_row.status == "PASS"
 
 

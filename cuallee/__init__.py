@@ -58,6 +58,8 @@ class Rule:
         if isinstance(self.column, List):
             self.column = tuple(self.column)
 
+        if isinstance(self.value, List):
+            self.value = tuple(self.value)
 
     def __repr__(self):
         return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
@@ -176,125 +178,79 @@ class Check:
 
     def is_unique(self, column: str, pct: float = 1.0):
         """Validation for unique values in column"""
-        rule = Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def are_unique(self, column: Tuple[str], pct: float = 1.0):
         """Validation for unique values in a group of columns"""
-        if isinstance(column, List):
-            column = tuple(column)
-        rule = Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)  >> self._rule
         return self
 
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater than value"""
-        rule = Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
-        rule = Rule(
-            "is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct
-        )
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less than value"""
-        rule = Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
-        rule = Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric column equal than value"""
-        rule = Rule("is_equal_than", column, value, CheckDataType.NUMERIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_equal_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def has_pattern(self, column: str, value: str, pct: float = 1.0):
         """Validation for string type column matching regex expression"""
-        rule = Rule("has_pattern", column, value, CheckDataType.STRING, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("has_pattern", column, value, CheckDataType.STRING, pct) >> self._rule
         return self
 
-        # ComputeInstruction(
-        #     Rule("has_pattern", column, value, CheckDataType.STRING, pct),
-        #     F.sum((F.length(F.regexp_extract(column, value, 0)) > 0).cast("integer")),
-
-    def has_min(self, column: str, value: float, pct: float = 1.0):
+    def has_min(self, column: str, value: float):
         """Validation of a column’s minimum value"""
-        rule = Rule("has_min", column, value, CheckDataType.NUMERIC)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("has_min", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
-    def has_max(self, column: str, value: float, pct: float = 1.0):
+    def has_max(self, column: str, value: float):
         """Validation of a column’s maximum value"""
-        rule = Rule("has_max", column, value, CheckDataType.NUMERIC)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("has_max", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
-    def has_std(self, column: str, value: float, pct: float = 1.0):
+    def has_std(self, column: str, value: float):
         """Validation of a column’s standard deviation"""
-        rule = Rule("has_std", column, value, CheckDataType.NUMERIC)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("has_std", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
-    def has_mean(self, column: str, value: float, pct: float = 1.0):
+    def has_mean(self, column: str, value: float):
         """Validation of a column's average/mean"""
-        rule = Rule("has_mean", column, value, CheckDataType.NUMERIC)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("has_mean", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
-
-        # Create tuple if user pass list
-        if isinstance(value, List):
-            value = tuple(value)
-
-        rule = Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def is_contained_in(
-        self, column: str, value: Tuple[str, int, float], pct: float = 1.0
-    ):
+    def is_contained_in(self, column: str, value: Tuple[str, int, float]):
         """Validation of column value in set of given values"""
-        # Create tuple if user pass list
-        if isinstance(value, List):
-            value = tuple(value)
 
         # Check value type to later assess correct column type
         if [isinstance(v, str) for v in value]:
-            check = CheckDataType.STRING
+            check_data_type = CheckDataType.STRING
         else:
-            check = CheckDataType.NUMERIC
+            check_data_type = CheckDataType.NUMERIC
 
-        rule = Rule("is_contained_in", column, value, check)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("is_contained_in", column, value, check_data_type) >> self._rule
         return self
 
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
@@ -303,117 +259,57 @@ class Check:
 
     def is_on_weekday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is in a Mon-Fri time range"""
-        rule = Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct),
-        #     F.sum(F.dayofweek(f"`{column}`").between(2, 6).cast("integer")),
-        # )
+        Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_weekend(self, column: str, pct: float = 1.0):
         """Validates a datetime column is in a Sat-Sun time range"""
-        rule = Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct),
-        #     F.sum(F.dayofweek(f"`{column}`").isin([1, 7]).cast("integer")),
-        # )
+        Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_monday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Mon"""
-        rule = Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct),
-        #     F.sum((F.dayofweek(f"`{column}`") == 2).cast("integer")),
-        # )
+        Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_tuesday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Tue"""
-        rule = Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct),
-        #     F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
-        # )
+        Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_wednesday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Wed"""
-        rule = Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct),
-        #     F.sum((F.dayofweek(f"`{column}`") == 3).cast("integer")),
-        # )
+        Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_thursday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Thu"""
-        rule = Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct),
-        #     F.sum((F.dayofweek(f"`{column}`") == 4).cast("integer")),
-        # )
+        Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_friday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Fri"""
-        rule = Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct),
-        #     F.sum((F.dayofweek(f"`{column}`") == 5).cast("integer")),
-        # )
+        Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_saturday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Sat"""
-        rule = Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct),
-        #     F.sum((F.dayofweek(f"`{column}`") == 7).cast("integer")),
-        # )
+        Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_sunday(self, column: str, pct: float = 1.0):
         """Validates a datetime column is on Sun"""
-        rule = Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct),
-        #     F.sum((F.dayofweek(f"`{column}`") == 1).cast("integer")),
-        # )
+        Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a datetime column between an hour interval"""
 
-        # Create tuple if user pass list
-        if isinstance(value, List):
-            value = tuple(value)
-
-        rule = Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct)
-        key = self._generate_rule_hash(rule)
+        Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct) >> self._rule
         # self._compute[key] = ComputeInstruction(
         #     Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct),
         #     F.sum(F.hour(column).between(*value).cast("integer")),  # type: ignore
         # )
-        self._rule[key] = rule
         return self
 
     def has_percentile(
@@ -425,64 +321,54 @@ class Check:
         pct: float = 1.0,
     ):
         """Validation of a column percentile value"""
-        rule = Rule(
+        Rule(
             "has_percentile",
             column,
             (value, percentile, precision),
             CheckDataType.NUMERIC,
             pct,
-        )
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        ) >> self._rule
         return self
 
     def has_max_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
         """Validation of a column maximum based on other column maximum"""
-        rule = Rule(
+        Rule(
             "has_max_by",
             (column_source, column_target),
             value,
             CheckDataType.NUMERIC,
-        )
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        ) >> self._rule
         return self
 
     def has_min_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
         """Validation of a column minimum based on other column minimum"""
-        rule = Rule(
+        Rule(
             "has_min_by",
             (column_source, column_target),
             value,
             CheckDataType.NUMERIC,
-        )
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        ) >> self._rule
         return self
 
     def has_correlation(
         self, column_left: str, column_right: str, value: float, pct: float = 1.0
     ):
         """Validates the correlation between 2 columns with some tolerance"""
-        rule = Rule(
+        Rule(
             "has_correlation",
             (column_left, column_right),
             value,
             CheckDataType.NUMERIC,
-        )
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        ) >> self._rule
         return self
 
     def satisfies(self, predicate: str, column: str, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
-        rule = Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct) >> self._rule
         # self._compute[key] = ComputeInstruction(
         #     Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct),
         #     F.sum(F.expr(predicate).cast("integer")),
@@ -491,8 +377,7 @@ class Check:
 
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
         """Validation for entropy calculation on continuous values"""
-        rule = Rule("has_entropy", column, value, CheckDataType.AGNOSTIC)
-        key = self._generate_rule_hash(rule)
+        Rule("has_entropy", column, value, CheckDataType.AGNOSTIC) >> self._rule
 
         # def _execute(dataframe: DataFrame):
         #     return (
@@ -534,16 +419,13 @@ class Check:
         #             ).alias(key)
         #         )
         #     )
-
-        self._rule[key] = rule
         return self
 
     def has_weekday_continuity(self, column: str, pct: float = 1.0):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
-        rule = Rule(
+        Rule(
             "has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct
-        )
-        key = self._generate_rule_hash(rule)
+        ) >> self._rule
 
         # def _execute(dataframe: DataFrame):
         #     _weekdays = lambda x: x.filter(F.dayofweek(column).isin([2, 3, 4, 5, 6]))
@@ -564,8 +446,6 @@ class Check:
         #     ).select(
         #         (F.expr(f"{dataframe.count()} - count(distinct({column}))")).alias(key)
         #     )
-
-        self._rule[key] = rule
         return self
 
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):

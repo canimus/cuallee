@@ -1,18 +1,20 @@
 import enum
 import hashlib
 import logging
+from modulefinder import Module
 import operator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union, Protocol
+from types import ModuleType
+import importlib
 
 from pyspark.sql import Column, DataFrame
-from toolz import valfilter  # type: ignore
-
-import pandas as pd  # type: ignore
+from toolz import valfilter, first  # type: ignore
 
 import cuallee.utils as cuallee_utils
+import pandas as pd  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +69,7 @@ class Rule:
     def __rshift__(self, rule_dict: Dict[str, Any]) -> Dict[str, Any]:
         rule_dict[self.key] = self
 
+
 @dataclass
 class ComputeInstruction:
     predicate: Union[Column, None]
@@ -75,6 +78,17 @@ class ComputeInstruction:
 
     def __repr__(self):
         return f"ComputeInstruction({self.compute_method})"
+
+
+class ComputeEngine(Protocol):
+    def compute(rules: Dict[str, Rule]) -> Dict[str, ComputeInstruction]:
+        """Returns compute instructions for each rule"""
+    
+    def validate_data_types(rules: Dict[str, Rule], dataframe: Any) -> bool:
+        """Validates that all data types from checks match the dataframe with data"""
+
+    def summary(dataframe: Any) -> Any:
+        """Computes all predicates and expressions for check summary"""
 
 
 class Check:
@@ -87,6 +101,7 @@ class Check:
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
         self._compute: Dict[str, ComputeInstruction] = {}
+        self.compute_engine : ModuleType = None
 
         if isinstance(level, int):
             level = CheckLevel(level)
@@ -129,6 +144,10 @@ class Check:
             )
         )
 
+    @property
+    def empty(self):
+        """True when no rules are added in the check"""
+        return len(self.rules) == 0
 
     def _remove_rule_and_compute(self, key: str):
         """Remove a key from rules and compute dictionaries"""
@@ -171,7 +190,7 @@ class Check:
         Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def are_complete(self, column: Union[List[str],Tuple[str]], pct: float = 1.0):
+    def are_complete(self, column: Union[List[str], Tuple[str]], pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
@@ -386,34 +405,30 @@ class Check:
         """Compute all rules in this check for specific data frame"""
 
         # Stop execution if the there is no rules in the check
-        assert (
-            self._rule
-        ), "Check is empty. Add validations i.e. is_complete, is_unique, etc."
-
-        rules = self._rule.values()
+        assert not self.empty, "Check is empty. Try adding some rules?"
 
         # Obtain a set of columns required for rules
         # flattening str columns and tuple columns
         column_set = set(
             cuallee_utils.get_column_set(
-                list(map(operator.attrgetter("column"), rules))
+                list(map(operator.attrgetter("column"), self.rules))
             )
         )
 
+        assert hasattr(dataframe, "columns"), "Your validation dataframe does not have a method `columns`"
         unknown_columns = column_set.difference(set(dataframe.columns))
         assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
-        # Check dataframe is spark dataframe
+        # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, DataFrame):
-            from pyspark.sql import SparkSession
+            from pyspark.sql.session import SparkSession
 
-            import cuallee.spark_validation as SV
-
-            # Check SparkSession is available
-            if "spark" in globals():
-                # Enabler for execution in Databricks
-                spark = globals()["spark"]
+            # Check SparkSession is available in environment through globals
+            if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
+                # Obtain the first spark session available in the globals
+                spark = first(spark_in_session.values())
             else:
+                # TODO: Check should have options for compute engine
                 spark = SparkSession.builder.getOrCreate()
 
             assert isinstance(
@@ -421,110 +436,15 @@ class Check:
             ), "The function requires to pass a spark session available, or in an environment with Apache Spark"
 
             # Create compute dictionary
-            self._compute = SV.compute(self._rule)
+            self.compute_engine = importlib.import_module("cuallee.spark_validation")
 
-            # Check Spark Version
-            # TODO: Requires re-implementation of imports in the the module
-            # if not SV.is_observe_capable(spark.version):
-            #     # NO: replace the compute_methods
-            #     self._compute = {} # new with select only
-            # SV._get_spark_version(self, spark)
-
-            # Pre-Validation of data types
-            assert SV.validate_data_types(
-                self._rule, dataframe
-            ), "Invalid data types found"
-
-            # Compute
-            return SV.summary(self, dataframe, spark)
-            # _get_rule_status(self, summary)
-
+        # When dataframe is Pandas DataFrame API
         elif isinstance(dataframe, pd.DataFrame):
-            from .pandas.pandas_validation import pd_compute_summary
+            self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
-            return pd_compute_summary(dataframe, self)
-
-        #     df_observation = dataframe.observe(
-        #         observation,
-        #         *[
-        #             compute_instruction.expression.alias(hash_key)  # type: ignore
-        #             for hash_key, compute_instruction in self._compute.items()
-        #         ],
-        #     )
-        #     rows = df_observation.count()
-        #     observation_result = observation.get
-        #     logger.info(observation_result)
-        # else:
-        #     observation_result = {}
-        #     rows = dataframe.count()
-
-        # self.rows = rows
-
-        # unique_observe = (
-        #     dataframe.select(
-        #         *[
-        #             compute_instrunction.expression.alias(hash_key)  # type: ignore
-        #             for hash_key, compute_instrunction in self._unique.items()
-        #         ]
-        #     )
-        #     .first()
-        #     .asDict()  # type: ignore
-        # )
-
-        # union_observe = {
-        #     k: operator.attrgetter(k)(compute_instruction.expression(dataframe).first())  # type: ignore
-        #     for k, compute_instruction in self._union.items()
-        # }
-
-        # unified_results = {**unique_observe, **observation_result, **union_observe}
-
-        # _calculate_pass_rate = lambda observed_column: (
-        #     F.when(observed_column == "false", F.lit(0.0))
-        #     .when(observed_column == "true", F.lit(1.0))
-        #     .otherwise(observed_column.cast(T.DoubleType()) / self.rows)  # type: ignore
-        # )
-        # _evaluate_status = lambda pass_rate, pass_threshold: (
-        #     F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
-        # )
-        # _metadata = F.create_map(
-        #     *chain.from_iterable([(F.lit(k), F.lit(v)) for k, v in metadata.items()])
-        # )
-        # return (
-        #     spark.createDataFrame(
-        #         [
-        #             Row(  # type: ignore
-        #                 index,
-        #                 compute_instruction.rule.method,
-        #                 str(compute_instruction.rule.column),
-        #                 str(compute_instruction.rule.value),
-        #                 unified_results[hash_key],
-        #                 compute_instruction.rule.coverage,
-        #             )
-        #             for index, (hash_key, compute_instruction) in enumerate(
-        #                 unified_rules.items(), 1
-        #             )
-        #         ],
-        #         schema="id int, rule string, column string, value string, result string, pass_threshold string",
-        #     )
-        #     .select(
-        #         F.col("id"),
-        #         F.lit(self.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
-        #         F.lit(self.name).alias("check"),
-        #         F.lit(self.level.name).alias("level"),
-        #         F.col("column"),
-        #         F.col("rule"),
-        #         F.col("value"),
-        #         F.lit(rows).alias("rows"),
-        #         (rows - F.col("result").cast("long")).alias("violations"),
-        #         _calculate_pass_rate(F.col("result")).alias("pass_rate"),
-        #         F.col("pass_threshold").cast(T.DoubleType()),
-        #         F.lit(_metadata).alias("metadata"),
-        #     )
-        #     .withColumn(
-        #         "status",
-        #         _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
-        #     )
-        # )
+        self._compute = self.compute_engine.compute(self._rule)
+        assert self.compute_engine.validate_data_types(self._rule, dataframe)
+        return self.compute_engine.summary(dataframe)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
         if not rule_index:

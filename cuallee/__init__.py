@@ -12,7 +12,7 @@ from toolz import valfilter  # type: ignore
 
 import pandas as pd  # type: ignore
 
-from .utils import get_column_set
+import cuallee.utils as cuallee_utils
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,12 @@ class CheckDataType(enum.Enum):
     TIMESTAMP = 4
 
 
+class CheckStatus(enum.Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+    NO_RUN = "NO_RUN"
+
+
 @dataclass
 class Rule:
     method: str
@@ -39,13 +45,25 @@ class Rule:
     coverage: float = 1.0
     status: str = None
 
+    @property
+    def key(self):
+        return hashlib.blake2s(
+            bytes(f"{self.method}{self.column}{self.value}{self.coverage}", "utf-8")
+        ).hexdigest()
+
     def __post_init__(self):
         if (self.coverage <= 0) or (self.coverage > 1):
             raise ValueError("Coverage should be between 0 and 1")
 
+        if isinstance(self.column, List):
+            self.column = tuple(self.column)
+
+
     def __repr__(self):
         return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
 
+    def __rshift__(self, rule_dict: Dict[str, Any]) -> Dict[str, Any]:
+        rule_dict[self.key] = self
 
 @dataclass
 class ComputeInstruction:
@@ -109,23 +127,6 @@ class Check:
             )
         )
 
-    def _generate_rule_key_id(
-        self,
-        method: str,
-        column: Union[Tuple, str],
-        value: Any,
-        coverage: float,
-    ):
-        """A hash function to generate unique identifiers for rules"""
-        return hashlib.blake2s(
-            bytes(f"{method}{column}{value}{coverage}", "utf-8")
-        ).hexdigest()
-
-    def _generate_rule_hash(self, rule: Rule):
-        """A hash funtion for unique rule identifiers"""
-        return self._generate_rule_key_id(
-            rule.method, rule.column, rule.value, rule.coverage
-        )
 
     def _remove_rule_and_compute(self, key: str):
         """Remove a key from rules and compute dictionaries"""
@@ -165,19 +166,12 @@ class Check:
 
     def is_complete(self, column: str, pct: float = 1.0):
         """Validation for non-null values in column"""
-        rule = Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
-
+        Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def are_complete(self, column: str, pct: float = 1.0):
+    def are_complete(self, column: Union[List[str],Tuple[str]], pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
-        if isinstance(column, List):
-            column = tuple(column)
-        rule = Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct)
-        key = self._generate_rule_hash(rule)
-        self._rule[key] = rule
+        Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def is_unique(self, column: str, pct: float = 1.0):
@@ -587,7 +581,9 @@ class Check:
         # Obtain a set of columns required for rules
         # flattening str columns and tuple columns
         column_set = set(
-            get_column_set(list(map(operator.attrgetter("column"), rules)))
+            cuallee_utils.get_column_set(
+                list(map(operator.attrgetter("column"), rules))
+            )
         )
 
         unknown_columns = column_set.difference(set(dataframe.columns))

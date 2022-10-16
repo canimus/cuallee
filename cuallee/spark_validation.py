@@ -8,7 +8,7 @@ from pyspark.sql import Column, DataFrame, Observation, Row, SparkSession
 from toolz import valfilter  # type: ignore
 
 from cuallee import Check, CheckDataType, ComputeInstruction, Rule
-from cuallee.utils import get_column_set
+import cuallee.utils as cuallee_utils
 
 
 class Compute:
@@ -397,7 +397,7 @@ def _column_set_comparison(
 ):
     """Compair type of the columns passed in rules and present in dataframe."""
     return set(
-        get_column_set(map(columns, valfilter(filter, rules).values()))  # type: ignore
+        cuallee_utils.get_column_set(map(columns, valfilter(filter, rules).values()))  # type: ignore
     ).difference(fn(dataframe))
 
 

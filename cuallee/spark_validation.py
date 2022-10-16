@@ -545,39 +545,10 @@ def _compute_transform_method(
     _transform = lambda x: x.compute_method == "transform"
     transform = valfilter(_transform, compute_set)
 
-    # return (
-    #     dataframe.select(
-    #         *[
-    #             compute_instrunction.expression.alias(hash_key)
-    #             for hash_key, compute_instrunction in transform.items()
-    #         ]
-    #     )
-    #     .first()
-    #     .asDict()  # type: ignore
-    # )
     return {
         k: operator.attrgetter(k)(compute_instruction.expression(dataframe, k).first())  # type: ignore
         for k, compute_instruction in transform.items()
     }
-
-
-# def _overwrite_observe_method(compute: Dict[str, ComputeInstruction]):
-#     """Overwrite the observe method to select."""
-#     for compute_instruction in compute.values():
-#         if compute_instruction.compute_method == "observe":
-#             compute_instruction.compute_method = "select"
-#         else:
-#             compute_instruction.compute_method = compute_instruction.compute_method
-
-
-# def is_observe_capable(version: str):
-#     """Check spark version and overwrite compute method if needed."""
-#     e = re.compile(r"(\d+).(\d+).(\d+)")
-#     major, minor, low = list(map(int, e.match(version).groups()))
-#     if major >= 3 & minor >= 3 & low >= 0:
-#         return True
-#     else:
-#         return False
 
 
 def numeric_fields(dataframe: DataFrame) -> Collection:

@@ -91,7 +91,7 @@ class ComputeInstruction:
 
 
 class ComputeEngine(Protocol):
-    def compute(self, rules: Dict[str, Rule]) -> Dict[str, ComputeInstruction]:
+    def compute(self, rules: Dict[str, Rule]) -> bool:
         """Returns compute instructions for each rule"""
 
     def validate_data_types(self, rules: Dict[str, Rule], dataframe: Any) -> bool:
@@ -497,27 +497,3 @@ class Check:
                 ],
             ).drop_duplicates()
 
-    # def sampling(
-    #     self,
-    #     dataframe: DataFrame,
-    #     *arg,
-    #     status: str = "FAIL",
-    #     method: Union[tuple[str], str] = None,
-    # ) -> DataFrame:
-
-    #     # Validate all rule
-
-    #     # Validate DataFrame
-
-    #     # Check dataframe is spark dataframe
-    #     if isinstance(dataframe, DataFrame):
-    #         from .spark.spark_validation import get_record_sample
-    #         from pyspark.sql import SparkSession
-
-    #         spark = arg[0]
-    #         assert isinstance(
-    #             arg[0], SparkSession
-    #         ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
-    #         return get_record_sample(self, dataframe, spark, status, method)
-    #     else:
-    #         "I cannot do anything for you! :'-("

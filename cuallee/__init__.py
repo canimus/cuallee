@@ -467,7 +467,7 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
         self._compute = self.compute_engine.compute(self._rule)
-        assert self.compute_engine.validate_data_types(self._rule, dataframe)
+        assert self.compute_engine.validate_data_types(self._rule, dataframe), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:

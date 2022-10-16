@@ -5,7 +5,7 @@ from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import Column, DataFrame, Observation, Row, SparkSession
-from toolz import valfilter  # type: ignore
+from toolz import valfilter, first  # type: ignore
 
 from cuallee import Check, CheckDataType, ComputeInstruction, Rule
 import cuallee.utils as cuallee_utils
@@ -618,8 +618,17 @@ def compute(rules: Dict[str, Rule]) -> Dict:
     return {k: operator.methodcaller(v.method, v)(Compute()) for k, v in rules.items()}
 
 
-def summary(check: Check, dataframe: DataFrame, spark: SparkSession) -> DataFrame:
+def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     """Compute all rules in this check for specific data frame"""
+    from pyspark.sql.session import SparkSession
+
+    # Check SparkSession is available in environment through globals
+    if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
+        # Obtain the first spark session available in the globals
+        spark = first(spark_in_session.values())
+    else:
+        # TODO: Check should have options for compute engine
+        spark = SparkSession.builder.getOrCreate()
 
     # Compute the expression
     rows, observation_result = _compute_observe_method(check._compute, dataframe)

@@ -421,21 +421,6 @@ class Check:
 
         # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, DataFrame):
-            from pyspark.sql.session import SparkSession
-
-            # Check SparkSession is available in environment through globals
-            if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
-                # Obtain the first spark session available in the globals
-                spark = first(spark_in_session.values())
-            else:
-                # TODO: Check should have options for compute engine
-                spark = SparkSession.builder.getOrCreate()
-
-            assert isinstance(
-                spark, SparkSession
-            ), "The function requires to pass a spark session available, or in an environment with Apache Spark"
-
-            # Create compute dictionary
             self.compute_engine = importlib.import_module("cuallee.spark_validation")
 
         # When dataframe is Pandas DataFrame API
@@ -444,7 +429,7 @@ class Check:
 
         self._compute = self.compute_engine.compute(self._rule)
         assert self.compute_engine.validate_data_types(self._rule, dataframe)
-        return self.compute_engine.summary(self, dataframe, spark)
+        return self.compute_engine.summary(self, dataframe)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
         if not rule_index:

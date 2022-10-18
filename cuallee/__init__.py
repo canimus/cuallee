@@ -326,9 +326,20 @@ class Check:
         )
         return self
 
-    def is_inside_interquartile_range(self, column: str, value: int = 10000, pct: float = 1.0):
+    def is_inside_interquartile_range(
+        self, column: str, value: int = 10000, pct: float = 1.0
+    ):
         """Validates a number resides inside the Q3 - Q1 range of values"""
-        Rule("is_inside_interquartile_range", column, value, CheckDataType.NUMERIC, pct) >> self._rule
+        (
+            Rule(
+                "is_inside_interquartile_range",
+                column,
+                value,
+                CheckDataType.NUMERIC,
+                pct,
+            )
+            >> self._rule
+        )
         return self
 
     def has_max_by(

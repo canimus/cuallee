@@ -141,7 +141,8 @@ Define once, `run everywhere`
 ## Authors
 - [canimus](https://github.com/canimus) / 🇲🇽 Herminio Vazquez
 - [vestalisvirginis](https://github.com/vestalisvirginis) / 🇫🇷 Virginie Grosboillot
-Made with ❤️ in `Utrecht` 🇳🇱
+
+> Made with ❤️ in `Utrecht` 🇳🇱
 
 ## License
 Apache License 2.0

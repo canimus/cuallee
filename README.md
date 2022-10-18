@@ -139,12 +139,15 @@ Define once, `run everywhere`
 
 
 ## Authors
-- [canimus](https://github.com/canimus) / 🇲🇽 Herminio Vazquez
-- [vestalisvirginis](https://github.com/vestalisvirginis) / 🇫🇷 Virginie Grosboillot
+- [canimus](https://github.com/canimus) / Herminio Vazquez / 🇲🇽 
+- [vestalisvirginis](https://github.com/vestalisvirginis) / Virginie Grosboillot / 🇫🇷 
 
-> Made with ❤️ in `Utrecht` 🇳🇱
+
 
 ## License
 Apache License 2.0
 Free for commercial use, modification, distribution, patent use, private use.
 Just preserve the copyright and license.
+
+
+> Made with ❤️ in Utrecht 🇳🇱

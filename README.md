@@ -92,6 +92,7 @@ Check | Description | DataType
 `are_complete` | Zero `nulls` on group of columns | _agnostic_
 `are_unique` | Composite primary key check | _agnostic_
 `is_greater_than` | `col > x` | _numeric_
+`is_positive` | `col > 0` | _numeric_
 `is_greater_or_equal_than` | `col >= x` | _numeric_
 `is_less_than` | `col < x` | _numeric_
 `is_less_or_equal_than` | `col <= x` | _numeric_
@@ -109,6 +110,8 @@ Check | Description | DataType
 `has_min_by` | A utilitary predicate for `min(col_a) == x for min(col_b)`  | _agnostic_
 `has_correlation` | Finds correlation between `0..1` on `corr(col_a, col_b)` | _numeric_
 `has_entropy` | Calculates the entropy of a column `entropy(col) == x` for classification problems | _numeric_
+`is_in_millions` | `col >= 1e6` | _numeric_
+`is_in_billions` | `col >= 1e9` | _numeric_
 `is_on_weekday` | For date fields confirms day is between `Mon-Fri` | _date_
 `is_on_weekend` | For date fields confirms day is between `Sat-Sun` | _date_
 `is_on_monday` | For date fields confirms day is `Mon` | _date_

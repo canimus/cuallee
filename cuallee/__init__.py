@@ -225,6 +225,11 @@ class Check:
         Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
+    def is_positive(self, column: str, pct: float = 1.0):
+        """Validation for numeric greater than zero"""
+        Rule("is_greater_than", column, 0, CheckDataType.NUMERIC, pct) >> self._rule
+        return self
+
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
         (
@@ -437,6 +442,16 @@ class Check:
     ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
         (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
+        return self
+
+    def is_in_millions(self, column: str, pct: float = 1.0):
+        """Validates that a column has values greater than 1M"""
+        Rule("is_greater_or_equal_than", column, 1e6, CheckDataType.NUMERIC, pct) >> self._rule
+        return self
+
+    def is_in_billions(self, column: str, pct: float = 1.0):
+        """Validates that a column has values greater than 1B"""
+        Rule("is_greater_or_equal_than", column, 1e9, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):

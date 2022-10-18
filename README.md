@@ -110,6 +110,7 @@ Check | Description | DataType
 `has_min_by` | A utilitary predicate for `min(col_a) == x for min(col_b)`  | _agnostic_
 `has_correlation` | Finds correlation between `0..1` on `corr(col_a, col_b)` | _numeric_
 `has_entropy` | Calculates the entropy of a column `entropy(col) == x` for classification problems | _numeric_
+`is_inside_interquartile_range` | Verifies column values reside inside limits of interquartile range `Q1 <= col <= Q3` used on anomalies.  | _numeric_
 `is_in_millions` | `col >= 1e6` | _numeric_
 `is_in_billions` | `col >= 1e9` | _numeric_
 `is_on_weekday` | For date fields confirms day is between `Mon-Fri` | _date_

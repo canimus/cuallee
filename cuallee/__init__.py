@@ -16,7 +16,6 @@ from typing import (
     Protocol,
 )
 from types import ModuleType
-from numbers import Number
 import importlib
 
 from pyspark.sql import SparkSession, DataFrame
@@ -73,10 +72,6 @@ class Rule:
             self.value = tuple(self.value)
 
         if isinstance(self.value, Tuple):
-            if all(map(lambda x: isinstance(x, Number), self.value)):
-                # Enforce valid data type on DataFrame
-                self.data_type = CheckDataType.NUMERIC
-
             # All values can only be of one data type in a rule
             if not all(map(type, self.value)):
                 raise ValueError("Data types in rule values are inconsistent")
@@ -437,12 +432,12 @@ class Check:
         )
         return self
 
-    def has_weekday_continuity(self, column: str, pct: float = 1.0):
+    def has_weekday_continuity(
+        self, column: str, value: List[int] = [2, 3, 4, 5, 6], pct: float = 1.0
+    ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
         (
-            Rule(
-                "has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct
-            )
+            Rule("has_weekday_continuity", column, value, CheckDataType.DATE, pct)
             >> self._rule
         )
         return self

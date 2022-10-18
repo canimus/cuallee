@@ -430,7 +430,7 @@ class Compute:
 
         def _execute(dataframe: DataFrame, key: str):
             _weekdays = lambda x: x.filter(
-                F.dayofweek(rule.column).isin([2, 3, 4, 5, 6])  # type: ignore
+                F.dayofweek(rule.column).isin(*rule.value)  # type: ignore
             )
             _date_only = lambda x: x.select(F.to_date(f"`{rule.column}`").alias(rule.column))  # type: ignore
             full_interval = (

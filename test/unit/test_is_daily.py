@@ -13,7 +13,7 @@ def test_missing_one_weekday(spark):
         .drop(4),
         schema="ts timestamp",
     )
-    check.has_weekday_continuity("ts")
+    check.is_daily("ts")
 
     assert (
         check.validate(df.withColumn("ts", F.to_date("ts"))).first().violations == 1
@@ -31,7 +31,7 @@ def test_missing_two_weekdays(spark):
         .drop(5),
         schema="ts timestamp",
     )
-    check.has_weekday_continuity("ts")
+    check.is_daily("ts")
 
     assert (
         check.validate(df.withColumn("ts", F.to_date("ts"))).first().violations == 2
@@ -50,7 +50,7 @@ def test_missing_sunday(spark):
         schema="ts timestamp",
     )
     # Delivery on Sundays only, has continuity
-    check.has_weekday_continuity("ts", [1])
+    check.is_daily("ts", [1])
 
     assert (
         check.validate(df.withColumn("ts", F.to_date("ts"))).first().violations == 2
@@ -70,7 +70,7 @@ def test_missing_mon_wed_fri(spark):
         schema="ts timestamp",
     )
     # Delivery on Mon-Wed-Fri only, has continuity
-    check.has_weekday_continuity("ts", [2, 4, 6])
+    check.is_daily("ts", [2, 4, 6])
 
     assert (
         check.validate(df.withColumn("ts", F.to_date("ts"))).first().violations == 3

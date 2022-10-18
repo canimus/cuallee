@@ -432,14 +432,11 @@ class Check:
         )
         return self
 
-    def has_weekday_continuity(
+    def is_daily(
         self, column: str, value: List[int] = [2, 3, 4, 5, 6], pct: float = 1.0
     ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
-        (
-            Rule("has_weekday_continuity", column, value, CheckDataType.DATE, pct)
-            >> self._rule
-        )
+        (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
         return self
 
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):

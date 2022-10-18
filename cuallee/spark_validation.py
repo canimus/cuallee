@@ -425,7 +425,7 @@ class Compute:
         )
         return self.compute_instruction
 
-    def has_weekday_continuity(self, rule: Rule):
+    def is_daily(self, rule: Rule):
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):

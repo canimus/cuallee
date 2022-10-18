@@ -446,12 +446,18 @@ class Check:
 
     def is_in_millions(self, column: str, pct: float = 1.0):
         """Validates that a column has values greater than 1M"""
-        Rule("is_greater_or_equal_than", column, 1e6, CheckDataType.NUMERIC, pct) >> self._rule
+        (
+            Rule("is_greater_or_equal_than", column, 1e6, CheckDataType.NUMERIC, pct)
+            >> self._rule
+        )
         return self
 
     def is_in_billions(self, column: str, pct: float = 1.0):
         """Validates that a column has values greater than 1B"""
-        Rule("is_greater_or_equal_than", column, 1e9, CheckDataType.NUMERIC, pct) >> self._rule
+        (
+            Rule("is_greater_or_equal_than", column, 1e9, CheckDataType.NUMERIC, pct)
+            >> self._rule
+        )
         return self
 
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):

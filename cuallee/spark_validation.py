@@ -400,7 +400,7 @@ class Compute:
         predicate = None
         def _execute(dataframe: DataFrame, key: str):
             _iqr = dataframe.select(F.percentile_approx(f"`{rule.column}`", [0.25, 0.75], rule.value).alias("iqr")).first().iqr
-            return dataframe.select(F.sum(F.col(f"`{rule.column}`").between(*_iqr).cast("integer")).alias(key))
+            return dataframe.select(F.sum((~F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")).alias(key))
 
         self.compute_instruction = ComputeInstruction(
             predicate=predicate, expression=_execute, compute_method="transform"

@@ -82,6 +82,23 @@ check.has_pattern("desc", r"^is.*t$") # only match is_smart 33% of rows.
 check.validate(df).first().status == "FAIL"
 ```
 
+### Anomalies
+
+Statistical tests are a great aid for verifying anomalies on data. Here an example that shows that will `PASS` only when `40%` of data is inside the interquartile range
+
+```python
+df = spark.range(10)
+check = Check(CheckLevel.WARNING, "IQR_Test")
+check.is_inside_interquartile_range("id", pct=0.4)
+check.validate(df).first().status == "PASS"
+
++---+-------------------+-----+-------+------+-----------------------------+-----+----+----------+---------+--------------+------+
+|id |timestamp          |check|level  |column|rule                         |value|rows|violations|pass_rate|pass_threshold|status|
++---+-------------------+-----+-------+------+-----------------------------+-----+----+----------+---------+--------------+------+
+|1  |2022-10-19 00:09:39|IQR  |WARNING|id    |is_inside_interquartile_range|10000|10  |4         |0.6      |0.4           |PASS  |
++---+-------------------+-----+-------+------+-----------------------------+-----+----+----------+---------+--------------+------+
+```
+
 
 ## Catalogue
 

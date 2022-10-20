@@ -3,7 +3,6 @@
 **__pycache__/
 *.crt
 *.key
-.coverage
 
 temp/
 .vscode/
@@ -11,7 +10,9 @@ cuallee/cuallee.egg-info
 cuallee.egg-info/
 dist/
 
-
+# Environment set up
+.env
+envtest.py
 .devcontainer/
 
 # Testing

@@ -1,5 +1,5 @@
 from unittest import skip
-from typing import Collection
+from typing import Collection, Dict
 
 import pytest
 import operator
@@ -153,13 +153,28 @@ def test_validate_timestamp_type(snowpark):
 
 def test_get_compute_dictionary(snowpark):
     df = snowpark.range(10).withColumn("desc", F.col("id").cast("string"))
-    c = (
+    check = (
         Check(CheckLevel.WARNING, "test_update_compute_dictionary")
         .is_complete("id")
         .is_complete("desc")
     )
-    assert len(c._rule) == 2
-    assert len(c._compute) == 0
-    rs = SV.compute(c._rule)
-    assert len(rs) == len(c._rule)
-    assert set(rs.keys()) == set(c._rule.keys())
+    assert len(check._rule) == 2
+    assert len(check._compute) == 0
+    rs = SV.compute(check._rule)
+    assert len(rs) == len(check._rule)
+    assert set(rs.keys()) == set(check._rule.keys())
+
+
+def test_compute_select_method(snowpark):
+    df = snowpark.range(10)
+    check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("id")
+    rs = SV._compute_select_method(SV.compute(check._rule), df)
+    assert (rs, Dict)
+    assert len(rs) == 1
+
+
+def test_compute_transform_method(): # TODO: when transform method available
+    pass
+
+def test_summary(): # TODO:
+    pass

@@ -1,5 +1,6 @@
 from cuallee import Check, CheckLevel
 
+
 def test_is_complete(snowpark):
     df = snowpark.range(10)
     check = Check(CheckLevel.WARNING, "IsComplete")

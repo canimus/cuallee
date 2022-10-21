@@ -1,5 +1,6 @@
 from unittest import skip
 from typing import Collection, Dict
+from snowflake.snowpark import DataFrame
 
 import pytest
 import operator
@@ -25,7 +26,7 @@ def test_Compute():  # TODO:
 def test_field_type_filter(snowpark):
     df = snowpark.range(10)
     rs = SV._field_type_filter(df, T.IntegerType)
-    assert (rs, Collection)
+    assert isinstance(rs, Collection)
 
 
 def test_numeric_fields(snowpark):
@@ -35,7 +36,7 @@ def test_numeric_fields(snowpark):
         .withColumn("id2", F.col("id").cast("float"))
     )
     rs = SV.numeric_fields(df)
-    assert (rs, Collection)
+    assert isinstance(rs, Collection)
     assert len(rs) == 2
     assert rs == {
         "ID",
@@ -46,7 +47,7 @@ def test_numeric_fields(snowpark):
 def test_string_fields(snowpark):
     df = snowpark.range(10).withColumn("desc", F.col("id").cast("string"))
     rs = SV.string_fields(df)
-    assert (rs, Collection)
+    assert isinstance(rs, Collection)
     assert len(rs) == 1
     assert rs == {"DESC"}
 
@@ -61,7 +62,7 @@ def test_date_fields(snowpark):
         .withColumn("time", F.time_from_parts(F.col("id"), 5, 10))
     )
     rs = SV.date_fields(df)
-    assert (rs, Collection)
+    assert isinstance(rs, Collection)
     assert len(rs) == 2
     assert rs == {"DATE", "TIMESTAMP"}
 
@@ -76,7 +77,7 @@ def test_timestamp_fields(snowpark):
         .withColumn("time", F.time_from_parts(F.col("id"), 5, 10))
     )
     rs = SV.timestamp_fields(df)
-    assert (rs, Collection)
+    assert isinstance(rs, Collection)
     assert len(rs) == 2
     assert rs == {"TIMESTAMP", "TIME"}
 
@@ -100,7 +101,7 @@ def test_column_set_comparison(snowpark):
         lambda x: x.data_type.name == CheckDataType.AGNOSTIC.name,
         SV.numeric_fields,
     )
-    assert (rs, Collection)
+    assert isinstance(rs, Collection)
     assert len(rs) == 1
     assert rs == {"DESC"}
 
@@ -117,7 +118,7 @@ def test_validate_numeric_type(snowpark):
         .is_greater_than("id2", 2)
     )
     rs = SV.validate_data_types(check._rule, df)
-    assert (rs, bool)
+    assert isinstance(rs, bool)
     assert rs == True
     check.is_greater_than("desc", 2)
     with pytest.raises(AssertionError, match="are not numeric"):
@@ -169,12 +170,17 @@ def test_compute_select_method(snowpark):
     df = snowpark.range(10)
     check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("id")
     rs = SV._compute_select_method(SV.compute(check._rule), df)
-    assert (rs, Dict)
+    assert isinstance(rs, Dict)
     assert len(rs) == 1
 
 
-def test_compute_transform_method(): # TODO: when transform method available
+def test_compute_transform_method():  # TODO: when transform method available
     pass
 
-def test_summary(): # TODO:
-    pass
+
+def test_summary(snowpark):  # TODO: problem with the schema -> does not accept string! but doesn't work with mixed type!
+    df = snowpark.range(10)
+    check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("id")
+    check._compute = SV.compute(check._rule) 
+    rs = SV.summary(check, df, snowpark)
+    assert isinstance(rs, DataFrame)

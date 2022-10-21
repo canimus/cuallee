@@ -1,12 +1,11 @@
 import enum
 import operator
-from sqlite3 import Row
 import snowflake.snowpark.functions as F  # type: ignore
 import snowflake.snowpark.types as T  # type: ignore
 
 from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple
 from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session
+from snowflake.snowpark import DataFrame, Column, Session, Row
 from toolz import valfilter  # type: ignore
 from functools import reduce
 
@@ -53,7 +52,7 @@ class Compute:
         value: Optional[Any],
         operator: Callable,
     ):
-        return operator(F.col(f"`{column}`")).eqNullSafe(
+        return operator(F.col(column)).eqNullSafe(
             value
         )  # TODO: Test if this works!
 
@@ -619,7 +618,12 @@ def summary(check: Check, dataframe: DataFrame, options):
     )
 
     # Get or Create SnowparkSession$
-    snowpark = Session.builder.configs(options).create()  # TODO: Get help on this part
+    if isinstance(options, Session): # TODO: Fix this part 
+        snowpark = options
+    else:
+        snowpark = Session.builder.configs(options).create()  # TODO: Get help on this part
+
+    #schema = T.StructType([T.StructField("id", T.IntegerType()), T.StructField("rule", T.StringType()), T.StructField("column", T.StringType()), T.StructField("value", T.StringType()), T.StructField("result", T.StringType()), T.StructField("pass_threshold", T.StringType())])
 
     return (
         snowpark.createDataFrame(
@@ -634,7 +638,7 @@ def summary(check: Check, dataframe: DataFrame, options):
                 )
                 for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
             ],
-            schema="id int, rule string, column string, value string, result string, pass_threshold string",
+            schema=["id", "rule", "column", "value", "result", "pass_threshold"],
         )
         .select(
             F.col("id"),

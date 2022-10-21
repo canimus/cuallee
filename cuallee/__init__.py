@@ -22,7 +22,7 @@ from pyspark.sql import SparkSession, DataFrame
 from toolz import valfilter  # type: ignore
 
 try:
-    from snowflake.snowpark import DataFrame as snowpark_dataframe
+    from snowflake.snowpark import DataFrame as snowpark_dataframe # type: ignore
 except:
     print("SnowFlake not installed.")
 

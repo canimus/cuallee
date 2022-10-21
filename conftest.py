@@ -3,7 +3,7 @@ import warnings
 import pytest
 from cuallee import Check, CheckLevel
 from pyspark.sql import SparkSession
-from snowflake.snowpark import Session
+from snowflake.snowpark import Session # type: ignore
 import logging
 
 @pytest.fixture(scope="session")

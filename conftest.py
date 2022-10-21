@@ -1,7 +1,14 @@
-from pyspark.sql import SparkSession
+import os
+import warnings
 import pytest
 from cuallee import Check, CheckLevel
+from pyspark.sql import SparkSession
 import logging
+
+try:
+	from snowflake.snowpark import Session # type: ignore
+except:
+	print("No snowflake available")
 
 @pytest.fixture(scope="session")
 def spark():
@@ -23,3 +30,32 @@ def spark():
 def check():
     return Check(CheckLevel.WARNING, "PyTestCheck")
 
+
+@pytest.fixture(scope="session")
+def configurations():
+	return {
+    	"account" : os.getenv("SF_ACCOUNT"),
+    	"user" : os.getenv("SF_USER"),
+    	"password" : os.getenv("SF_PASSWORD"),
+    	"role" : os.getenv("SF_ROLE"),
+    	"warehouse" : os.getenv("SF_WAREHOUSE"),
+    	"database" : os.getenv("SF_DATABASE"),
+    	"schema" : os.getenv("SF_SCHEMA")
+	}
+
+@pytest.fixture(scope="session")
+def snowpark():
+	settings = {
+    	"account" : os.getenv("SF_ACCOUNT"),
+    	"user" : os.getenv("SF_USER"),
+    	"password" : os.getenv("SF_PASSWORD"),
+    	"role" : os.getenv("SF_ROLE"),
+    	"warehouse" : os.getenv("SF_WAREHOUSE"),
+    	"database" : os.getenv("SF_DATABASE"),
+    	"schema" : os.getenv("SF_SCHEMA")
+	}
+	try:
+		snowpark_session = Session.builder.configs(settings).create()
+		yield snowpark_session
+	except:
+		pass

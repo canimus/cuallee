@@ -9,11 +9,8 @@ temp/
 cuallee/cuallee.egg-info
 cuallee.egg-info/
 dist/
-
-# Environment set up
 .env
-envtest.py
-.devcontainer/
+.py3812/
 
 # Testing
 .coverage

@@ -52,7 +52,7 @@ class Compute:
         value: Optional[Any],
         operator: Callable,
     ):
-        return operator(F.col(column)).eqNullSafe(value)  # TODO: Test if this works!
+        return operator(F.col(column)).eqNullSafe(value)
 
     def is_complete(self, rule: Rule):
         """Validation for non-null values in column"""

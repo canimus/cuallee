@@ -514,7 +514,7 @@ def _compute_select_method(
     return (
         dataframe.select(
             *[
-                compute_instrunction.expression.as_(hash_key)
+                compute_instrunction.expression.alias(hash_key.upper())
                 for hash_key, compute_instrunction in select.items()
             ]
         )
@@ -603,58 +603,56 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         check._compute, dataframe
     )  # TODO: Check with Herminio to remove the Compute Instruction in the __init__.py
     transform_result = _compute_transform_method(check._compute, dataframe)
-    
+
     unified_results = {**select_result, **transform_result}
 
+    _calculate_violations = lambda result_column: (
+        F.when(result_column == "False", F.lit(rows))
+        .when(result_column == "True", F.lit(0))
+        .otherwise(F.lit(rows) - result_column.cast("long"))
+    )
+
     _calculate_pass_rate = lambda observed_column: (
-        F.when(observed_column == "false", F.lit(0.0))
-        .when(observed_column == "true", F.lit(1.0))
+        F.when(observed_column == "False", F.lit(0.0))
+        .when(observed_column == "True", F.lit(1.0))
         .otherwise(observed_column.cast(T.DoubleType()) / rows)  # type: ignore
     )
+
     _evaluate_status = lambda pass_rate, pass_threshold: (
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
     )
 
     # Create SnowparkSession
-    snowpark = Session.builder.configs(
-        check.config
-    ).create()
+    snowpark = Session.builder.configs(check.config).create()
 
-
-    computation_basis = (
-        snowpark.createDataFrame(
-            [
-                Row(
-                    index,
-                    rule.method,
-                    str(rule.column),
-                    str(rule.value),
-                    str(unified_results[hash_key.upper()]),
-                    rule.coverage,
-                )
-                for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
-            ],
-            schema=["id", "rule", "column", "value", "result", "pass_threshold"],
-        )
+    computation_basis = snowpark.createDataFrame(
+        [
+            Row(
+                index,
+                rule.method,
+                str(rule.column),
+                str(rule.value),
+                str(unified_results[hash_key.upper()]),
+                rule.coverage,
+            )
+            for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
+        ],
+        schema=["id", "rule", "column", "value", "result", "pass_threshold"],
     )
-    
-    return (
-            computation_basis   
-            .select(
-            F.col("id"),
-            F.lit(check.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
-            F.lit(check.name).alias("check"),
-            F.lit(check.level.name).alias("level"),
-            F.col("column"),
-            F.col("rule"),
-            F.col("value"),
-            F.lit(rows).alias("rows"),
-            (rows - F.col("result").cast("long")).alias("violations"),
-            _calculate_pass_rate(F.col("result")).alias("pass_rate"),
-            F.col("pass_threshold").cast(T.DoubleType()).alias("pass_threshold"),
-        )
-        .withColumn(
-            "status",
-            _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
-        )
+
+    return computation_basis.select(
+        F.col("id"),
+        F.lit(check.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
+        F.lit(check.name).alias("check"),
+        F.lit(check.level.name).alias("level"),
+        F.col("column"),
+        F.col("rule"),
+        F.col("value"),
+        F.lit(rows).alias("rows"),
+        _calculate_violations(F.col("RESULT")).alias("violations"),
+        _calculate_pass_rate(F.col("result")).alias("pass_rate"),
+        F.col("pass_threshold").cast(T.DoubleType()).alias("pass_threshold"),
+    ).withColumn(
+        "status",
+        _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
     )

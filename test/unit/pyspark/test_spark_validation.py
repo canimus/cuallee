@@ -13,7 +13,7 @@ def test_compute_summary_return_dataframe(spark):
     df = spark.range(10).alias("id")
     c = Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id")
     c._compute = SV.compute(c._rule)
-    rs = SV.summary(c, df, spark)
+    rs = SV.summary(c, df)
     assert isinstance(rs, DataFrame)
 
 

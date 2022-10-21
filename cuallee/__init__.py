@@ -1,17 +1,25 @@
 import enum
 import hashlib
 import logging
-from modulefinder import Module
 import operator
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union, Protocol
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    Protocol,
+)
 from types import ModuleType
 import importlib
 
-from pyspark.sql import SparkSession, DataFrame, Column
-from toolz import valfilter, first  # type: ignore
+from pyspark.sql import SparkSession, DataFrame
+from toolz import valfilter  # type: ignore
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe
@@ -46,11 +54,11 @@ class CheckStatus(enum.Enum):
 @dataclass
 class Rule:
     method: str
-    column: Union[Tuple, str]
+    column: Union[str, List[str], Tuple[str, str]]
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
-    status: str = None
+    status: Union[str, None] = None
 
     @property
     def key(self):
@@ -68,17 +76,23 @@ class Rule:
         if isinstance(self.value, List):
             self.value = tuple(self.value)
 
+        if isinstance(self.value, Tuple):
+            # All values can only be of one data type in a rule
+            if not all(map(type, self.value)):
+                raise ValueError("Data types in rule values are inconsistent")
+
     def __repr__(self):
         return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
 
     def __rshift__(self, rule_dict: Dict[str, Any]) -> Dict[str, Any]:
         rule_dict[self.key] = self
+        return rule_dict
 
 
 @dataclass
 class ComputeInstruction:
-    predicate: Union[Column, None]
-    expression: Column
+    predicate: Any
+    expression: Any
     compute_method: str
 
     def __repr__(self):
@@ -86,13 +100,13 @@ class ComputeInstruction:
 
 
 class ComputeEngine(Protocol):
-    def compute(rules: Dict[str, Rule]) -> Dict[str, ComputeInstruction]:
+    def compute(self, rules: Dict[str, Rule]) -> bool:
         """Returns compute instructions for each rule"""
-    
-    def validate_data_types(rules: Dict[str, Rule], dataframe: Any) -> bool:
+
+    def validate_data_types(self, rules: Dict[str, Rule], dataframe: Any) -> bool:
         """Validates that all data types from checks match the dataframe with data"""
 
-    def summary(check: Any, dataframe: Any, spark: SparkSession) -> Any:
+    def summary(self, check: Any, dataframe: Any, spark: SparkSession) -> Any:
         """Computes all predicates and expressions for check summary"""
 
 
@@ -106,9 +120,10 @@ class Check:
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
         self._compute: Dict[str, ComputeInstruction] = {}
-        self.compute_engine : ModuleType = None
+        self.compute_engine: ModuleType
 
         if isinstance(level, int):
+            # When the user is lazy and wants to do WARN=0, or ERR=1
             level = CheckLevel(level)
 
         self.level = level
@@ -158,9 +173,9 @@ class Check:
     def _remove_rule_and_compute(self, key: str):
         """Remove a key from rules and compute dictionaries"""
         [
-            collection.pop(key)
+            collection.pop(key)  # type: ignore
             for collection in [self._rule, self._compute]
-            if key in collection.keys()
+            if key in collection.keys()  # type: ignore
         ]
 
     def add_rule(self, method: str, *arg):
@@ -196,7 +211,7 @@ class Check:
         Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def are_complete(self, column: Union[List[str], Tuple[str]], pct: float = 1.0):
+    def are_complete(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """Validation for non-null values in a group of columns"""
         Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
@@ -206,9 +221,9 @@ class Check:
         Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def are_unique(self, column: Tuple[str], pct: float = 1.0):
+    def are_unique(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """Validation for unique values in a group of columns"""
-        Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct)  >> self._rule
+        Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
@@ -216,9 +231,17 @@ class Check:
         Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
+    def is_positive(self, column: str, pct: float = 1.0):
+        """Validation for numeric greater than zero"""
+        Rule("is_greater_than", column, 0, CheckDataType.NUMERIC, pct) >> self._rule
+        return self
+
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater or equal than value"""
-        Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
+        (
+            Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
+            >> self._rule
+        )
         return self
 
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
@@ -228,7 +251,10 @@ class Check:
 
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric less or equal than value"""
-        Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
+        (
+            Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
+            >> self._rule
+        )
         return self
 
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
@@ -266,16 +292,19 @@ class Check:
         Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def is_contained_in(self, column: str, value: Tuple[str, int, float]):
+    def is_contained_in(
+        self,
+        column: str,
+        value: Union[List, Tuple],
+        pct: float = 1.0,
+    ):
         """Validation of column value in set of given values"""
 
-        # Check value type to later assess correct column type
-        if [isinstance(v, str) for v in value]:
-            check_data_type = CheckDataType.STRING
-        else:
-            check_data_type = CheckDataType.NUMERIC
+        (
+            Rule("is_contained_in", column, value, CheckDataType.AGNOSTIC, pct)
+            >> self._rule
+        )
 
-        Rule("is_contained_in", column, value, check_data_type) >> self._rule
         return self
 
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
@@ -291,63 +320,90 @@ class Check:
         pct: float = 1.0,
     ):
         """Validation of a column percentile value"""
-        Rule(
-            "has_percentile",
-            column,
-            (value, percentile, precision),
-            CheckDataType.NUMERIC,
-            pct,
-        ) >> self._rule
+        (
+            Rule(
+                "has_percentile",
+                column,
+                (value, percentile, precision),
+                CheckDataType.NUMERIC,
+                pct,
+            )
+            >> self._rule
+        )
+        return self
+
+    def is_inside_interquartile_range(
+        self, column: str, value: int = 10000, pct: float = 1.0
+    ):
+        """Validates a number resides inside the Q3 - Q1 range of values"""
+        (
+            Rule(
+                "is_inside_interquartile_range",
+                column,
+                value,
+                CheckDataType.NUMERIC,
+                pct,
+            )
+            >> self._rule
+        )
         return self
 
     def has_max_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
         """Validation of a column maximum based on other column maximum"""
-        Rule(
-            "has_max_by",
-            (column_source, column_target),
-            value,
-            CheckDataType.NUMERIC,
-        ) >> self._rule
+        (
+            Rule(
+                "has_max_by",
+                [column_source, column_target],
+                value,
+                CheckDataType.NUMERIC,
+            )
+            >> self._rule
+        )
         return self
 
     def has_min_by(
         self, column_source: str, column_target: str, value: float, pct: float = 1.0
     ):
         """Validation of a column minimum based on other column minimum"""
-        Rule(
-            "has_min_by",
-            (column_source, column_target),
-            value,
-            CheckDataType.NUMERIC,
-        ) >> self._rule
+        (
+            Rule(
+                "has_min_by",
+                [column_source, column_target],
+                value,
+                CheckDataType.NUMERIC,
+            )
+            >> self._rule
+        )
         return self
 
     def has_correlation(
         self, column_left: str, column_right: str, value: float, pct: float = 1.0
     ):
         """Validates the correlation between 2 columns with some tolerance"""
-        Rule(
-            "has_correlation",
-            (column_left, column_right),
-            value,
-            CheckDataType.NUMERIC,
-        ) >> self._rule
+        (
+            Rule(
+                "has_correlation",
+                [column_left, column_right],
+                value,
+                CheckDataType.NUMERIC,
+            )
+            >> self._rule
+        )
         return self
 
     def satisfies(self, predicate: str, column: str, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
         Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct) >> self._rule
-        # self._compute[key] = ComputeInstruction(
-        #     Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct),
-        #     F.sum(F.expr(predicate).cast("integer")),
-        # )
         return self
 
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
         """Validation for entropy calculation on continuous values"""
-        Rule("has_entropy", column, (value, tolerance), CheckDataType.AGNOSTIC) >> self._rule
+        (
+            Rule("has_entropy", column, (value, tolerance), CheckDataType.AGNOSTIC)
+            >> self._rule
+        )
         return self
 
     def is_on_weekday(self, column: str, pct: float = 1.0):
@@ -397,14 +453,33 @@ class Check:
 
     def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a datetime column between an hour interval"""
-        Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct) >> self._rule
+        (
+            Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct)
+            >> self._rule
+        )
         return self
 
-    def has_weekday_continuity(self, column: str, pct: float = 1.0):
+    def is_daily(
+        self, column: str, value: List[int] = [2, 3, 4, 5, 6], pct: float = 1.0
+    ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
-        Rule(
-            "has_weekday_continuity", column, "⊂{Mon-Fri}", CheckDataType.DATE, pct
-        ) >> self._rule
+        (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
+        return self
+
+    def is_in_millions(self, column: str, pct: float = 1.0):
+        """Validates that a column has values greater than 1M"""
+        (
+            Rule("is_greater_or_equal_than", column, 1e6, CheckDataType.NUMERIC, pct)
+            >> self._rule
+        )
+        return self
+
+    def is_in_billions(self, column: str, pct: float = 1.0):
+        """Validates that a column has values greater than 1B"""
+        (
+            Rule("is_greater_or_equal_than", column, 1e9, CheckDataType.NUMERIC, pct)
+            >> self._rule
+        )
         return self
 
     def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):
@@ -421,27 +496,14 @@ class Check:
             )
         )
 
-        assert hasattr(dataframe, "columns"), "Your validation dataframe does not have a method `columns`"
+        assert hasattr(
+            dataframe, "columns"
+        ), "Your validation dataframe does not have a method `columns`"
         unknown_columns = column_set.difference(set(dataframe.columns))
         assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
         # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, DataFrame):
-            from pyspark.sql.session import SparkSession
-
-            # Check SparkSession is available in environment through globals
-            if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
-                # Obtain the first spark session available in the globals
-                spark = first(spark_in_session.values())
-            else:
-                # TODO: Check should have options for compute engine
-                spark = SparkSession.builder.getOrCreate()
-
-            assert isinstance(
-                spark, SparkSession
-            ), "The function requires to pass a spark session available, or in an environment with Apache Spark"
-
-            # Create compute dictionary
             self.compute_engine = importlib.import_module("cuallee.spark_validation")
 
         # When dataframe is Pandas DataFrame API
@@ -452,7 +514,7 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.snow_validation")
 
         self._compute = self.compute_engine.compute(self._rule)
-        assert self.compute_engine.validate_data_types(self._rule, dataframe)
+        assert self.compute_engine.validate_data_types(self._rule, dataframe), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
@@ -479,28 +541,3 @@ class Check:
                     if index in rule_index
                 ],
             ).drop_duplicates()
-
-    # def sampling(
-    #     self,
-    #     dataframe: DataFrame,
-    #     *arg,
-    #     status: str = "FAIL",
-    #     method: Union[tuple[str], str] = None,
-    # ) -> DataFrame:
-
-    #     # Validate all rule
-
-    #     # Validate DataFrame
-
-    #     # Check dataframe is spark dataframe
-    #     if isinstance(dataframe, DataFrame):
-    #         from .spark.spark_validation import get_record_sample
-    #         from pyspark.sql import SparkSession
-
-    #         spark = arg[0]
-    #         assert isinstance(
-    #             arg[0], SparkSession
-    #         ), "The function requires to pass a spark session as arg --> validate(dataframe, SparkSession)"
-    #         return get_record_sample(self, dataframe, spark, status, method)
-    #     else:
-    #         "I cannot do anything for you! :'-("

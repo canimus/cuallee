@@ -19,7 +19,7 @@ def test_empty_dictionary_spark(spark):
     df = spark.range(10).alias("id")
     with pytest.raises(
         Exception,
-        match="Check is empty. Add validations i.e. is_complete, is_unique, etc.",
+        match="Check is empty",
     ):
         Check(CheckLevel.WARNING, "test_empty_observation_spark").validate(df)
 
@@ -82,7 +82,7 @@ def test_empty_dictionary_pandas():
     df = pd.DataFrame({"id": [1, 2], "desc": ["1", "2"]})
     with pytest.raises(
         Exception,
-        match="Check is empty. Add validations i.e. is_complete, is_unique, etc.",
+        match="Check is empty",
     ):
         Check(CheckLevel.WARNING, "test_empty_observation_pandas").validate(df)
 

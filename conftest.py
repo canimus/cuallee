@@ -4,11 +4,18 @@ import pytest
 from cuallee import Check, CheckLevel
 from pyspark.sql import SparkSession
 from snowflake.snowpark import Session
+import logging
 
 @pytest.fixture(scope="session")
 def spark():
     try:
-        spark_session = SparkSession.builder.config("spark.driver.memory", "2g").getOrCreate()
+        logger = logging.getLogger("py4j")
+        logger.setLevel(logging.ERROR)
+        spark_session = (
+            SparkSession.builder
+            .config("spark.driver.memory", "2g")
+            .getOrCreate()
+        )
         yield spark_session
     except:
         pass

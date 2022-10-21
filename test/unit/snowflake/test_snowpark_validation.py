@@ -74,12 +74,11 @@ def test_timestamp_fields(snowpark):
         .withColumn(
             "timestamp", F.timestamp_from_parts(2022, 10, F.col("id"), 10, 10, 10)
         )
-        .withColumn("time", F.time_from_parts(F.col("id"), 5, 10))
     )
     rs = SV.timestamp_fields(df)
     assert isinstance(rs, Collection)
-    assert len(rs) == 2
-    assert rs == {"TIMESTAMP", "TIME"}
+    assert len(rs) == 1
+    assert rs == {"TIMESTAMP"}
 
 
 def test_column_set_comparison(snowpark):

@@ -230,7 +230,7 @@ class Compute:
                 rule.value[1],
                 rule.value[
                     2
-                ],  # TODO: Check that the function accept this second value (only one in documentation)
+                ],  # TODO: Remove according to documentation
             ).eqNullSafe(rule.value[0]),
             ComputeMethod.SELECT,
         )
@@ -551,14 +551,11 @@ def string_fields(dataframe: DataFrame) -> Collection:
 def date_fields(dataframe: DataFrame) -> Collection:
     """Filter all date data types in data frame and returns field names"""
     return _field_type_filter(dataframe, (T.DateType, T.TimestampType))
-    # set(
-    #    [f.name for f in dataframe.schema.fields if isinstance(f.datatype, T.DateType) or isinstance(f.datatype, T.TimestampType) or isinstance(f.datatype, T.TimeType)]  # type: ignore
-    # )  # TODO: Check with Herminio: T.TimestampNTZType does not exist. However there is a TimeType --> to use for TimeStamp?.
 
 
 def timestamp_fields(dataframe: DataFrame) -> Collection:
     """Filter all date data types in data frame and returns field names"""
-    return _field_type_filter(dataframe, (T.TimestampType, T.TimeType))
+    return _field_type_filter(dataframe, T.TimestampType)
 
 
 def compute(rules: Dict[str, Rule]) -> Dict:

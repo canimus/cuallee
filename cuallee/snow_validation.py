@@ -6,7 +6,7 @@ import snowflake.snowpark.types as T  # type: ignore
 from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple
 from dataclasses import dataclass
 from snowflake.snowpark import DataFrame, Column, Session, Row
-from toolz import valfilter  # type: ignore
+from toolz import valfilter, first  # type: ignore
 from functools import reduce
 
 from cuallee import Check, Rule, CheckDataType
@@ -52,9 +52,7 @@ class Compute:
         value: Optional[Any],
         operator: Callable,
     ):
-        return operator(F.col(column)).eqNullSafe(
-            value
-        )  # TODO: Test if this works!
+        return operator(F.col(column)).eqNullSafe(value)  # TODO: Test if this works!
 
     def is_complete(self, rule: Rule):
         """Validation for non-null values in column"""
@@ -594,7 +592,7 @@ def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame) -> bool:
     return True
 
 
-def summary(check: Check, dataframe: DataFrame, options):
+def summary(check: Check, dataframe: DataFrame, configurations: Dict) -> DataFrame:
     """Compute all rules in this check for specific data frame"""
 
     # Number of rows
@@ -617,13 +615,12 @@ def summary(check: Check, dataframe: DataFrame, options):
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
     )
 
-    # Get or Create SnowparkSession$
-    if isinstance(options, Session): # TODO: Fix this part 
-        snowpark = options
-    else:
-        snowpark = Session.builder.configs(options).create()  # TODO: Get help on this part
+    # Create SnowparkSession
+    snowpark = Session.builder.configs(
+        configurations
+    ).create()  # TODO: Get help on this part
 
-    #schema = T.StructType([T.StructField("id", T.IntegerType()), T.StructField("rule", T.StringType()), T.StructField("column", T.StringType()), T.StructField("value", T.StringType()), T.StructField("result", T.StringType()), T.StructField("pass_threshold", T.StringType())])
+    # schema = T.StructType([T.StructField("id", T.IntegerType()), T.StructField("rule", T.StringType()), T.StructField("column", T.StringType()), T.StructField("value", T.StringType()), T.StructField("result", T.StringType()), T.StructField("pass_threshold", T.StringType())])
 
     return (
         snowpark.createDataFrame(

@@ -592,7 +592,7 @@ def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame) -> bool:
     return True
 
 
-def summary(check: Check, dataframe: DataFrame, configurations: Dict) -> DataFrame:
+def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     """Compute all rules in this check for specific data frame"""
 
     # Number of rows
@@ -603,7 +603,7 @@ def summary(check: Check, dataframe: DataFrame, configurations: Dict) -> DataFra
         check._compute, dataframe
     )  # TODO: Check with Herminio to remove the Compute Instruction in the __init__.py
     transform_result = _compute_transform_method(check._compute, dataframe)
-
+    
     unified_results = {**select_result, **transform_result}
 
     _calculate_pass_rate = lambda observed_column: (
@@ -617,12 +617,11 @@ def summary(check: Check, dataframe: DataFrame, configurations: Dict) -> DataFra
 
     # Create SnowparkSession
     snowpark = Session.builder.configs(
-        configurations
-    ).create()  # TODO: Get help on this part
+        check.config
+    ).create()
 
-    # schema = T.StructType([T.StructField("id", T.IntegerType()), T.StructField("rule", T.StringType()), T.StructField("column", T.StringType()), T.StructField("value", T.StringType()), T.StructField("result", T.StringType()), T.StructField("pass_threshold", T.StringType())])
 
-    return (
+    computation_basis = (
         snowpark.createDataFrame(
             [
                 Row(
@@ -630,14 +629,18 @@ def summary(check: Check, dataframe: DataFrame, configurations: Dict) -> DataFra
                     rule.method,
                     str(rule.column),
                     str(rule.value),
-                    unified_results[hash_key.upper()],
+                    str(unified_results[hash_key.upper()]),
                     rule.coverage,
                 )
                 for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
             ],
             schema=["id", "rule", "column", "value", "result", "pass_threshold"],
         )
-        .select(
+    )
+    
+    return (
+            computation_basis   
+            .select(
             F.col("id"),
             F.lit(check.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
             F.lit(check.name).alias("check"),
@@ -648,7 +651,7 @@ def summary(check: Check, dataframe: DataFrame, configurations: Dict) -> DataFra
             F.lit(rows).alias("rows"),
             (rows - F.col("result").cast("long")).alias("violations"),
             _calculate_pass_rate(F.col("result")).alias("pass_rate"),
-            F.col("pass_threshold").cast(T.DoubleType()),
+            F.col("pass_threshold").cast(T.DoubleType()).alias("pass_threshold"),
         )
         .withColumn(
             "status",

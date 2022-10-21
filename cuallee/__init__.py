@@ -13,6 +13,11 @@ import importlib
 from pyspark.sql import SparkSession, DataFrame, Column
 from toolz import valfilter, first  # type: ignore
 
+try:
+    from snowflake.snowpark import DataFrame as snowpark_dataframe
+except:
+    print("SnowFlake not installed.")
+
 import cuallee.utils as cuallee_utils
 import pandas as pd  # type: ignore
 
@@ -110,6 +115,7 @@ class Check:
         self.name = name
         self.date = execution_date
         self.rows = -1
+        self.config = {}
 
     def __repr__(self):
         return f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
@@ -442,9 +448,12 @@ class Check:
         elif isinstance(dataframe, pd.DataFrame):
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
+        elif isinstance(dataframe, snowpark_dataframe):
+            self.compute_engine = importlib.import_module("cuallee.snow_validation")
+
         self._compute = self.compute_engine.compute(self._rule)
         assert self.compute_engine.validate_data_types(self._rule, dataframe)
-        return self.compute_engine.summary(self, dataframe, spark)
+        return self.compute_engine.summary(self, dataframe)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
         if not rule_index:

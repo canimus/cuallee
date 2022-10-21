@@ -11,15 +11,15 @@ from cuallee import Check, CheckLevel, CheckDataType
 from cuallee import snow_validation as SV
 
 
-def test_ComputeMethod():  # TODO:
+def test_compute_method():  # TODO:
     skip
 
 
-def test_ComputeInstruction():  # TODO:
+def test_compute_instruction():  # TODO:
     skip
 
 
-def test_Compute():  # TODO:
+def test_compute():  # TODO:
     skip
 
 
@@ -178,9 +178,10 @@ def test_compute_transform_method():  # TODO: when transform method available
     pass
 
 
-def test_summary(snowpark):  # TODO: problem with the schema -> does not accept string! but doesn't work with mixed type!
+def test_summary(snowpark, configurations):
     df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("id")
+    check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("ID")
     check._compute = SV.compute(check._rule) 
-    rs = SV.summary(check, df, snowpark)
+    check.config = configurations
+    rs = SV.summary(check, df)
     assert isinstance(rs, DataFrame)

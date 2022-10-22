@@ -5,6 +5,7 @@ import pytest
 
 logger = logging.getLogger(__name__)
 
+
 @pytest.mark.statistical
 def test_sigmas(spark):
     df = spark.range(10)

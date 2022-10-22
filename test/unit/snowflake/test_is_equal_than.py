@@ -4,10 +4,10 @@ from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
-def test_is_unique(snowpark, configurations):
-    df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "check_is_unique")
-    check.is_unique("ID")
+def test_value_equal_than(snowpark, configurations):
+    df = snowpark.range(10).withColumn("value", F.lit(1000))
+    check = Check(CheckLevel.WARNING, "check_is_equal_than")
+    check.is_equal_than("VALUE", 1000)
     check.config = configurations
     rs = check.validate(df)
     assert isinstance(rs, DataFrame)

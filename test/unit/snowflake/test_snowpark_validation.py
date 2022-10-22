@@ -1,11 +1,11 @@
 from unittest import skip
 from typing import Collection, Dict
-from snowflake.snowpark import DataFrame
+from snowflake.snowpark import DataFrame  # type: ignore
 
 import pytest
 import operator
-import snowflake.snowpark.functions as F
-import snowflake.snowpark.types as T
+import snowflake.snowpark.functions as F  # type: ignore
+import snowflake.snowpark.types as T  # type: ignore
 
 from cuallee import Check, CheckLevel, CheckDataType
 from cuallee import snow_validation as SV
@@ -180,7 +180,7 @@ def test_compute_transform_method():  # TODO: when transform method available
 def test_summary(snowpark, configurations):
     df = snowpark.range(10)
     check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("ID")
-    check._compute = SV.compute(check._rule) 
+    check._compute = SV.compute(check._rule)
     check.config = configurations
     rs = SV.summary(check, df)
     assert isinstance(rs, DataFrame)

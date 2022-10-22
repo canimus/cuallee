@@ -5,8 +5,8 @@ import snowflake.snowpark.types as T  # type: ignore
 
 from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple
 from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session, Row
-from toolz import valfilter, first  # type: ignore
+from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
+from toolz import valfilter  # type: ignore
 from functools import reduce
 
 from cuallee import Check, Rule, CheckDataType
@@ -44,7 +44,7 @@ class Compute:
         value: Optional[Any],
         operator: Callable,
     ):
-        return operator(F.col(f"`{column}`"), value)
+        return operator(F.col(column), value)
 
     def _stats_fn_rule(
         self,
@@ -66,12 +66,12 @@ class Compute:
 
     def are_complete(self, rule: Rule):
         """Validation for non-null values in a group of columns"""
-        predicate = [F.col(f"`{c}`").isNotNull() for c in rule.column]
+        predicate = [F.col(c).isNotNull() for c in rule.column]
         self.compute_instruction = ComputeInstruction(
             predicate,
             reduce(
                 operator.add,
-                [self._sum_predicate_to_integer(c) for c in rule.column],
+                [self._sum_predicate_to_integer(p) for p in predicate],
             )
             / len(rule.column),
             ComputeMethod.SELECT,
@@ -228,9 +228,7 @@ class Compute:
             F.approx_percentile(
                 F.col(f"`{rule.column}`").cast(T.DoubleType()),
                 rule.value[1],
-                rule.value[
-                    2
-                ],  # TODO: Remove according to documentation
+                rule.value[2],  # TODO: Remove according to documentation
             ).eqNullSafe(rule.value[0]),
             ComputeMethod.SELECT,
         )

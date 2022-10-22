@@ -148,11 +148,9 @@ class Compute:
         )
         return self.compute_instruction
 
-    def has_pattern(self, rule: Rule):  # TODO: test cases
+    def has_pattern(self, rule: Rule):
         """Validation for string type column matching regex expression"""
-        predicate = (
-            F.length(F.regexp_count(rule.column, rule.value, 1)) > 0
-        )  # TODO: To test!
+        predicate = F.regexp_count(rule.column, rule.value, 1) > 0
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -464,6 +462,45 @@ class Compute:
     #     )
 
     #     return self.compute_instruction
+
+    def is_daily(self, rule: Rule):
+        """Validates that there is no missing dates using only week days in the date/timestamp column"""
+
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            _weekdays = lambda x: x.filter(
+                F.dayofweek(rule.column).isin([1, 2, 3, 4, 5])  # type: ignore
+            )
+            _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))  # type: ignore
+            # full_interval = (
+            #     dataframe.select(
+            #         F.explode(
+            #             F.sequence(
+            #                 F.min(F.col(f"`{rule.column}`")),  # type: ignore
+            #                 F.max(F.col(f"`{rule.column}`")),  # type: ignore
+            #                 F.expr("interval 1 day"),
+            #             )
+            #         ).alias(
+            #             f"{rule.column}"
+            #         )  # type: ignore
+            #     )
+            #     .transform(_weekdays)
+            #     .transform(_date_only)
+            # )
+            # return full_interval.join(  # type: ignore
+            #     dataframe.transform(_date_only), rule.column, how="left_anti"  # type: ignore
+            # ).select(
+            #     (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
+            #         key
+            #     )
+            # )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate, _execute, ComputeMethod.TRANSFORM
+        )
+
+        return self.compute_instruction
 
 
 def _field_type_filter(

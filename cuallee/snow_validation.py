@@ -202,7 +202,7 @@ class Compute:
 
     def is_between(self, rule: Rule):
         """Validation of a column between a range"""
-        predicate = F.col(f"`{rule.column}`").between(*rule.value)
+        predicate = F.col(rule.column).between(*rule.value)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -212,7 +212,7 @@ class Compute:
 
     def is_contained_in(self, rule: Rule):  # TODO: Type error
         """Validation of column value in set of given values"""
-        predicate = F.col(f"`{rule.column}`").isin(list(rule.value))
+        predicate = F.col(rule.column).isin(list(rule.value))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),

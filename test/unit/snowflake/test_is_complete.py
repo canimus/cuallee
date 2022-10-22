@@ -11,7 +11,7 @@ def test_is_complete(snowpark, configurations):
     check.config = configurations
     rs = check.validate(df)
     assert isinstance(rs, DataFrame)
-    assert check.validate(df).first().STATUS == "PASS"
+    assert rs.first().STATUS == "PASS"
 
 
 def test_name_with_space(snowpark, configurations):

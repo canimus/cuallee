@@ -1,0 +1,12 @@
+from snowflake.snowpark import DataFrame  # type: ignore
+from cuallee import Check, CheckLevel
+
+
+def test_stats_std_value(snowpark, configurations):
+    df = snowpark.range(10)
+    check = Check(CheckLevel.WARNING, "check_has_std")
+    check.has_std("ID", 2.5)
+    check.config = configurations
+    rs = check.validate(df)
+    assert (rs, DataFrame)
+    assert rs.first().STATUS == "FAIL"

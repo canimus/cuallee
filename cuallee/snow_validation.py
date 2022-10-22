@@ -148,10 +148,10 @@ class Compute:
         )
         return self.compute_instruction
 
-    def has_pattern(self, rule: Rule):
+    def has_pattern(self, rule: Rule):  # TODO: test cases
         """Validation for string type column matching regex expression"""
         predicate = (
-            F.length(F.regexp_count(f"`{rule.column}`", rule.value, 0)) > 0
+            F.length(F.regexp_count(rule.column, rule.value, 1)) > 0
         )  # TODO: To test!
         self.compute_instruction = ComputeInstruction(
             predicate,

@@ -222,13 +222,12 @@ class Compute:
 
     def has_percentile(self, rule: Rule):  # TODO: Type error
         """Validation of a column percentile value"""
-        predicate = None  # TODO: Does this function has a predicate?
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.approx_percentile(
-                F.col(f"`{rule.column}`").cast(T.DoubleType()),
+                F.col(rule.column).cast(T.DoubleType()),
                 rule.value[1],
-                rule.value[2],  # TODO: Remove according to documentation
             ).eqNullSafe(rule.value[0]),
             ComputeMethod.SELECT,
         )
@@ -258,12 +257,12 @@ class Compute:
 
     def has_correlation(self, rule: Rule):
         """Validates the correlation between 2 columns with some tolerance"""
-        predicate = None  # TODO: Does this function has a predicate?
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.corr(
-                F.col(f"`{rule.column[0]}`").cast(T.DoubleType()),
-                F.col(f"`{rule.column[1]}`").cast(T.DoubleType()),
+                F.col(rule.column[0]).cast(T.DoubleType()),
+                F.col(rule.column[1]).cast(T.DoubleType()),
             ).eqNullSafe(F.lit(rule.value)),
             ComputeMethod.SELECT,
         )

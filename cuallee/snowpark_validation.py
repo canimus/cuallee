@@ -226,7 +226,6 @@ class Compute:
             F.approx_percentile(
                 F.col(rule.column).cast(T.DoubleType()),
                 rule.value[1],
-                rule.value[2],
             ).eqNullSafe(rule.value[0]),
             ComputeMethod.SELECT,
         )

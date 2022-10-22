@@ -1,6 +1,6 @@
 from os import truncate
 from cuallee import Check, CheckLevel
-from cuallee.spark_validation import numeric_fields, timestamp_fields
+from cuallee.pyspark_validation import numeric_fields, timestamp_fields
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from datetime import datetime

@@ -533,7 +533,7 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
         elif isinstance(dataframe, snowpark_dataframe):
-            self.compute_engine = importlib.import_module("cuallee.snow_validation")
+            self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
 
         self._compute = self.compute_engine.compute(self._rule)
         assert self.compute_engine.validate_data_types(

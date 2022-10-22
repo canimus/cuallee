@@ -6,7 +6,7 @@ from typing import Tuple, Dict
 from toolz import valfilter  # type: ignore
 
 from cuallee import Check, CheckLevel
-from cuallee import spark_validation as SV
+from cuallee import pyspark_validation as SV
 
 
 def test_compute_summary_return_dataframe(spark):

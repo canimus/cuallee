@@ -5,7 +5,7 @@ import snowflake.snowpark.types as T  # type: ignore
 
 from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple
 from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session, Row
+from snowflake.snowpark import DataFrame, Column, Session, Row # type: ignore
 from toolz import valfilter, first  # type: ignore
 from functools import reduce
 

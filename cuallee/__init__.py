@@ -17,15 +17,32 @@ from typing import (
 )
 from types import ModuleType
 import importlib
-
-from pyspark.sql import SparkSession, DataFrame
+from colorama import Style, Fore
 from toolz import valfilter  # type: ignore
+
+# Verify Libraries Available
+# ==========================
+try:
+    from pandas import DataFrame as pandas_dataframe
+    print(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
+except:
+    print(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
+
+try:
+    from pyspark.sql import SparkSession, DataFrame
+    print(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
+
+except:
+    print(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe # type: ignore
+    print(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
 except:
-    print("SnowFlake not installed.")
+    print(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
 
+    
+print(Style.RESET_ALL)
 import cuallee.utils as cuallee_utils
 import pandas as pd  # type: ignore
 
@@ -507,7 +524,7 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.spark_validation")
 
         # When dataframe is Pandas DataFrame API
-        elif isinstance(dataframe, pd.DataFrame):
+        elif isinstance(dataframe, pandas_dataframe):
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
         elif isinstance(dataframe, snowpark_dataframe):

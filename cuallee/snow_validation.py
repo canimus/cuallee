@@ -83,7 +83,7 @@ class Compute:
         predicate = None  # TODO:  .groupBy("value").count.filter("count > 1")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.count_distinct(F.col(f"`{rule.column}`")),
+            F.count_distinct(F.col(rule.column)),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
@@ -93,7 +93,7 @@ class Compute:
         predicate = None  # TODO:  .groupBy("value").count.filter("count > 1")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.count_distinct(*[F.col(f"`{c}`") for c in rule.column]),
+            F.count_distinct(*[F.col(c) for c in rule.column]),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction

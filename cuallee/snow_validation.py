@@ -428,41 +428,6 @@ class Compute:
         )
         return self.compute_instruction
 
-    # def has_weekday_continuity(self, rule: Rule):
-    #     predicate = None
-
-    #     def _execute(dataframe: DataFrame, key: str):
-    #         _weekdays = lambda x: x.filter(
-    #             F.dayofweek(rule.column).isin([2, 3, 4, 5, 6])
-    #         )
-    #         _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))
-    #         full_interval = (
-    #             dataframe.select(
-    #                 F.explode(
-    #                     F.sequence(
-    #                         F.min(rule.column),
-    #                         F.max(rule.column),
-    #                         F.expr("interval 1 day"),
-    #                     )
-    #                 ).alias(rule.column)
-    #             )
-    #             .transform(_weekdays)
-    #             .transform(_date_only)
-    #         )
-    #         return full_interval.join(
-    #             dataframe.transform(_date_only), rule.column, how="left_anti"
-    #         ).select(
-    #             (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
-    #                 key
-    #             )
-    #         )
-
-    #     self.compute_instruction = ComputeInstruction(
-    #         predicate=predicate, expression=_execute, compute_method="transform"
-    #     )
-
-    #     return self.compute_instruction
-
     def is_daily(self, rule: Rule):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
 

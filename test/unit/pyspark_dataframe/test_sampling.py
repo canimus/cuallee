@@ -6,6 +6,7 @@ from cuallee import Check, CheckLevel
 
 # __ SPARK DATAFRAME TESTS __
 
+
 @pytest.mark.skip
 def test_return_spark_dataframe(spark):
     df = spark.range(10).alias("id")

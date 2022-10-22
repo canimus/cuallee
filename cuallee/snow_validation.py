@@ -5,8 +5,8 @@ import snowflake.snowpark.types as T  # type: ignore
 
 from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple
 from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session, Row # type: ignore
-from toolz import valfilter, first  # type: ignore
+from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
+from toolz import valfilter  # type: ignore
 from functools import reduce
 
 from cuallee import Check, Rule, CheckDataType
@@ -228,9 +228,7 @@ class Compute:
             F.approx_percentile(
                 F.col(f"`{rule.column}`").cast(T.DoubleType()),
                 rule.value[1],
-                rule.value[
-                    2
-                ],  # TODO: Remove according to documentation
+                rule.value[2],  # TODO: Remove according to documentation
             ).eqNullSafe(rule.value[0]),
             ComputeMethod.SELECT,
         )

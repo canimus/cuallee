@@ -1,51 +1,45 @@
 import enum
 import hashlib
+import importlib
 import logging
 import operator
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
-from functools import reduce
-from typing import (
-    Any,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    Union,
-    Protocol,
-)
 from types import ModuleType
-import importlib
-from colorama import Style, Fore
+from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
+
+from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
+
+import cuallee.utils as cuallee_utils
 
 # Verify Libraries Available
 # ==========================
 try:
-    from pandas import DataFrame as pandas_dataframe
+    from pandas import DataFrame as pandas_dataframe  # type: ignore
+
     print(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
 except:
     print(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
     from pyspark.sql import DataFrame as pyspark_dataframe
+
     print(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
 
 except:
     print(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
 
 try:
-    from snowflake.snowpark import DataFrame as snowpark_dataframe # type: ignore
+    from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
+
     print(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
 except:
     print(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
 
-    
+
 print(Style.RESET_ALL)
-import cuallee.utils as cuallee_utils
-import pandas as pd  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +142,7 @@ class Check:
         self.name = name
         self.date = execution_date
         self.rows = -1
-        self.config = {}
+        self.config: Dict[str, str] = {}
 
     def __repr__(self):
         return f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
@@ -487,7 +481,7 @@ class Check:
         return self
 
     def is_daily(
-        self, column: str, value: Union[None,List[int]] = None, pct: float = 1.0
+        self, column: str, value: Union[None, List[int]] = None, pct: float = 1.0
     ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
         (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
@@ -541,30 +535,32 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.snow_validation")
 
         self._compute = self.compute_engine.compute(self._rule)
-        assert self.compute_engine.validate_data_types(self._rule, dataframe), "Invalid data types between rules and dataframe"
+        assert self.compute_engine.validate_data_types(
+            self._rule, dataframe
+        ), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
-    def samples(self, dataframe: Any, rule_index: int = None) -> Any:
-        if not rule_index:
-            return reduce(
-                DataFrame.unionAll,
-                [dataframe.filter(predicate) for predicate in self.predicates],
-            ).drop_duplicates()
-        elif isinstance(rule_index, int):
-            return reduce(
-                DataFrame.unionAll,
-                [
-                    dataframe.filter(predicate)
-                    for index, predicate in enumerate(self.predicates, 1)
-                    if rule_index == index
-                ],
-            )
-        elif isinstance(rule_index, list):
-            return reduce(
-                DataFrame.unionAll,
-                [
-                    dataframe.filter(predicate)
-                    for index, predicate in enumerate(self.predicates, 1)
-                    if index in rule_index
-                ],
-            ).drop_duplicates()
+    # def samples(self, dataframe: Any, rule_index: int = None) -> Any:
+    #     if not rule_index:
+    #         return reduce(
+    #             DataFrame.unionAll,
+    #             [dataframe.filter(predicate) for predicate in self.predicates],
+    #         ).drop_duplicates()
+    #     elif isinstance(rule_index, int):
+    #         return reduce(
+    #             DataFrame.unionAll,
+    #             [
+    #                 dataframe.filter(predicate)
+    #                 for index, predicate in enumerate(self.predicates, 1)
+    #                 if rule_index == index
+    #             ],
+    #         )
+    #     elif isinstance(rule_index, list):
+    #         return reduce(
+    #             DataFrame.unionAll,
+    #             [
+    #                 dataframe.filter(predicate)
+    #                 for index, predicate in enumerate(self.predicates, 1)
+    #                 if index in rule_index
+    #             ],
+    #         ).drop_duplicates()

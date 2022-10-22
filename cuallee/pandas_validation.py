@@ -4,7 +4,7 @@ import pandas as pd  # type: ignore
 import operator
 import numpy as np
 import re
-from toolz import first
+from toolz import first # type: ignore
 from numbers import Number
 
 
@@ -43,11 +43,16 @@ class Compute:
         return dataframe.loc[:, rule.column].eq(rule.value).sum()
 
     def has_pattern(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].str.match(re.compile(rule.value)).astype(int).sum()
+        return (
+            dataframe.loc[:, rule.column]
+            .str.match(re.compile(rule.value)) # type: ignore
+            .astype(int)
+            .sum()
+        )
 
     def has_min(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].min() == rule.value
-    
+
     def has_max(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].max() == rule.value
 
@@ -56,7 +61,7 @@ class Compute:
 
     def has_mean(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].mean() == rule.value
-    
+
     def is_between(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].between(*rule.value).astype(int).sum()
 
@@ -64,23 +69,35 @@ class Compute:
         return dataframe.loc[:, rule.column].isin(rule.value).astype(int).sum()
 
     def has_percentile(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return np.percentile(dataframe.loc[:, rule.column].values, rule.value[0]*100) == rule.value[1]
+        return (
+            np.percentile(dataframe.loc[:, rule.column].values, rule.value[0] * 100) # type: ignore
+            == rule.value[1] # type: ignore
+        )
 
     def has_max_by(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[dataframe.loc[:, rule.column[1]].idxmax(), rule.column[0]] == rule.value
+        return (
+            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmax(), rule.column[0]]
+            == rule.value
+        )
 
     def has_min_by(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[dataframe.loc[:, rule.column[1]].idxmin(), rule.column[0]] == rule.value
+        return (
+            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmin(), rule.column[0]]
+            == rule.value
+        )
 
     def has_correlation(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, (rule.column[0], rule.column[1])].corr().iloc[0, 1] == rule.value
+        return (
+            dataframe.loc[:, (rule.column[0], rule.column[1])].corr().iloc[0, 1]
+            == rule.value
+        )
 
     def satisfies(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.eval(rule.value).astype(int).sum()
 
     def has_entropy(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         def entropy(labels):
-            """ Computes entropy of 0-1 vector. """
+            """Computes entropy of 0-1 vector."""
             n_labels = len(labels)
 
             if n_labels <= 1:
@@ -92,14 +109,19 @@ class Compute:
 
             if n_classes <= 1:
                 return 0
-            return - np.sum(probs * np.log(probs)) / np.log(n_classes)
-        return entropy(df.loc[:, rule.column].values)
+            return -np.sum(probs * np.log(probs)) / np.log(n_classes)
+
+        return entropy(dataframe.loc[:, rule.column].values)
 
     def is_on_weekday(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.between(0,4).astype(int).sum()
-    
+        return (
+            dataframe.loc[:, rule.column].dt.dayofweek.between(0, 4).astype(int).sum()
+        )
+
     def is_on_weekend(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.between(5,6).astype(int).sum()
+        return (
+            dataframe.loc[:, rule.column].dt.dayofweek.between(5, 6).astype(int).sum()
+        )
 
     def is_on_monday(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].dt.dayofweek.eq(0).astype(int).sum()
@@ -123,25 +145,44 @@ class Compute:
         return dataframe.loc[:, rule.column].dt.dayofweek.eq(6).astype(int).sum()
 
     def is_on_schedule(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.hour.between(*rule.value).astype(int).sum()
+        return (
+            dataframe.loc[:, rule.column].dt.hour.between(*rule.value).astype(int).sum()
+        )
 
-    def is_daily(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int, complex]:
+    def is_daily(
+        self, rule: Rule, dataframe: pd.DataFrame
+    ) -> Union[bool, int, complex]:
         if rule.value is None:
-            day_mask = [0,1,2,3,4]
+            day_mask = [0, 1, 2, 3, 4]
 
-        lower, upper = dataframe.loc[:, rule.column].agg([np.min, np.max]).dt.strftime("%Y-%m-%d")
-        sequence = pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
-        sequence = sequence[sequence.ts.dt.dayofweek.isin(day_mask)].reset_index(drop=True).ts.unique().astype(np.datetime64)
-        
-        delivery = dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][rule.column].dt.date.astype(np.datetime64).values
+        lower, upper = (
+            dataframe.loc[:, rule.column].agg([np.min, np.max]).dt.strftime("%Y-%m-%d")
+        )
+        sequence = (
+            pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
+        )
+        sequence = (
+            sequence[sequence.ts.dt.dayofweek.isin(day_mask)]
+            .reset_index(drop=True)
+            .ts.unique()
+            .astype(np.datetime64)
+        )
+
+        delivery = (
+            dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][rule.column]
+            .dt.date.astype(np.datetime64)
+            .values
+        )
 
         # No difference between sequence of daily as a complex number
         return complex(len(dataframe), len(set(sequence).difference(delivery)))
 
-    def is_inside_interquartile_range(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, complex]:
+    def is_inside_interquartile_range(
+        self, rule: Rule, dataframe: pd.DataFrame
+    ) -> Union[bool, complex]:
         lower, upper = dataframe[rule.column].quantile(rule.value).values
         return dataframe[rule.column].between(lower, upper).astype(int).sum()
-    
+
 
 def compute(rules: Dict[str, Rule]):
     pass

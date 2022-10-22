@@ -395,32 +395,6 @@ class Compute:
         )
         return self.compute_instruction
 
-    def is_inside_interquartile_range(self, rule: Rule):
-        """Validates a number resides inside the Q3 - Q1 range of values"""
-        predicate = None
-
-        def _execute(dataframe: DataFrame, key: str):
-            _iqr = (
-                dataframe.select(
-                    F.percentile_approx(
-                        f"`{rule.column}`", [0.25, 0.75], rule.value  # type: ignore
-                    ).alias("iqr")
-                )
-                .first()
-                .iqr
-            )
-            return dataframe.select(
-                F.sum(
-                    (~F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")
-                ).alias(key)
-            )
-
-        self.compute_instruction = ComputeInstruction(
-            predicate=predicate, expression=_execute, compute_method="transform"
-        )
-
-        return self.compute_instruction
-
     def is_on_saturday(self, rule: Rule):
         """Validates a datetime column is on Sat"""
         predicate = F.dayofweek(f"`{rule.column}`") == 7
@@ -453,10 +427,12 @@ class Compute:
 
     def is_daily(self, rule: Rule):
         predicate = None
+        if rule.value is None:
+            day_mask = [2,3,4,5,6]
 
         def _execute(dataframe: DataFrame, key: str):
             _weekdays = lambda x: x.filter(
-                F.dayofweek(rule.column).isin(*rule.value)  # type: ignore
+                F.dayofweek(rule.column).isin(*day_mask)  # type: ignore
             )
             _date_only = lambda x: x.select(F.to_date(f"`{rule.column}`").alias(rule.column))  # type: ignore
             full_interval = (
@@ -480,6 +456,32 @@ class Compute:
                 (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
                     key
                 )
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate, expression=_execute, compute_method="transform"
+        )
+
+        return self.compute_instruction
+
+    def is_inside_interquartile_range(self, rule: Rule):
+        """Validates a number resides inside the Q3 - Q1 range of values"""
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            _iqr = (
+                dataframe.select(
+                    F.percentile_approx(
+                        f"`{rule.column}`", rule.value  # type: ignore
+                    ).alias("iqr")
+                )
+                .first()
+                .iqr
+            )
+            return dataframe.select(
+                F.sum(
+                    (~F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")
+                ).alias(key)
             )
 
         self.compute_instruction = ComputeInstruction(

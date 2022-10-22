@@ -2,6 +2,7 @@ import enum
 import hashlib
 import logging
 import operator
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
@@ -29,7 +30,7 @@ except:
     print(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
-    from pyspark.sql import SparkSession, DataFrame
+    from pyspark.sql import DataFrame as pyspark_dataframe
     print(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
 
 except:
@@ -95,7 +96,7 @@ class Rule:
 
         if isinstance(self.value, Tuple):
             # All values can only be of one data type in a rule
-            if not all(map(type, self.value)):
+            if len(Counter(map(type, self.value)).keys()) > 1:
                 raise ValueError("Data types in rule values are inconsistent")
 
     def __repr__(self):
@@ -123,7 +124,7 @@ class ComputeEngine(Protocol):
     def validate_data_types(self, rules: Dict[str, Rule], dataframe: Any) -> bool:
         """Validates that all data types from checks match the dataframe with data"""
 
-    def summary(self, check: Any, dataframe: Any, spark: SparkSession) -> Any:
+    def summary(self, check: Any, dataframe: Any) -> Any:
         """Computes all predicates and expressions for check summary"""
 
 
@@ -221,6 +222,15 @@ class Check:
             self._remove_rule_and_compute(key)
             for key in valfilter(_filter, self._rule).keys()
         ]
+        return self
+
+    def adjust_rule_coverage(self, rule_index: int, rule_coverage: float):
+        """Targeted for adjusting the predicate/rows ratio or making rules less strict"""
+        target_rule = self.rules[rule_index]
+        old_key = target_rule.key
+        target_rule = self._rule.pop(old_key)
+        target_rule.coverage = rule_coverage
+        target_rule >> self._rule
         return self
 
     def is_complete(self, column: str, pct: float = 1.0):
@@ -350,7 +360,7 @@ class Check:
         return self
 
     def is_inside_interquartile_range(
-        self, column: str, value: int = 10000, pct: float = 1.0
+        self, column: str, value: List[float] = [0.25, 0.75], pct: float = 1.0
     ):
         """Validates a number resides inside the Q3 - Q1 range of values"""
         (
@@ -410,7 +420,7 @@ class Check:
         )
         return self
 
-    def satisfies(self, predicate: str, column: str, pct: float = 1.0):
+    def satisfies(self, column: str, predicate: str, pct: float = 1.0):
         """Validation of a column satisfying a SQL-like predicate"""
         Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
@@ -477,7 +487,7 @@ class Check:
         return self
 
     def is_daily(
-        self, column: str, value: List[int] = [2, 3, 4, 5, 6], pct: float = 1.0
+        self, column: str, value: Union[None,List[int]] = None, pct: float = 1.0
     ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
         (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
@@ -499,7 +509,7 @@ class Check:
         )
         return self
 
-    def validate(self, dataframe: Union[DataFrame, pd.DataFrame]):
+    def validate(self, dataframe: Any):
         """Compute all rules in this check for specific data frame"""
 
         # Stop execution if the there is no rules in the check
@@ -520,7 +530,7 @@ class Check:
         assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
 
         # When dataframe is PySpark DataFrame API
-        if isinstance(dataframe, DataFrame):
+        if isinstance(dataframe, pyspark_dataframe):
             self.compute_engine = importlib.import_module("cuallee.spark_validation")
 
         # When dataframe is Pandas DataFrame API
@@ -534,7 +544,7 @@ class Check:
         assert self.compute_engine.validate_data_types(self._rule, dataframe), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
-    def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:
+    def samples(self, dataframe: Any, rule_index: int = None) -> Any:
         if not rule_index:
             return reduce(
                 DataFrame.unionAll,

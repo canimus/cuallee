@@ -332,7 +332,7 @@ class Compute:
 
     def is_on_weekday(self, rule: Rule):
         """Validates a datetime column is in a Mon-Fri time range"""
-        predicate = F.dayofweek(rule.column).between(2, 6)
+        predicate = F.dayofweek(rule.column).between(1, 5)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -342,7 +342,7 @@ class Compute:
 
     def is_on_weekend(self, rule: Rule):
         """Validates a datetime column is in a Sat-Sun time range"""
-        predicate = F.dayofweek(rule.column).isin([1, 7])
+        predicate = F.dayofweek(rule.column).isin([0, 6])
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -352,7 +352,7 @@ class Compute:
 
     def is_on_monday(self, rule: Rule):
         """Validates a datetime column is on Mon"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 2
+        predicate = F.dayofweek(rule.column) == 1
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -362,7 +362,7 @@ class Compute:
 
     def is_on_tuesday(self, rule: Rule):
         """Validates a datetime column is on Tue"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 3
+        predicate = F.dayofweek(rule.column) == 2
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -372,7 +372,7 @@ class Compute:
 
     def is_on_wednesday(self, rule: Rule):
         """Validates a datetime column is on Wed"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 4
+        predicate = F.dayofweek(rule.column) == 3
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -382,7 +382,7 @@ class Compute:
 
     def is_on_thursday(self, rule: Rule):
         """Validates a datetime column is on Thu"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 5
+        predicate = F.dayofweek(rule.column) == 4
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -392,7 +392,7 @@ class Compute:
 
     def is_on_friday(self, rule: Rule):
         """Validates a datetime column is on Fri"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 6
+        predicate = F.dayofweek(rule.column) == 5
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -402,7 +402,7 @@ class Compute:
 
     def is_on_saturday(self, rule: Rule):
         """Validates a datetime column is on Sat"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 7
+        predicate = F.dayofweek(rule.column) == 6
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -412,7 +412,7 @@ class Compute:
 
     def is_on_sunday(self, rule: Rule):
         """Validates a datetime column is on Sun"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 1
+        predicate = F.dayofweek(rule.column) == 0
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),

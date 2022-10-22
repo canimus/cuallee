@@ -88,7 +88,10 @@ class Compute:
 
     def has_correlation(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, (rule.column[0], rule.column[1])].corr().fillna(0).iloc[0, 1]
+            dataframe.loc[:, (rule.column[0], rule.column[1])]
+            .corr()
+            .fillna(0)
+            .iloc[0, 1]
             == rule.value
         )
 

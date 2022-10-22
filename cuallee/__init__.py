@@ -526,7 +526,7 @@ class Check:
 
         # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, pyspark_dataframe):
-            self.compute_engine = importlib.import_module("cuallee.spark_validation")
+            self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
 
         # When dataframe is Pandas DataFrame API
         elif isinstance(dataframe, pandas_dataframe):

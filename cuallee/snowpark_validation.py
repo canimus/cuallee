@@ -231,6 +231,9 @@ class Compute:
         )
         return self.compute_instruction
 
+    # TODO: is_inside_interquartile_range
+    # def is_inside_interquartile_range(
+
     # TODO: min_by
     # def has_min_by(self, rule: Rule):  # To Do with Predicate
     #    """Validation of a column minimum based on other column minimum"""
@@ -434,10 +437,11 @@ class Compute:
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
-            _weekdays = lambda x: x.filter(
-                F.dayofweek(rule.column).isin([1, 2, 3, 4, 5])  # type: ignore
-            )
-            _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))  # type: ignore
+            return "I am not yet implemented"
+            # _weekdays = lambda x: x.filter(
+            #     F.dayofweek(rule.column).isin([1, 2, 3, 4, 5])  # type: ignore
+            # )
+            # _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))  # type: ignore
             # full_interval = (
             #     dataframe.select(
             #         F.explode(

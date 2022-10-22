@@ -13,7 +13,15 @@ def quiet_logs(sc):
 
 def init():
 
-    spark = SparkSession.builder.config("spark.driver.memory", "50g").getOrCreate()
+    spark = (
+        SparkSession
+        .builder
+        .config("spark.driver.memory", "50g")
+        .config("spark.driver.maxResultSize", "30g")
+        .config("spark.sql.execution.arrow.pyspark.enabled", "true")
+        .getOrCreate()
+    )
+
     spark.sparkContext.setLogLevel("OFF")
     quiet_logs(spark.sparkContext)
     
@@ -32,24 +40,28 @@ def init():
 
     return spark, df, check
 
-def with_validate(df, rule):
-    return rule.validate(df)
+def with_validate(df, check):
+    return check.validate(df)
+
+def with_pandas(df, check):
+    return check.validate(df.toPandas())
 
 def with_select(df, c):
     df.select([(F.round(x[1]/F.count("*"),2)).alias(f"{x[0].method}({x[0].column})") for x in c._compute.values()])
 
 if __name__ == "__main__":
     
-    spark, df, rule = init()
+    spark, df, check = init()
     start = datetime.now()
-    r = with_validate(df, rule)
-    # r = with_select(df, rule)
+    r = with_validate(df, check)
+    #r = with_pandas(df, check)
+    # r = with_select(df, check)
     r.show(n=1000, truncate=False)
     end = datetime.now()
     print("START:",start)
     print("END:",end)
     print("ELAPSED:", end-start)
-    print("RULES:", len(rule.rules))
+    print("RULES:", len(check.rules))
     print("FRAMEWORK: cuallee [0.0.14]")
 # 0.10513386
 

@@ -1,11 +1,11 @@
 from unittest import skip
 from typing import Collection, Dict
-from snowflake.snowpark import DataFrame
+from snowflake.snowpark import DataFrame  # type: ignore
 
 import pytest
 import operator
-import snowflake.snowpark.functions as F
-import snowflake.snowpark.types as T
+import snowflake.snowpark.functions as F  # type: ignore
+import snowflake.snowpark.types as T  # type: ignore
 
 from cuallee import Check, CheckLevel, CheckDataType
 from cuallee import snow_validation as SV

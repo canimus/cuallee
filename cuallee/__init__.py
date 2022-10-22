@@ -11,7 +11,6 @@ from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
-
 import cuallee.utils as cuallee_utils
 
 # Verify Libraries Available
@@ -521,7 +520,9 @@ class Check:
             dataframe, "columns"
         ), "Your validation dataframe does not have a method `columns`"
         unknown_columns = column_set.difference(set(dataframe.columns))
-        assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
+        assert (
+            not unknown_columns
+        ), f'Column(s): {unknown_columns} not in dataframe. WARNING: If you are using snowpark DataFrame, columns containing spaces and dots can be pass with "name" inside the method and column names are case sensitive'
 
         # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, pyspark_dataframe):

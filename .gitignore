@@ -3,6 +3,7 @@
 **__pycache__/
 *.crt
 *.key
+.devcontainer/
 
 temp/
 .vscode/

@@ -5,8 +5,8 @@ import snowflake.snowpark.types as T  # type: ignore
 
 from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple
 from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session, Row
-from toolz import valfilter, first  # type: ignore
+from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
+from toolz import valfilter  # type: ignore
 from functools import reduce
 
 from cuallee import Check, Rule, CheckDataType
@@ -44,7 +44,7 @@ class Compute:
         value: Optional[Any],
         operator: Callable,
     ):
-        return operator(F.col(f"`{column}`"), value)
+        return operator(F.col(column), value)
 
     def _stats_fn_rule(
         self,
@@ -66,12 +66,12 @@ class Compute:
 
     def are_complete(self, rule: Rule):
         """Validation for non-null values in a group of columns"""
-        predicate = [F.col(f"`{c}`").isNotNull() for c in rule.column]
+        predicate = [F.col(c).isNotNull() for c in rule.column]
         self.compute_instruction = ComputeInstruction(
             predicate,
             reduce(
                 operator.add,
-                [self._sum_predicate_to_integer(c) for c in rule.column],
+                [self._sum_predicate_to_integer(p) for p in predicate],
             )
             / len(rule.column),
             ComputeMethod.SELECT,
@@ -83,7 +83,7 @@ class Compute:
         predicate = None  # TODO:  .groupBy("value").count.filter("count > 1")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.count_distinct(F.col(f"`{rule.column}`")),
+            F.count_distinct(F.col(rule.column)),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
@@ -93,7 +93,7 @@ class Compute:
         predicate = None  # TODO:  .groupBy("value").count.filter("count > 1")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.count_distinct(*[F.col(f"`{c}`") for c in rule.column]),
+            F.count_distinct(*[F.col(c) for c in rule.column]),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
@@ -150,9 +150,7 @@ class Compute:
 
     def has_pattern(self, rule: Rule):
         """Validation for string type column matching regex expression"""
-        predicate = (
-            F.length(F.regexp_count(f"`{rule.column}`", rule.value, 0)) > 0
-        )  # TODO: To test!
+        predicate = F.regexp_count(rule.column, rule.value, 1) > 0
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -202,7 +200,7 @@ class Compute:
 
     def is_between(self, rule: Rule):
         """Validation of a column between a range"""
-        predicate = F.col(f"`{rule.column}`").between(*rule.value)
+        predicate = F.col(rule.column).between(*rule.value)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -212,7 +210,7 @@ class Compute:
 
     def is_contained_in(self, rule: Rule):  # TODO: Type error
         """Validation of column value in set of given values"""
-        predicate = F.col(f"`{rule.column}`").isin(list(rule.value))
+        predicate = F.col(rule.column).isin(list(rule.value))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
@@ -222,15 +220,12 @@ class Compute:
 
     def has_percentile(self, rule: Rule):  # TODO: Type error
         """Validation of a column percentile value"""
-        predicate = None  # TODO: Does this function has a predicate?
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.approx_percentile(
-                F.col(f"`{rule.column}`").cast(T.DoubleType()),
+                F.col(rule.column).cast(T.DoubleType()),
                 rule.value[1],
-                rule.value[
-                    2
-                ],  # TODO: Remove according to documentation
             ).eqNullSafe(rule.value[0]),
             ComputeMethod.SELECT,
         )
@@ -260,12 +255,12 @@ class Compute:
 
     def has_correlation(self, rule: Rule):
         """Validates the correlation between 2 columns with some tolerance"""
-        predicate = None  # TODO: Does this function has a predicate?
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.corr(
-                F.col(f"`{rule.column[0]}`").cast(T.DoubleType()),
-                F.col(f"`{rule.column[1]}`").cast(T.DoubleType()),
+                F.col(rule.column[0]).cast(T.DoubleType()),
+                F.col(rule.column[1]).cast(T.DoubleType()),
             ).eqNullSafe(F.lit(rule.value)),
             ComputeMethod.SELECT,
         )
@@ -335,7 +330,7 @@ class Compute:
 
     def is_on_weekday(self, rule: Rule):
         """Validates a datetime column is in a Mon-Fri time range"""
-        predicate = F.dayofweek(f"`{rule.column}`").between(2, 6)
+        predicate = F.dayofweek(rule.column).between(1, 5)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -345,7 +340,7 @@ class Compute:
 
     def is_on_weekend(self, rule: Rule):
         """Validates a datetime column is in a Sat-Sun time range"""
-        predicate = F.dayofweek(f"`{rule.column}`").isin([1, 7])
+        predicate = F.dayofweek(rule.column).isin([0, 6])
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -355,7 +350,7 @@ class Compute:
 
     def is_on_monday(self, rule: Rule):
         """Validates a datetime column is on Mon"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 2
+        predicate = F.dayofweek(rule.column) == 1
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -365,7 +360,7 @@ class Compute:
 
     def is_on_tuesday(self, rule: Rule):
         """Validates a datetime column is on Tue"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 3
+        predicate = F.dayofweek(rule.column) == 2
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -375,7 +370,7 @@ class Compute:
 
     def is_on_wednesday(self, rule: Rule):
         """Validates a datetime column is on Wed"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 4
+        predicate = F.dayofweek(rule.column) == 3
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -385,7 +380,7 @@ class Compute:
 
     def is_on_thursday(self, rule: Rule):
         """Validates a datetime column is on Thu"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 5
+        predicate = F.dayofweek(rule.column) == 4
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -395,7 +390,7 @@ class Compute:
 
     def is_on_friday(self, rule: Rule):
         """Validates a datetime column is on Fri"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 6
+        predicate = F.dayofweek(rule.column) == 5
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -405,7 +400,7 @@ class Compute:
 
     def is_on_saturday(self, rule: Rule):
         """Validates a datetime column is on Sat"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 7
+        predicate = F.dayofweek(rule.column) == 6
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -415,7 +410,7 @@ class Compute:
 
     def is_on_sunday(self, rule: Rule):
         """Validates a datetime column is on Sun"""
-        predicate = F.dayofweek(f"`{rule.column}`") == 1
+        predicate = F.dayofweek(rule.column) == 0
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -433,40 +428,44 @@ class Compute:
         )
         return self.compute_instruction
 
-    # def has_weekday_continuity(self, rule: Rule):
-    #     predicate = None
+    def is_daily(self, rule: Rule):
+        """Validates that there is no missing dates using only week days in the date/timestamp column"""
 
-    #     def _execute(dataframe: DataFrame, key: str):
-    #         _weekdays = lambda x: x.filter(
-    #             F.dayofweek(rule.column).isin([2, 3, 4, 5, 6])
-    #         )
-    #         _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))
-    #         full_interval = (
-    #             dataframe.select(
-    #                 F.explode(
-    #                     F.sequence(
-    #                         F.min(rule.column),
-    #                         F.max(rule.column),
-    #                         F.expr("interval 1 day"),
-    #                     )
-    #                 ).alias(rule.column)
-    #             )
-    #             .transform(_weekdays)
-    #             .transform(_date_only)
-    #         )
-    #         return full_interval.join(
-    #             dataframe.transform(_date_only), rule.column, how="left_anti"
-    #         ).select(
-    #             (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
-    #                 key
-    #             )
-    #         )
+        predicate = None
 
-    #     self.compute_instruction = ComputeInstruction(
-    #         predicate=predicate, expression=_execute, compute_method="transform"
-    #     )
+        def _execute(dataframe: DataFrame, key: str):
+            _weekdays = lambda x: x.filter(
+                F.dayofweek(rule.column).isin([1, 2, 3, 4, 5])  # type: ignore
+            )
+            _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))  # type: ignore
+            # full_interval = (
+            #     dataframe.select(
+            #         F.explode(
+            #             F.sequence(
+            #                 F.min(F.col(f"`{rule.column}`")),  # type: ignore
+            #                 F.max(F.col(f"`{rule.column}`")),  # type: ignore
+            #                 F.expr("interval 1 day"),
+            #             )
+            #         ).alias(
+            #             f"{rule.column}"
+            #         )  # type: ignore
+            #     )
+            #     .transform(_weekdays)
+            #     .transform(_date_only)
+            # )
+            # return full_interval.join(  # type: ignore
+            #     dataframe.transform(_date_only), rule.column, how="left_anti"  # type: ignore
+            # ).select(
+            #     (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
+            #         key
+            #     )
+            # )
 
-    #     return self.compute_instruction
+        self.compute_instruction = ComputeInstruction(
+            predicate, _execute, ComputeMethod.TRANSFORM
+        )
+
+        return self.compute_instruction
 
 
 def _field_type_filter(

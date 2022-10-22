@@ -22,7 +22,7 @@ from pyspark.sql import SparkSession, DataFrame
 from toolz import valfilter  # type: ignore
 
 try:
-    from snowflake.snowpark import DataFrame as snowpark_dataframe # type: ignore
+    from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
 except:
     print("SnowFlake not installed.")
 
@@ -500,7 +500,9 @@ class Check:
             dataframe, "columns"
         ), "Your validation dataframe does not have a method `columns`"
         unknown_columns = column_set.difference(set(dataframe.columns))
-        assert not unknown_columns, f"Column(s): {unknown_columns} not in dataframe"
+        assert (
+            not unknown_columns
+        ), f'Column(s): {unknown_columns} not in dataframe. WARNING: If you are using snowpark DataFrame, columns containing spaces and dots can be pass with "name" inside the method and column names are case sensitive'
 
         # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, DataFrame):
@@ -514,7 +516,9 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.snow_validation")
 
         self._compute = self.compute_engine.compute(self._rule)
-        assert self.compute_engine.validate_data_types(self._rule, dataframe), "Invalid data types between rules and dataframe"
+        assert self.compute_engine.validate_data_types(
+            self._rule, dataframe
+        ), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
     def samples(self, dataframe: DataFrame, rule_index: int = None) -> DataFrame:

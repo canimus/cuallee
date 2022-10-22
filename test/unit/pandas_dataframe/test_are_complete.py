@@ -1,5 +1,5 @@
-from cuallee import Check
 import pandas as pd
+from cuallee import Check
 
 
 def test_numeric_columns(check: Check):

@@ -4,7 +4,7 @@ import pandas as pd  # type: ignore
 import operator
 import numpy as np
 import re
-from toolz import first # type: ignore
+from toolz import first  # type: ignore
 from numbers import Number
 
 
@@ -45,7 +45,7 @@ class Compute:
     def has_pattern(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
             dataframe.loc[:, rule.column]
-            .str.match(re.compile(rule.value)) # type: ignore
+            .str.match(re.compile(rule.value))  # type: ignore
             .astype(int)
             .sum()
         )
@@ -70,8 +70,8 @@ class Compute:
 
     def has_percentile(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
-            np.percentile(dataframe.loc[:, rule.column].values, rule.value[0] * 100) # type: ignore
-            == rule.value[1] # type: ignore
+            np.percentile(dataframe.loc[:, rule.column].values, rule.value[0] * 100)  # type: ignore
+            == rule.value[1]  # type: ignore
         )
 
     def has_max_by(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:

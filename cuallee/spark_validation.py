@@ -427,10 +427,13 @@ class Compute:
 
     def is_daily(self, rule: Rule):
         predicate = None
-        if rule.value is None:
-            day_mask = [2,3,4,5,6]
 
         def _execute(dataframe: DataFrame, key: str):
+            
+            day_mask = rule.value
+            if not day_mask:
+                day_mask = [2,3,4,5,6]
+
             _weekdays = lambda x: x.filter(
                 F.dayofweek(rule.column).isin(*day_mask)  # type: ignore
             )

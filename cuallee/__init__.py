@@ -94,7 +94,7 @@ class Rule:
         if isinstance(self.value, List):
             self.value = tuple(self.value)
 
-        if isinstance(self.value, Tuple):
+        if isinstance(self.value, Tuple) & (self.data_type == CheckDataType.AGNOSTIC):
             # All values can only be of one data type in a rule
             if len(Counter(map(type, self.value)).keys()) > 1:
                 raise ValueError("Data types in rule values are inconsistent")

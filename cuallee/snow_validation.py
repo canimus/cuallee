@@ -218,7 +218,7 @@ class Compute:
         )
         return self.compute_instruction
 
-    def has_percentile(self, rule: Rule):  # TODO: Type error
+    def has_percentile(self, rule: Rule):
         """Validation of a column percentile value"""
         predicate = None
         self.compute_instruction = ComputeInstruction(
@@ -226,6 +226,7 @@ class Compute:
             F.approx_percentile(
                 F.col(rule.column).cast(T.DoubleType()),
                 rule.value[1],
+                rule.value[2],
             ).eqNullSafe(rule.value[0]),
             ComputeMethod.SELECT,
         )

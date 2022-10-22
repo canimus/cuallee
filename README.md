@@ -110,6 +110,7 @@ Check | Description | DataType
 `are_unique` | Composite primary key check | _agnostic_
 `is_greater_than` | `col > x` | _numeric_
 `is_positive` | `col > 0` | _numeric_
+`is_negative` | `col < 0` | _numeric_
 `is_greater_or_equal_than` | `col >= x` | _numeric_
 `is_less_than` | `col < x` | _numeric_
 `is_less_or_equal_than` | `col <= x` | _numeric_

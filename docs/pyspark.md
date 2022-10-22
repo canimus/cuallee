@@ -1,6 +1,8 @@
 # Check
 
-## is_complete
+## pyspark
+
+### is_complete
 
 This check is the most popular. It validates the _completeness_ attribute of a data set. It confirms that all fields contain values different of `null`.
 

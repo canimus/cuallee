@@ -1,7 +1,9 @@
 site_name: cuallee
 nav:
     - Introduction: index.md
-    - Checks: check.md
+    - PySpark: pyspark.md
+    - Pandas: pandas.md
+    - Snowpark: snowpark.md
     - Advanced: advanced.md
     - Validate: validate.md
 theme:

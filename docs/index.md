@@ -5,15 +5,17 @@ Welcome to `cuallee` and thanks for using this amazing framework. None of this w
 This `pure-python` implementation of unit tests for your data, will help you define validations for your data using `3` concepts described below:
 
 
-### Entities used
+### Entities
+
+To better understand `cuallee` you will need to get familiar with the following 3 concepts: `Check`, `Rule` and `ComputeInstruction`. 
 
 | Entity      | Icon                                 | Description |
 | ----------- | :------------------------------------: | ----------- |
-| `Check` | :material-check-all:   | Use to define `CheckLevel` and a brief description |
-| `Rule` | :material-check: | Added to the `Check` with individual predicates for validation |
-| `ComputeInstruction` | :material-cog: | Created internally in the check to run against `pyspark` dataframes |
+| `Check` | :material-check-all:   | Use it to define a group of validations on a `dataframe` and report them as `WARNING` or `ERROR`. You can chain as many rules into a `check`, internally `cuallee` will make sure the same rule is not executed twice. |
+| `Rule` | :material-check: | A `rule` represents the _predicate_ you want to test on a `single` or `multiple` columns in a dataframe. A rule as a 4 attributes `method`: name of the predicate, `column`: the column in the dataframe, `value`: the value to compare against and `coverage`: the percentage of positive predicate necessary to set the status of the check to `PASS`.  |
+| `ComputeInstruction` | :material-cog: | Are the implementation specific representations of the `predicates` in the `rule`. Because `cuallee` is a dataframe agnostic data quality framework, the implementation of the rules, rely in the creation of compute instructions passed to the specific dataframe of choice, including the following dataframe options: `pandas`, `pyspark` and `snowpark` |
 
-In principle, the only interface you need to be familiar with is the `Check` as it is through this `object` that you can chain your validations and then directly through the `validate` method, execute validations on `DataFrame` loaded through `pyspark`.
+In principle, the only interface you need to be familiar with is the `Check` as it is through this `object` that you can chain your validations and then directly through the `validate` method, execute validations on any `DataFrame`.
 
 ## Process Flow
 ``` mermaid
@@ -36,8 +38,8 @@ graph LR
 
 ## Installation
 
-`cuallee` is designed to work with `pyspark==3.3.0` and this is its only dependency.
-The __API__ uses the `Observation` features in pyspark, to reduce the computation time for aggregations, and calculating summaries in one pass of the data frames being validated.
+`cuallee` is designed to work primarily with `pyspark==3.3.0` and this is its only dependency.
+It uses the `Observation` API features in pyspark, to reduce the computation time for aggregations, and calculating summaries in one pass of the data frames being validated.
 
 ## pip
 
@@ -89,5 +91,5 @@ df = spark.read.parquet("temp/taxi/*.parquet")
 [check.is_between(name, ("2000-01-01", "2022-12-31")) for name in D.timestamp_fields(df)]
 
 # Validation
-check.validate(spark, df)
+check.validate(df)
 ```

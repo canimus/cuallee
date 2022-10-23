@@ -437,33 +437,30 @@ class Compute:
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
-            return "I am not yet implemented"
-            # _weekdays = lambda x: x.filter(
-            #     F.dayofweek(rule.column).isin([1, 2, 3, 4, 5])  # type: ignore
-            # )
-            # _date_only = lambda x: x.select(F.to_date(rule.column).alias(rule.column))  # type: ignore
-            # full_interval = (
-            #     dataframe.select(
-            #         F.explode(
-            #             F.sequence(
-            #                 F.min(F.col(f"`{rule.column}`")),  # type: ignore
-            #                 F.max(F.col(f"`{rule.column}`")),  # type: ignore
-            #                 F.expr("interval 1 day"),
-            #             )
-            #         ).alias(
-            #             f"{rule.column}"
-            #         )  # type: ignore
-            #     )
-            #     .transform(_weekdays)
-            #     .transform(_date_only)
-            # )
-            # return full_interval.join(  # type: ignore
-            #     dataframe.transform(_date_only), rule.column, how="left_anti"  # type: ignore
-            # ).select(
-            #     (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
-            #         key
-            #     )
-            # )
+
+            day_mask = rule.value
+            if not day_mask:
+                day_mask = [1, 2, 3, 4, 5]
+
+            _to_date = F.col(rule.column).cast(T.DateType())
+
+            date_range = dataframe.select(
+                F.datediff("days", F.min(_to_date), F.max(_to_date))
+            ).collect()[0][0]
+
+            full_interval = (
+                dataframe.select(
+                    F.array_construct(
+                        *[F.min(_to_date) + i for i in range(date_range)]
+                    ).alias("D_ARRAY")
+                )
+                .flatten(F.col("D_ARRAY"))
+                .select(F.col("VALUE").cast(T.DateType()).alias(rule.column))
+                .filter(F.dayofweek(rule.column).isin(day_mask))
+            )
+            return full_interval.join(dataframe, rule.column, how="left_anti").select(
+                (F.count(rule.column) * -1).alias(key)
+            )
 
         self.compute_instruction = ComputeInstruction(
             predicate, _execute, ComputeMethod.TRANSFORM
@@ -514,10 +511,13 @@ def _compute_select_method(
     _select = lambda x: x.compute_method.name == ComputeMethod.SELECT.name
     select = valfilter(_select, compute_set)
 
+    if not select:
+        return {}
+
     return (
         dataframe.select(
             *[
-                compute_instrunction.expression.alias(hash_key.upper())
+                compute_instrunction.expression.alias(hash_key)
                 for hash_key, compute_instrunction in select.items()
             ]
         )
@@ -532,11 +532,11 @@ def _compute_transform_method(
     """Compute rules throught spark transform"""
 
     # Filter expression directed to transform
-    _transform = lambda x: x.compute_method == ComputeMethod.TRANSFORM.name
+    _transform = lambda x: x.compute_method.name == ComputeMethod.TRANSFORM.name
     transform = valfilter(_transform, compute_set)
 
     return {
-        k: operator.attrgetter(k)(compute_instruction.expression(dataframe, k).first())  # type: ignore
+        k: operator.attrgetter(k)(compute_instruction.expression(dataframe, k).first())
         for k, compute_instruction in transform.items()
     }
 
@@ -599,22 +599,30 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     rows = dataframe.count()
 
     # Compute the expression
-    select_result = _compute_select_method(
-        check._compute, dataframe
-    )  # TODO: Check with Herminio to remove the Compute Instruction in the __init__.py
-    transform_result = _compute_transform_method(check._compute, dataframe)
+    select_result = _compute_select_method(compute(check._rule), dataframe)
+    transform_result = _compute_transform_method(compute(check._rule), dataframe)
 
     unified_results = {**select_result, **transform_result}
 
     _calculate_violations = lambda result_column: (
         F.when(result_column == "False", F.lit(rows))
         .when(result_column == "True", F.lit(0))
+        .when(result_column < 0, F.abs(result_column))
         .otherwise(F.lit(rows) - result_column.cast("long"))
     )
 
     _calculate_pass_rate = lambda observed_column: (
         F.when(observed_column == "False", F.lit(0.0))
         .when(observed_column == "True", F.lit(1.0))
+        .when(
+            (observed_column < 0) & (F.abs(observed_column) < rows),
+            1 - (F.abs(observed_column) / rows),
+        )
+        .when((observed_column < 0) & (F.abs(observed_column) == rows), 0.5)
+        .when(
+            (observed_column < 0) & (F.abs(observed_column) > rows),
+            rows / F.abs(observed_column),
+        )
         .otherwise(observed_column.cast(T.DoubleType()) / rows)  # type: ignore
     )
 
@@ -632,7 +640,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
                 rule.method,
                 str(rule.column),
                 str(rule.value),
-                str(unified_results[hash_key.upper()]),
+                str(unified_results[hash_key]),
                 rule.coverage,
             )
             for index, (hash_key, rule) in enumerate(check._rule.items(), 1)

@@ -26,7 +26,7 @@ def test_get_compute_dictionary(spark):
         .is_greater_or_equal_than("id", 2)
     )
     assert len(c._rule) == 3
-    
+
     rs = SV.compute(c._rule)
     assert len(rs) == len(c._rule)
     assert set(rs.keys()) == set(c._rule.keys())

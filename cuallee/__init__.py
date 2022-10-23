@@ -150,7 +150,6 @@ class Check:
         """Returns blake2s unique identifiers of rules"""
         return list(self._rule.keys())
 
-    
     @property
     def empty(self):
         """True when no rules are added in the check"""
@@ -486,7 +485,6 @@ class Check:
         elif isinstance(dataframe, snowpark_dataframe):
             self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
 
-        
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"

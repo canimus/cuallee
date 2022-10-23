@@ -2,8 +2,7 @@ import logging
 import operator
 from dataclasses import dataclass
 from functools import reduce
-from typing import (Any, Callable, Collection, Dict, List, Optional, Tuple,
-                    Type, Union)
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
@@ -15,20 +14,20 @@ from cuallee import Check, Rule, ComputeEngine
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ComputeInstruction:
-    predicate: Column
-    expression: Column
+    predicate: Union[Column, List[Column], None]
+    expression: Union[Callable[[DataFrame, str], Any], Column]
     compute_method: str
 
     def __repr__(self):
         return f"ComputeInstruction({self.compute_method})"
 
 
-
 class Compute(ComputeEngine):
     def __init__(self):
-        self.compute_instruction : Union[ComputeInstruction, None] = None
+        self.compute_instruction: Union[ComputeInstruction, None] = None
 
     def __repr__(self):
         return self.compute_instruction
@@ -506,13 +505,12 @@ class Compute(ComputeEngine):
         return self.compute_instruction
 
 
-
 def _field_type_filter(
     dataframe: DataFrame,
     field_type: Union[
         Type[T.DateType], Type[T.NumericType], Type[T.TimestampType], Type[T.StringType]
     ],
-) -> Collection:
+) -> List[str]:
     """Internal method to search for column names based on data type"""
     return set(
         [f.name for f in dataframe.schema.fields if isinstance(f.dataType, field_type)]  # type: ignore
@@ -582,29 +580,29 @@ def _compute_transform_method(
     }
 
 
-def numeric_fields(dataframe: DataFrame) -> Collection:
+def numeric_fields(dataframe: DataFrame) -> List[str]:
     """Filter all numeric data types in data frame and returns field names"""
     return _field_type_filter(dataframe, T.NumericType)
 
 
-def string_fields(dataframe: DataFrame) -> Collection:
+def string_fields(dataframe: DataFrame) -> List[str]:
     """Filter all numeric data types in data frame and returns field names"""
     return _field_type_filter(dataframe, T.StringType)
 
 
-def date_fields(dataframe: DataFrame) -> Collection:
+def date_fields(dataframe: DataFrame) -> List[str]:
     """Filter all date data types in data frame and returns field names"""
     return set(
         [f.name for f in dataframe.schema.fields if isinstance(f.dataType, T.DateType) or isinstance(f.dataType, T.TimestampType) or isinstance(f.dataType, T.TimestampNTZType)]  # type: ignore
     )
 
 
-def timestamp_fields(dataframe: DataFrame) -> Collection:
+def timestamp_fields(dataframe: DataFrame) -> List[str]:
     """Filter all date data types in data frame and returns field names"""
     return _field_type_filter(dataframe, T.TimestampType)
 
 
-def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame):
+def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
 
     # COLUMNS
@@ -614,7 +612,9 @@ def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame):
 
     # NUMERIC
     # =======
-    numeric_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_numeric_rules(rules))
+    numeric_columns = cuallee_utils.get_rule_colums(
+        cuallee_utils.get_numeric_rules(rules)
+    )
     numeric_dtypes = numeric_fields(dataframe)
     numeric_match = cuallee_utils.match_data_types(numeric_columns, numeric_dtypes)
     assert not numeric_match, f"Column(s): {numeric_match} are not numeric"
@@ -628,14 +628,20 @@ def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame):
 
     # TIMESTAMP
     # =======
-    timestamp_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_timestamp_rules(rules))
+    timestamp_columns = cuallee_utils.get_rule_colums(
+        cuallee_utils.get_timestamp_rules(rules)
+    )
     timestamp_dtypes = timestamp_fields(dataframe)
-    timestamp_match = cuallee_utils.match_data_types(timestamp_columns, timestamp_dtypes)
+    timestamp_match = cuallee_utils.match_data_types(
+        timestamp_columns, timestamp_dtypes
+    )
     assert not timestamp_match, f"Column(s): {timestamp_match} are not timestamp"
 
     # STRING
     # =======
-    string_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_string_rules(rules))
+    string_columns = cuallee_utils.get_rule_colums(
+        cuallee_utils.get_string_rules(rules)
+    )
     string_dtypes = string_fields(dataframe)
     string_match = cuallee_utils.match_data_types(string_columns, string_dtypes)
     assert not string_match, f"Column(s): {string_match} are not string"

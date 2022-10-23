@@ -40,7 +40,7 @@ def get_string_rules(rules: List[Rule]) -> List[Rule]:
 
 def get_rule_colums(rules: List[Rule]) -> List[str]:
     """Based on a rule list it returns a flatten set of unique columns"""
-    return get_column_set(list(map(lambda x: x.column, rules))) # type: ignore
+    return get_column_set(list(map(lambda x: x.column, rules)))  # type: ignore
 
 
 def match_data_types(on_rule: List[str], on_dataframe: List[str]) -> Set[str]:

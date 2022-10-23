@@ -150,33 +150,16 @@ class Check:
         """Returns blake2s unique identifiers of rules"""
         return list(self._rule.keys())
 
-    @property
-    def expressions(self):
-        """Returns all summary expressions for validation"""
-        return list(map(lambda x: x.expression, self._compute.values()))
-
-    @property
-    def predicates(self):
-        """Returns all filtering predicates for negative samples"""
-        return list(
-            filter(
-                lambda x: x is not None,
-                map(lambda x: x.predicate, self._compute.values()),
-            )
-        )
-
+    
     @property
     def empty(self):
         """True when no rules are added in the check"""
         return len(self.rules) == 0
 
-    def _remove_rule_and_compute(self, key: str):
+    def _remove_rule_generic(self, key: str):
         """Remove a key from rules and compute dictionaries"""
-        [
-            collection.pop(key)  # type: ignore
-            for collection in [self._rule, self._compute]
-            if key in collection.keys()  # type: ignore
-        ]
+        if key in self._rule:
+            self._rule.pop(key)
 
     def add_rule(self, method: str, *arg):
         """Add a new rule to the Check class."""
@@ -187,7 +170,7 @@ class Check:
         if isinstance(keys, str):
             keys = [keys]
 
-        [self._remove_rule_and_compute(key) for key in keys]
+        [self._remove_rule_generic(key) for key in keys]
         return self
 
     def delete_rule_by_attribute(
@@ -201,7 +184,7 @@ class Check:
 
         _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
         [
-            self._remove_rule_and_compute(key)
+            self._remove_rule_generic(key)
             for key in valfilter(_filter, self._rule).keys()
         ]
         return self

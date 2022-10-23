@@ -19,20 +19,20 @@ def test_delete_rule_by_key(spark):
         .is_greater_or_equal_than("id", 2)
     )
     assert len(c._rule) == 3
-    assert len(c._compute) == 0
+
     c.delete_rule_by_key(
         "c50361d748fe3ca294ed85751df113f4f7fbdb6faccb48ec531d865b71170268"
     )
     assert len(c._rule) == 2
-    assert len(c._compute) == 0
+
     c.validate(df)
     assert len(c._rule) == 2
-    assert len(c._compute) == 2
+    
     c.delete_rule_by_key(
         "33403fdc43f5c7665952ad9885063ab09e1c233716eaa21a4da49817eec8fb70"
     )
     assert len(c._rule) == 1
-    assert len(c._compute) == 1
+    
 
 
 def test_delete_rule_by_list_of_keys(spark):
@@ -44,15 +44,15 @@ def test_delete_rule_by_list_of_keys(spark):
         .is_greater_or_equal_than("id", 2)
     )
     assert len(c._rule) == 3
-    assert len(c._compute) == 0
+    
     c.delete_rule_by_key(
         "c50361d748fe3ca294ed85751df113f4f7fbdb6faccb48ec531d865b71170268"
     )
     assert len(c._rule) == 2
-    assert len(c._compute) == 0
+    
     c.validate(df)
     assert len(c._rule) == 2
-    assert len(c._compute) == 2
+    
     c.delete_rule_by_key(
         [
             "33403fdc43f5c7665952ad9885063ab09e1c233716eaa21a4da49817eec8fb70",
@@ -60,7 +60,7 @@ def test_delete_rule_by_list_of_keys(spark):
         ]
     )
     assert len(c._rule) == 0
-    assert len(c._compute) == 0
+    
 
 
 def test_delete_rule_by_method(spark):
@@ -73,10 +73,10 @@ def test_delete_rule_by_method(spark):
     )
     c.validate(df)
     assert len(c._rule) == 3
-    assert len(c._compute) == 3
+    
     c.delete_rule_by_attribute("method", ["is_complete"])
     assert len(c._rule) == 1
-    assert len(c._compute) == 1
+    
 
 
 def test_delete_rule_by_column(spark):
@@ -89,10 +89,10 @@ def test_delete_rule_by_column(spark):
     )
     c.validate(df)
     assert len(c._rule) == 3
-    assert len(c._compute) == 3
+    
     c.delete_rule_by_attribute("column", ["id"])
     assert len(c._rule) == 1
-    assert len(c._compute) == 1
+    
 
 
 def test_delete_rule_by_coverage(spark):
@@ -105,7 +105,7 @@ def test_delete_rule_by_coverage(spark):
     )
     c.validate(df)
     assert len(c._rule) == 3
-    assert len(c._compute) == 3
+    
     c.delete_rule_by_attribute("coverage", 1.0)
     assert len(c._rule) == 0
-    assert len(c._compute) == 0
+    

@@ -1,7 +1,7 @@
 from typing import Collection
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
-from cuallee import Check, ComputeInstruction
+from cuallee import Check
 from operator import attrgetter as at
 from toolz import compose
 

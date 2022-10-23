@@ -1,1 +1,1 @@
-docker run -it -v $PWD/temp/taxi:/usr/src/data --rm --name cuallee-tester cuallee-tester bash
+docker run -it -v $PWD/temp/taxi:/usr/src/data --rm --name cuallee-perftest cuallee-tester python /usr/src/sparker2.py

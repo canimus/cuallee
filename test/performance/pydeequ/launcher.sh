@@ -1,1 +1,1 @@
-docker run -it -v $PWD/temp/taxi:/usr/src/data --rm pydeequ-tester
+docker run -it -v $PWD/temp/taxi:/usr/src/data --rm --name pydeequ-perftest pydeequ-tester python /usr/src/sparker2.py

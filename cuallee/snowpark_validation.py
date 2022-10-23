@@ -1,4 +1,5 @@
 import enum
+import os
 import operator
 import snowflake.snowpark.functions as F  # type: ignore
 import snowflake.snowpark.types as T  # type: ignore
@@ -656,6 +657,21 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     )
 
     # Create SnowparkSession
+    SNOWFLAKE_ENVIRONMENT = {
+            "account" : "SF_ACCOUNT",
+            "user" : "SF_USER",
+            "password" : "SF_PASSWORD",
+            "role" : "SF_ROLE",
+            "warehouse" : "SF_WAREHOUSE",
+            "database" : "SF_DATABASE",
+            "schema" : "SF_SCHEMA"
+    }
+
+    if not check.config:
+        check.config = {k: os.getenv(v,None) for k,v in SNOWFLAKE_ENVIRONMENT.items()}
+        
+    assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(check.config.keys()), "SnowFlake Environment variables not available in check configuration"
+
     snowpark = Session.builder.configs(check.config).create()
 
     computation_basis = snowpark.createDataFrame(

@@ -445,10 +445,8 @@ class Compute(ComputeEngine):
             if not day_mask:
                 day_mask = [2, 3, 4, 5, 6]
 
-            _weekdays = lambda x: x.filter(
-                F.dayofweek(rule.column).isin(*day_mask)  # type: ignore
-            )
-            _date_only = lambda x: x.select(F.to_date(f"`{rule.column}`").alias(rule.column))  # type: ignore
+            _weekdays = F.dayofweek(rule.column).isin(*day_mask)  # type: ignore
+            _date_only = F.to_date(f"`{rule.column}`").alias(rule.column)  # type: ignore
             full_interval = (
                 dataframe.select(
                     F.explode(
@@ -461,15 +459,13 @@ class Compute(ComputeEngine):
                         f"{rule.column}"
                     )  # type: ignore
                 )
-                .transform(_weekdays)
-                .transform(_date_only)
+                .filter(_weekdays)
+                .select(_date_only)
             )
             return full_interval.join(  # type: ignore
-                dataframe.transform(_date_only), rule.column, how="left_anti"  # type: ignore
+                dataframe.select(_date_only), rule.column, how="left_anti"  # type: ignore
             ).select(
-                (F.expr(f"{dataframe.count()} - count(distinct({rule.column}))")).alias(
-                    key
-                )
+                (F.count(rule.column) * -1).alias(key)
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -675,11 +671,22 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     unified_results = {**observation_result, **select_result, **transform_result}
     logger.debug(unified_results)
 
+    _calculate_violations = lambda result_column: (
+        F.when(result_column < 0, F.abs(result_column))
+        .when(result_column == "false", F.lit(rows))
+        .when(result_column == "true", F.lit(0))
+        .otherwise(rows - result_column.cast("long"))
+    )
+        
     _calculate_pass_rate = lambda observed_column: (
         F.when(observed_column == "false", F.lit(0.0))
         .when(observed_column == "true", F.lit(1.0))
+        .when((observed_column < 0) & (F.abs(observed_column) > F.lit(rows)), rows/F.abs(observed_column) ) # Calculate as ratio or rows
+        .when((observed_column < 0) & (F.abs(observed_column) < F.lit(rows)), 1-(F.abs(observed_column)/rows) ) # Calculate as total 
+        .when((observed_column < 0) & (F.abs(observed_column) == F.lit(rows)), F.lit(0.5) ) # Half in, half not
         .otherwise(observed_column.cast(T.DoubleType()) / rows)  # type: ignore
     )
+
     _evaluate_status = lambda pass_rate, pass_threshold: (
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
     )
@@ -708,7 +715,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
             F.col("rule"),
             F.col("value"),
             F.lit(rows).alias("rows"),
-            (rows - F.col("result").cast("long")).alias("violations"),
+            _calculate_violations(F.col("result")).alias("violations"),
             _calculate_pass_rate(F.col("result")).alias("pass_rate"),
             F.col("pass_threshold").cast(T.DoubleType()),
         )

@@ -1,7 +1,6 @@
 # cuallee
 Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
-
 This library provides an intuitive `API` to describe `checks` for Apache PySpark DataFrames `v3.3.0`.
 It is a replacement written in pure `python` of the `pydeequ` framework.
 
@@ -13,6 +12,11 @@ As result `cuallee` was born, with a simplistic, extremely user friendly interfa
 This implementation goes in hand with the latest API from PySpark and uses the `Observation` API to collect metrics
 at the lower cost of computation. 
 When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underneath and **remarkably** less memory.
+
+## Support
+- ![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")
+- ![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")
+- ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API"){:width="100px"}
  
 
 ## Install

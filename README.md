@@ -99,6 +99,16 @@ check.validate(df).first().status == "PASS"
 +---+-------------------+-----+-------+------+-----------------------------+-----+----+----------+---------+--------------+------+
 ```
 
+### `cualleee` __VS__ `pydeequ`
+In the `test` folder there are `docker` containers with the requirements to match the tests. Also a `perftest.py` available at the root folder for interests.
+
+```
+# 1000 rules / # of seconds
+
+cuallee: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 162.00
+pydeequ: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 322.00
+```
+
 
 ## Catalogue
 
@@ -144,21 +154,37 @@ Check | Description | DataType
 `is_daily` | Can verify daily continuity on date fields by default. `[2,3,4,5,6]` which represents `Mon-Fri` in PySpark. However new schedules can be used for custom date continuity | _date_
 `satisfies` | An open `SQL expression` builder to construct custom checks | _agnostic_
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
-`samples` | Returns per rule. A sample of the data with the `predicates` failing the check | _agnostic_
 
 
+
+## Snowflake Connection
+In order to establish a connection to your SnowFlake account `cuallee` relies in the following environment variables to be avaialble in your environment:
+- `SF_ACCOUNT`
+- `SF_USER`
+- `SF_PASSWORD`
+- `SF_ROLE`
+- `SF_WAREHOUSE`
+- `SF_DATABASE`
+- `SF_SCHEMA`
+
+## Databricks Connection
+By default `cuallee` will search for a SparkSession available in the `globals` so there is literally no need to ~~`SparkSession.builder`~~. When working in a local environment it will automatically search for an available session, or start one.
 
 ## Roadmap
 
 `100%` data frame agnostic implementation of data quality checks.
 Define once, `run everywhere`
-- Snowpark DataFrame
-- Pandas DataFrame
+- [x] PySpark 3.3.0
+- [x] PySpark 3.2.x 
+- [x] Snowpark DataFrame
+- [x] Pandas DataFrame
 - Polars DataFrame
-- SQlite3 Tables
 - DuckDB Tables
-- SQL Tables
+- SQLite Tables
+- MS-SQL Tables
 
+Whilst expanding the functionality feels a bit as an overkill because you most likely can connect `spark` via its drivers to whatever `DBMS` of your choice.
+In the desire to make it even more `user-friendly` we are aiming to make `cuallee` portable to all the providers above.
 
 ## Authors
 - [canimus](https://github.com/canimus) / Herminio Vazquez / 🇲🇽 

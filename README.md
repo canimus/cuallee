@@ -17,11 +17,11 @@ When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underne
 
 `cuallee` is the data quality framework truly dataframe agnostic.
 
-Provider | API 
- ------- | ----------- 
-![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` 
-![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark`
-![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`
+Provider | API | Versions
+ ------- | ----------- | ------
+![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `0.12.0`
+![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.3.0`, `3.2.x`
+![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`|`1.5.1`, `1.4.x`
  
  <sub>Logos are trademarks of their own brands.</sub>
 

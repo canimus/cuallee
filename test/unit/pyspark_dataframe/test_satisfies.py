@@ -24,5 +24,5 @@ def test_unknown_columns(spark):
     check = Check(CheckLevel.ERROR, "SatisfiesTest")
     check.satisfies(["id", "id3"], "(id * id2) > 10", 0.9)
 
-    with pytest.raises(AssertionError, match=r".*id3.* not in dataframe"):
+    with pytest.raises(AssertionError, match=r".*id3.* not present in dataframe"):
         check.validate(df).first().status == "PASS"

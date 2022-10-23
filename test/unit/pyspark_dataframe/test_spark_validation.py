@@ -60,8 +60,8 @@ def test_numeric_column_validation(spark):
         .is_greater_or_equal_than("id", 2)
         .is_greater_or_equal_than("desc", 2)
     )
-    with pytest.raises(AssertionError, match="are not numeric"):
-        SV.validate_data_types(c._rule, df)
+    with pytest.raises(AssertionError, match="not numeric"):
+        SV.validate_data_types(c.rules, df)
 
 
 def test_string_column_validation(spark):
@@ -71,8 +71,8 @@ def test_string_column_validation(spark):
         .has_pattern("id", "2")
         .has_pattern("desc", "red")
     )
-    with pytest.raises(AssertionError, match="are not strings"):
-        SV.validate_data_types(c._rule, df)
+    with pytest.raises(AssertionError, match="not string"):
+        SV.validate_data_types(c.rules, df)
 
 
 def test_date_column_validation(spark):  # TODO: when got a case

@@ -1,5 +1,5 @@
-from typing import Union, List
-
+from typing import Set, Union, List
+from cuallee import Rule, CheckDataType
 
 def get_column_set(columns: Union[str, List[str]]) -> List[str]:
     """Confirm that all compute columns exists in dataframe"""
@@ -13,3 +13,31 @@ def get_column_set(columns: Union[str, List[str]]) -> List[str]:
         return agg
 
     return _normalize_columns(columns, [])
+
+def get_numeric_rules(rules: Rule) -> List[Rule]:
+    """Based on a rule list it returns all matching data type: NUMERIC"""
+    return filter(lambda x: x.data_type.name == CheckDataType.NUMERIC.name, rules)
+
+def get_date_rules(rules: Rule) -> List[Rule]:
+    """Based on a rule list it returns all matching data type: DATE"""
+    return filter(lambda x: x.data_type.name == CheckDataType.DATE.name, rules)
+
+def get_timestamp_rules(rules: List[Rule]) -> List[Rule]:
+    """Based on a rule list it returns all matching data type: TIMESTAMP"""
+    return filter(lambda x: x.data_type.name == CheckDataType.TIMESTAMP.name, rules)
+
+def get_string_rules(rules: List[Rule]) -> List[Rule]:
+    """Based on a rule list it returns all matching data type: STRING"""
+    return filter(lambda x: x.data_type.name == CheckDataType.STRING.name, rules)
+
+def get_rule_colums(rules: List[Rule]) -> List[str]:
+    """Based on a rule list it returns a flatten set of unique columns"""
+    return get_column_set(list(map(lambda x: x.column, rules)))
+
+def match_data_types(on_rule: List[str], on_dataframe: List[str]) -> Set[str]:
+    """Compare sets between rule and dataframe"""
+    return set(on_rule).difference(on_dataframe)
+
+def match_columns(on_rule: List[Rule], on_dataframe: List[str]) -> Set[str]:
+    """Confirms all columns in check exists in dataframe"""
+    return set(get_rule_colums(on_rule)).difference(on_dataframe)

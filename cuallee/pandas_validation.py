@@ -1,12 +1,12 @@
-from typing import Dict, Union
-from cuallee import Check, Rule
+from typing import Dict, Union, List
+from cuallee import Check, Rule, CheckDataType
 import pandas as pd  # type: ignore
 import operator
 import numpy as np
 import re
 from toolz import first  # type: ignore
 from numbers import Number
-
+from cuallee import utils as cuallee_utils
 
 class Compute:
     def is_complete(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
@@ -191,8 +191,44 @@ def compute(rules: Dict[str, Rule]):
     pass
 
 
-def validate_data_types(rules: Dict[str, Rule], dataframe: pd.DataFrame):
+def validate_data_types(rules: List[Rule], dataframe: pd.DataFrame):
+    """Validate the datatype of each column according to the CheckDataType of the rule's method"""
+    
+    # COLUMNS
+    # =======
+    rule_match = cuallee_utils.match_columns(rules, dataframe.columns)
+    assert not rule_match, f"Column(s): {rule_match} are not present in dataframe"
+
+    # NUMERIC
+    # =======
+    numeric_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_numeric_rules(rules))
+    numeric_dtypes = dataframe.select_dtypes("number")
+    numeric_match = cuallee_utils.match_data_types(numeric_columns, numeric_dtypes)
+    assert not numeric_match, f"Column(s): {numeric_match} are not numeric"
+
+    # DATE
+    # =======
+    date_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_date_rules(rules))
+    date_dtypes = dataframe.select_dtypes("datetime")
+    date_match = cuallee_utils.match_data_types(date_columns, date_dtypes)
+    assert not date_match, f"Column(s): {date_match} are not date"
+
+    # TIMESTAMP
+    # =======
+    timestamp_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_timestamp_rules(rules))
+    timestamp_dtypes = dataframe.select_dtypes("datetime64")
+    timestamp_match = cuallee_utils.match_data_types(timestamp_columns, timestamp_dtypes)
+    assert not timestamp_match, f"Column(s): {timestamp_match} are not timestamp"
+
+    # STRING
+    # =======
+    string_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_string_rules(rules))
+    string_dtypes = dataframe.select_dtypes("object")
+    string_match = cuallee_utils.match_data_types(string_columns, string_dtypes)
+    assert not string_match, f"Column(s): {string_match} are not string"
+
     return True
+
 
 
 def summary(check: Check, dataframe: pd.DataFrame):

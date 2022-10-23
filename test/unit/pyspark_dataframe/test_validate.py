@@ -26,7 +26,7 @@ def test_empty_dictionary_spark(spark):
 
 def test_column_name_validation_spark(spark):
     df = spark.range(10).alias("id")
-    with pytest.raises(Exception, match="not in dataframe"):
+    with pytest.raises(Exception, match="not present in dataframe"):
         Check(CheckLevel.WARNING, "test_column_name_spark").is_complete("ide").validate(
             df
         )

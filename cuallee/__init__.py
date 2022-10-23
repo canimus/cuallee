@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
-import cuallee.utils as cuallee_utils
+
 
 # Verify Libraries Available
 # ==========================
@@ -505,19 +505,19 @@ class Check:
 
         # Obtain a set of columns required for rules
         # flattening str columns and tuple columns
-        column_set = set(
-            cuallee_utils.get_column_set(
-                list(map(operator.attrgetter("column"), self.rules))
-            )
-        )
+        # column_set = set(
+        #     cuallee_utils.get_column_set(
+        #         list(map(operator.attrgetter("column"), self.rules))
+        #     )
+        # )
 
-        assert hasattr(
-            dataframe, "columns"
-        ), "Your validation dataframe does not have a method `columns`"
-        unknown_columns = column_set.difference(set(dataframe.columns))
-        assert (
-            not unknown_columns
-        ), f'Column(s): {unknown_columns} not in dataframe. WARNING: If you are using snowpark DataFrame, columns containing spaces and dots can be pass with "name" inside the method and column names are case sensitive'
+        # assert hasattr(
+        #     dataframe, "columns"
+        # ), "Your validation dataframe does not have a method `columns`"
+        # unknown_columns = column_set.difference(set(dataframe.columns))
+        # assert (
+        #     not unknown_columns
+        # ), f'Column(s): {unknown_columns} not in dataframe. WARNING: If you are using snowpark DataFrame, columns containing spaces and dots can be pass with "name" inside the method and column names are case sensitive'
 
         # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, pyspark_dataframe):
@@ -532,7 +532,7 @@ class Check:
 
         self._compute = self.compute_engine.compute(self._rule)
         assert self.compute_engine.validate_data_types(
-            self._rule, dataframe
+            self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 

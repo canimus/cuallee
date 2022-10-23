@@ -10,7 +10,7 @@ from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
 from toolz import valfilter  # type: ignore
 from functools import reduce
 
-from cuallee import Check, Rule, CheckDataType
+from cuallee import Check, Rule
 import cuallee.utils as cuallee_utils
 
 
@@ -235,12 +235,17 @@ class Compute:
     # TODO: is_inside_interquartile_range
     def is_inside_interquartile_range(self, rule: Rule):
         """Verifies values inside the IQR of a vector"""
-        raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
+        raise NotImplementedError(
+            "[😔] We are working on this feature. Not ready yet..."
+        )
 
     # TODO: min_by
     def has_min_by(self, rule: Rule):
-       """Validation of a column minimum based on other column minimum"""
-       raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
+        """Validation of a column minimum based on other column minimum"""
+        raise NotImplementedError(
+            "[😔] We are working on this feature. Not ready yet..."
+        )
+
     #    predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value
     #    self.compute_instruction = ComputeInstruction(
     #        predicate,
@@ -251,8 +256,11 @@ class Compute:
 
     # TODO: max_by
     def has_max_by(self, rule: Rule):  # To Do with Predicate
-       """Validation of a column maximum based on other column maximum"""
-       raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
+        """Validation of a column maximum based on other column maximum"""
+        raise NotImplementedError(
+            "[😔] We are working on this feature. Not ready yet..."
+        )
+
     #    predicate = None  # TODO: Does this function has a predicate?
     #    self.compute_instruction = ComputeInstruction(
     #        predicate,
@@ -286,7 +294,10 @@ class Compute:
 
     def has_entropy(self, rule: Rule):
         """Validation for entropy calculation on continuous values"""
-        raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
+        raise NotImplementedError(
+            "[😔] We are working on this feature. Not ready yet..."
+        )
+
     #     predicate = None
 
     #     def _execute(dataframe: DataFrame, key: str):
@@ -658,19 +669,21 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
 
     # Create SnowparkSession
     SNOWFLAKE_ENVIRONMENT = {
-            "account" : "SF_ACCOUNT",
-            "user" : "SF_USER",
-            "password" : "SF_PASSWORD",
-            "role" : "SF_ROLE",
-            "warehouse" : "SF_WAREHOUSE",
-            "database" : "SF_DATABASE",
-            "schema" : "SF_SCHEMA"
+        "account": "SF_ACCOUNT",
+        "user": "SF_USER",
+        "password": "SF_PASSWORD",
+        "role": "SF_ROLE",
+        "warehouse": "SF_WAREHOUSE",
+        "database": "SF_DATABASE",
+        "schema": "SF_SCHEMA",
     }
 
     if not check.config:
-        check.config = {k: os.getenv(v,None) for k,v in SNOWFLAKE_ENVIRONMENT.items()}
-        
-    assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(check.config.keys()), "SnowFlake Environment variables not available in check configuration"
+        check.config = {k: os.getenv(v, None) for k, v in SNOWFLAKE_ENVIRONMENT.items()}
+
+    assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(
+        check.config.keys()
+    ), "SnowFlake Environment variables not available in check configuration"
 
     snowpark = Session.builder.configs(check.config).create()
 

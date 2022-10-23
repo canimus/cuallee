@@ -18,8 +18,18 @@ df = spark.read.parquet("data/*.parquet")
 [check.isGreaterThan(name, "total_amount") for name in numeric_fields(df)]
 [check.isLessThan(name, "total_amount") for name in numeric_fields(df)]
 # [check.hasEntropy(name, 1.0, 0.5) for name in numeric_fields(df)]
-[check.satisfies(f"{name} BETWEEN 1000 AND 2000", "BETWEEN 1k-2k", lambda x: x == 1) for name in numeric_fields(df)]
-[check.satisfies(f"{name} BETWEEN '2000-01-01' AND '2022-12-31'", "BETWEEN Jan-Dec", lambda x: x >= 0.9) for name in timestamp_fields(df)]
+[
+    check.satisfies(f"{name} BETWEEN 1000 AND 2000", "BETWEEN 1k-2k", lambda x: x == 1)
+    for name in numeric_fields(df)
+]
+[
+    check.satisfies(
+        f"{name} BETWEEN '2000-01-01' AND '2022-12-31'",
+        "BETWEEN Jan-Dec",
+        lambda x: x >= 0.9,
+    )
+    for name in timestamp_fields(df)
+]
 
 
 start = datetime.now()

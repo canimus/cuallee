@@ -159,7 +159,7 @@ def test_get_compute_dictionary(snowpark):
         .is_complete("desc")
     )
     assert len(check._rule) == 2
-    
+
     rs = SV.compute(check._rule)
     assert len(rs) == len(check._rule)
     assert set(rs.keys()) == set(check._rule.keys())
@@ -185,7 +185,7 @@ def test_compute_transform_method(snowpark):
 def test_summary(snowpark, configurations):
     df = snowpark.range(10)
     check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("ID")
-    
+
     check.config = configurations
     rs = SV.summary(check, df)
     assert isinstance(rs, DataFrame)

@@ -11,7 +11,7 @@ from toolz import first, valfilter  # type: ignore
 
 import cuallee.utils as cuallee_utils
 from cuallee import Check, ComputeEngine, Rule
-from colorama import Fore, Style
+from colorama import Fore, Style  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -523,7 +523,11 @@ def _compute_observe_method(
     try:
         from pyspark.sql import Observation
     except:
-        print("[😔]" + Fore.YELLOW + " PySpark < 3.3.0 | When you upgrade checks will run 2x faster.")
+        print(
+            "[😔]"
+            + Fore.YELLOW
+            + " PySpark < 3.3.0 | When you upgrade checks will run 2x faster."
+        )
         print(Style.RESET_ALL)
 
     if observe:
@@ -669,15 +673,15 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
 
     # Compute the expression
     computed_expressions = compute(check._rule)
-    if int(spark.version.replace(".","")) < 330:
+    if int(spark.version.replace(".", "")) < 330:
         select_only_expressions = {}
-        for k,v in computed_expressions.items():
+        for k, v in computed_expressions.items():
             instruction = v
             if instruction.compute_method == "observe":
                 instruction.compute_method = "select"
             select_only_expressions[k] = instruction
         computed_expressions = select_only_expressions
-            
+
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)
     select_result = _compute_select_method(computed_expressions, dataframe)
     transform_result = _compute_transform_method(computed_expressions, dataframe)

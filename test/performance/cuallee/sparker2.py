@@ -14,8 +14,11 @@ df = spark.read.parquet("data/*.parquet")
 [check.is_greater_than(name, F.col("total_amount")) for name in numeric_fields(df)]
 [check.is_less_than(name, F.col("total_amount")) for name in numeric_fields(df)]
 # [check.has_entropy(name, 1.0, 0.5) for name in numeric_fields(df)]
-[check.is_between(name, (1000,2000)) for name in numeric_fields(df)]
-[check.is_between(name, ("2000-01-01", "2022-12-31"), .9) for name in timestamp_fields(df)]
+[check.is_between(name, (1000, 2000)) for name in numeric_fields(df)]
+[
+    check.is_between(name, ("2000-01-01", "2022-12-31"), 0.9)
+    for name in timestamp_fields(df)
+]
 
 start = datetime.now()
 check.validate(df).show(n=1000, truncate=False)

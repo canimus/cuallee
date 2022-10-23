@@ -23,6 +23,7 @@ Provider | API
 ![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark`
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`
  
+ <sub>Logos are trademarks of their own brands.</sub>
 
 ## Install
 ```bash

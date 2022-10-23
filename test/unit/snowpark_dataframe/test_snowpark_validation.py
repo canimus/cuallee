@@ -113,42 +113,42 @@ def test_validate_numeric_type(snowpark):
     )
     check = (
         Check(CheckLevel.WARNING, "test_validate_numeric_type")
-        .is_greater_than("id", 2)
-        .is_greater_than("id2", 2)
+        .is_greater_than("ID", 2)
+        .is_greater_than("ID2", 2)
     )
-    rs = SV.validate_data_types(check._rule, df)
+    rs = SV.validate_data_types(check.rules, df)
     assert isinstance(rs, bool)
     assert rs == True
-    check.is_greater_than("desc", 2)
+    check.is_greater_than("DESC", 2)
     with pytest.raises(AssertionError, match="are not numeric"):
-        SV.validate_data_types(check._rule, df)
+        SV.validate_data_types(check.rules, df)
 
 
 def test_validate_string_type(snowpark):
     df = snowpark.range(10).withColumn("desc", F.col("id").cast("string"))
     check = (
         Check(CheckLevel.WARNING, "test_validate_string_type")
-        .has_pattern("id", "2")
-        .has_pattern("desc", "2")
+        .has_pattern("ID", "2")
+        .has_pattern("DESC", "2")
     )
-    with pytest.raises(AssertionError, match="are not strings"):
-        SV.validate_data_types(check._rule, df)
+    with pytest.raises(AssertionError, match="are not string"):
+        SV.validate_data_types(check.rules, df)
 
 
 def test_validate_date_type(snowpark):
     df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "test_validate_date_type").is_on_monday("id")
-    with pytest.raises(AssertionError, match="are not dates"):
-        SV.validate_data_types(check._rule, df)
+    check = Check(CheckLevel.WARNING, "test_validate_date_type").is_on_monday("ID")
+    with pytest.raises(AssertionError, match="are not date"):
+        SV.validate_data_types(check.rules, df)
 
 
 def test_validate_timestamp_type(snowpark):
     df = snowpark.range(10)
     check = Check(CheckLevel.WARNING, "test_validate_timestamp_type").is_on_schedule(
-        "id", (F.time_from_parts(10, 0, 0), F.time_from_parts(17, 0, 0))
+        "ID", (F.time_from_parts(10, 0, 0), F.time_from_parts(17, 0, 0))
     )
-    with pytest.raises(AssertionError, match="are not timestamps"):
-        SV.validate_data_types(check._rule, df)
+    with pytest.raises(AssertionError, match="are not timestamp"):
+        SV.validate_data_types(check.rules, df)
 
 
 def test_get_compute_dictionary(snowpark):
@@ -159,7 +159,7 @@ def test_get_compute_dictionary(snowpark):
         .is_complete("desc")
     )
     assert len(check._rule) == 2
-    assert len(check._compute) == 0
+    
     rs = SV.compute(check._rule)
     assert len(rs) == len(check._rule)
     assert set(rs.keys()) == set(check._rule.keys())
@@ -185,7 +185,7 @@ def test_compute_transform_method(snowpark):
 def test_summary(snowpark, configurations):
     df = snowpark.range(10)
     check = Check(CheckLevel.WARNING, "test_compute_select_method").is_complete("ID")
-    check._compute = SV.compute(check._rule)
+    
     check.config = configurations
     rs = SV.summary(check, df)
     assert isinstance(rs, DataFrame)

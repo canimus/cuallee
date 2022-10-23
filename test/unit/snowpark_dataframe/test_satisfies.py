@@ -30,5 +30,5 @@ def test_predicate_on_unknown_columns(snowpark, configurations):
     check = Check(CheckLevel.WARNING, "check_predicate_on_unknown_columns")
     check.satisfies(["ID", "ID3"], "(id * id2) > 10", 0.9)
     check.config = configurations
-    with pytest.raises(AssertionError, match="not in dataframe"):
+    with pytest.raises(AssertionError, match="not present in dataframe"):
         check.validate(df)

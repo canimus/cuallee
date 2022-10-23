@@ -3,7 +3,7 @@ import operator
 import snowflake.snowpark.functions as F  # type: ignore
 import snowflake.snowpark.types as T  # type: ignore
 
-from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple
+from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple, List
 from dataclasses import dataclass
 from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
 from toolz import valfilter  # type: ignore
@@ -566,29 +566,49 @@ def compute(rules: Dict[str, Rule]) -> Dict:
     return {k: operator.methodcaller(v.method, v)(Compute()) for k, v in rules.items()}
 
 
-def validate_data_types(rules: Dict[str, Rule], dataframe: DataFrame) -> bool:
+def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
-    _col = operator.attrgetter("column")
-    _numeric = lambda x: x.data_type.name == CheckDataType.NUMERIC.name
-    _date = lambda x: x.data_type.name == CheckDataType.DATE.name
-    _timestamp = lambda x: x.data_type.name == CheckDataType.TIMESTAMP.name
-    _string = lambda x: x.data_type.name == CheckDataType.STRING.name
-    # Numeric Validation
-    non_numeric = _column_set_comparison(
-        rules, dataframe, _col, _numeric, numeric_fields
+    # COLUMNS
+    # =======
+    rule_match = cuallee_utils.match_columns(rules, dataframe.columns)
+    assert not rule_match, f"Column(s): {rule_match} are not present in dataframe"
+
+    # NUMERIC
+    # =======
+    numeric_columns = cuallee_utils.get_rule_colums(
+        cuallee_utils.get_numeric_rules(rules)
     )
-    assert len(non_numeric) == 0, f"Column(s): {non_numeric} are not numeric"
-    # String Validation
-    non_string = _column_set_comparison(rules, dataframe, _col, _string, string_fields)
-    assert len(non_string) == 0, f"Column(s): {non_string} are not strings"
-    # Date Validation
-    non_date = _column_set_comparison(rules, dataframe, _col, _date, date_fields)
-    assert len(non_date) == 0, f"Column(s): {non_date} are not dates"
-    # Timestamp validation
-    non_timestamp = _column_set_comparison(
-        rules, dataframe, _col, _timestamp, timestamp_fields
+    numeric_dtypes = numeric_fields(dataframe)
+    numeric_match = cuallee_utils.match_data_types(numeric_columns, numeric_dtypes)
+    assert not numeric_match, f"Column(s): {numeric_match} are not numeric"
+
+    # DATE
+    # =======
+    date_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_date_rules(rules))
+    date_dtypes = date_fields(dataframe)
+    date_match = cuallee_utils.match_data_types(date_columns, date_dtypes)
+    assert not date_match, f"Column(s): {date_match} are not date"
+
+    # TIMESTAMP
+    # =======
+    timestamp_columns = cuallee_utils.get_rule_colums(
+        cuallee_utils.get_timestamp_rules(rules)
     )
-    assert len(non_timestamp) == 0, f"Column(s): {non_timestamp} are not timestamps"
+    timestamp_dtypes = timestamp_fields(dataframe)
+    timestamp_match = cuallee_utils.match_data_types(
+        timestamp_columns, timestamp_dtypes
+    )
+    assert not timestamp_match, f"Column(s): {timestamp_match} are not timestamp"
+
+    # STRING
+    # =======
+    string_columns = cuallee_utils.get_rule_colums(
+        cuallee_utils.get_string_rules(rules)
+    )
+    string_dtypes = string_fields(dataframe)
+    string_match = cuallee_utils.match_data_types(string_columns, string_dtypes)
+    assert not string_match, f"Column(s): {string_match} are not string"
+
     return True
 
 

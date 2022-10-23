@@ -503,22 +503,6 @@ class Check:
         # Stop execution if the there is no rules in the check
         assert not self.empty, "Check is empty. Try adding some rules?"
 
-        # Obtain a set of columns required for rules
-        # flattening str columns and tuple columns
-        # column_set = set(
-        #     cuallee_utils.get_column_set(
-        #         list(map(operator.attrgetter("column"), self.rules))
-        #     )
-        # )
-
-        # assert hasattr(
-        #     dataframe, "columns"
-        # ), "Your validation dataframe does not have a method `columns`"
-        # unknown_columns = column_set.difference(set(dataframe.columns))
-        # assert (
-        #     not unknown_columns
-        # ), f'Column(s): {unknown_columns} not in dataframe. WARNING: If you are using snowpark DataFrame, columns containing spaces and dots can be pass with "name" inside the method and column names are case sensitive'
-
         # When dataframe is PySpark DataFrame API
         if isinstance(dataframe, pyspark_dataframe):
             self.compute_engine = importlib.import_module("cuallee.pyspark_validation")

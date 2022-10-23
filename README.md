@@ -14,9 +14,14 @@ at the lower cost of computation.
 When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underneath and **remarkably** less memory.
 
 ## Support
-![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")<br/>
-![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")<br/>
-![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API"){:width="50px"}
+
+`cuallee` is the data quality framework truly dataframe agnostic.
+
+Provider | API 
+ ------- | ----------- 
+![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` 
+![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark`
+![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`
  
 
 ## Install

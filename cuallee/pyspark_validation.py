@@ -6,11 +6,12 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import Column, DataFrame, Observation, Row
+from pyspark.sql import Column, DataFrame, Row
 from toolz import first, valfilter  # type: ignore
 
 import cuallee.utils as cuallee_utils
-from cuallee import Check, Rule, ComputeEngine
+from cuallee import Check, ComputeEngine, Rule
+from colorama import Fore, Style
 
 logger = logging.getLogger(__name__)
 
@@ -519,6 +520,12 @@ def _compute_observe_method(
     _observe = lambda x: x.compute_method == "observe"
     observe = valfilter(_observe, compute_set)
 
+    try:
+        from pyspark.sql import Observation
+    except:
+        print("[😔]" + Fore.YELLOW + " PySpark < 3.3.0 | When you upgrade checks will run 2x faster.")
+        print(Style.RESET_ALL)
+
     if observe:
         observation = Observation("observation")
 
@@ -587,7 +594,7 @@ def string_fields(dataframe: DataFrame) -> List[str]:
 def date_fields(dataframe: DataFrame) -> List[str]:
     """Filter all date data types in data frame and returns field names"""
     return set(
-        [f.name for f in dataframe.schema.fields if isinstance(f.dataType, T.DateType) or isinstance(f.dataType, T.TimestampType) or isinstance(f.dataType, T.TimestampNTZType)]  # type: ignore
+        [f.name for f in dataframe.schema.fields if isinstance(f.dataType, T.DateType) or isinstance(f.dataType, T.TimestampType)]  # type: ignore
     )
 
 
@@ -662,6 +669,15 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
 
     # Compute the expression
     computed_expressions = compute(check._rule)
+    if int(spark.version.replace(".","")) < 330:
+        select_only_expressions = {}
+        for k,v in computed_expressions.items():
+            instruction = v
+            if instruction.compute_method == "observe":
+                instruction.compute_method = "select"
+            select_only_expressions[k] = instruction
+        computed_expressions = select_only_expressions
+            
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)
     select_result = _compute_select_method(computed_expressions, dataframe)
     transform_result = _compute_transform_method(computed_expressions, dataframe)

@@ -7,7 +7,10 @@ from toolz import valfilter  # type: ignore
 
 from cuallee import Check, CheckLevel
 from cuallee import pyspark_validation as SV
-
+import importlib
+minversion = pytest.mark.skipif(
+    int(importlib.import_module("pyspark").__version__.replace(".","")) < 330, reason="PySpark 3.3.0 Observation is required"
+)
 
 def test_compute_summary_return_dataframe(spark):
     df = spark.range(10).alias("id")
@@ -82,7 +85,7 @@ def test_date_column_validation(spark):  # TODO: when got a case
 def test_timestamp_column_validation(spark):  # TODO: when got a case
     pass
 
-
+@minversion
 def test_observe_method_return_tuple(spark):
     df = spark.range(10).alias("id")
     c = (

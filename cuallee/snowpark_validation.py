@@ -232,11 +232,14 @@ class Compute:
         return self.compute_instruction
 
     # TODO: is_inside_interquartile_range
-    # def is_inside_interquartile_range(
+    def is_inside_interquartile_range(self, rule: Rule):
+        """Verifies values inside the IQR of a vector"""
+        raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
 
     # TODO: min_by
-    # def has_min_by(self, rule: Rule):  # To Do with Predicate
-    #    """Validation of a column minimum based on other column minimum"""
+    def has_min_by(self, rule: Rule):
+       """Validation of a column minimum based on other column minimum"""
+       raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
     #    predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value
     #    self.compute_instruction = ComputeInstruction(
     #        predicate,
@@ -246,8 +249,9 @@ class Compute:
     #    return self.compute_instruction
 
     # TODO: max_by
-    # def has_max_by(self, rule: Rule):  # To Do with Predicate
-    #    """Validation of a column maximum based on other column maximum"""
+    def has_max_by(self, rule: Rule):  # To Do with Predicate
+       """Validation of a column maximum based on other column maximum"""
+       raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
     #    predicate = None  # TODO: Does this function has a predicate?
     #    self.compute_instruction = ComputeInstruction(
     #        predicate,
@@ -279,8 +283,9 @@ class Compute:
         )
         return self.compute_instruction
 
-    # def has_entropy(self, rule: Rule):
-    #     """Validation for entropy calculation on continuous values"""
+    def has_entropy(self, rule: Rule):
+        """Validation for entropy calculation on continuous values"""
+        raise NotImplementedError("[😔] We are working on this feature. Not ready yet...")
     #     predicate = None
 
     #     def _execute(dataframe: DataFrame, key: str):

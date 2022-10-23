@@ -173,8 +173,13 @@ def test_compute_select_method(snowpark):
     assert len(rs) == 1
 
 
-def test_compute_transform_method():  # TODO: when transform method available
-    pass
+def test_compute_transform_method(snowpark):
+    df = snowpark.range(10).withColumn("date", F.date_from_parts(2022, F.col("id"), 1))
+    check = Check(CheckLevel.WARNING, "check_compute_transform_method")
+    check.is_daily("DATE")
+    rs = SV._compute_transform_method(SV.compute(check._rule), df)
+    assert isinstance(rs, Dict)
+    assert len(rs) == 1
 
 
 def test_summary(snowpark, configurations):

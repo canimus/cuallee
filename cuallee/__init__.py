@@ -73,9 +73,13 @@ class Rule:
 
     @property
     def key(self):
-        return hashlib.blake2s(
-            bytes(f"{self.method}{self.column}{self.value}{self.coverage}", "utf-8")
-        ).hexdigest()
+        return (
+            hashlib.blake2s(
+                bytes(f"{self.method}{self.column}{self.value}{self.coverage}", "utf-8")
+            )
+            .hexdigest()
+            .upper()
+        )
 
     def __post_init__(self):
         if (self.coverage <= 0) or (self.coverage > 1):

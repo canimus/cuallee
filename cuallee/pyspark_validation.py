@@ -464,9 +464,7 @@ class Compute(ComputeEngine):
             )
             return full_interval.join(  # type: ignore
                 dataframe.select(_date_only), rule.column, how="left_anti"  # type: ignore
-            ).select(
-                (F.count(rule.column) * -1).alias(key)
-            )
+            ).select((F.count(f"`{rule.column}`") * -1).alias(key))
 
         self.compute_instruction = ComputeInstruction(
             predicate=predicate, expression=_execute, compute_method="transform"
@@ -677,13 +675,21 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         .when(result_column == "true", F.lit(0))
         .otherwise(rows - result_column.cast("long"))
     )
-        
+
     _calculate_pass_rate = lambda observed_column: (
         F.when(observed_column == "false", F.lit(0.0))
         .when(observed_column == "true", F.lit(1.0))
-        .when((observed_column < 0) & (F.abs(observed_column) > F.lit(rows)), rows/F.abs(observed_column) ) # Calculate as ratio or rows
-        .when((observed_column < 0) & (F.abs(observed_column) < F.lit(rows)), 1-(F.abs(observed_column)/rows) ) # Calculate as total 
-        .when((observed_column < 0) & (F.abs(observed_column) == F.lit(rows)), F.lit(0.5) ) # Half in, half not
+        .when(
+            (observed_column < 0) & (F.abs(observed_column) > F.lit(rows)),
+            rows / F.abs(observed_column),
+        )  # Calculate as ratio or rows
+        .when(
+            (observed_column < 0) & (F.abs(observed_column) < F.lit(rows)),
+            1 - (F.abs(observed_column) / rows),
+        )  # Calculate as total
+        .when(
+            (observed_column < 0) & (F.abs(observed_column) == F.lit(rows)), F.lit(0.5)
+        )  # Half in, half not
         .otherwise(observed_column.cast(T.DoubleType()) / rows)  # type: ignore
     )
 

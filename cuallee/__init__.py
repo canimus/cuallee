@@ -100,21 +100,11 @@ class Rule:
         return rule_dict
 
 
-@dataclass
-class ComputeInstruction:
-    predicate: Any
-    expression: Any
-    compute_method: str
-
-    def __repr__(self):
-        return f"ComputeInstruction({self.compute_method})"
-
-
 class ComputeEngine(Protocol):
     def compute(self, rules: Dict[str, Rule]) -> bool:
         """Returns compute instructions for each rule"""
 
-    def validate_data_types(self, rules: Dict[str, Rule], dataframe: Any) -> bool:
+    def validate_data_types(self, rules: List[Rule], dataframe: Any) -> bool:
         """Validates that all data types from checks match the dataframe with data"""
 
     def summary(self, check: Any, dataframe: Any) -> Any:
@@ -130,7 +120,6 @@ class Check:
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
-        self._compute: Dict[str, ComputeInstruction] = {}
         self.compute_engine: ModuleType
 
         if isinstance(level, int):
@@ -514,7 +503,7 @@ class Check:
         elif isinstance(dataframe, snowpark_dataframe):
             self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
 
-        self._compute = self.compute_engine.compute(self._rule)
+        
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"

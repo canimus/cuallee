@@ -154,7 +154,7 @@ class Compute:
 
     def is_daily(
         self, rule: Rule, dataframe: pd.DataFrame
-    ) -> Union[bool, int, complex]:
+    ) -> complex:
         if rule.value is None:
             day_mask = [0, 1, 2, 3, 4]
 

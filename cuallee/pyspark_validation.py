@@ -1,22 +1,34 @@
-import operator
-from functools import reduce
-from typing import Any, Callable, Collection, Dict, Optional, Tuple, Type, Union, List
 import logging
+import operator
+from dataclasses import dataclass
+from functools import reduce
+from typing import (Any, Callable, Collection, Dict, List, Optional, Tuple,
+                    Type, Union)
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import Column, DataFrame, Observation, Row
-from toolz import valfilter, first  # type: ignore
+from toolz import first, valfilter  # type: ignore
 
-from cuallee import Check, CheckDataType, ComputeInstruction, Rule
 import cuallee.utils as cuallee_utils
+from cuallee import Check, Rule, ComputeEngine
 
 logger = logging.getLogger(__name__)
 
+@dataclass
+class ComputeInstruction:
+    predicate: Column
+    expression: Column
+    compute_method: str
 
-class Compute:
+    def __repr__(self):
+        return f"ComputeInstruction({self.compute_method})"
+
+
+
+class Compute(ComputeEngine):
     def __init__(self):
-        self.compute_instruction = ComputeInstruction
+        self.compute_instruction : Union[ComputeInstruction, None] = None
 
     def __repr__(self):
         return self.compute_instruction
@@ -494,18 +506,6 @@ class Compute:
         return self.compute_instruction
 
 
-# def _column_set_comparison(
-#     rules: Dict[str, Rule],
-#     dataframe: DataFrame,
-#     columns,
-#     filter: Callable,
-#     fn: Callable,
-# ):
-#     """Compair type of the columns passed in rules and present in dataframe."""
-#     return set(
-#         cuallee_utils.get_column_set(map(columns, valfilter(filter, rules).values()))  # type: ignore
-#     ).difference(fn(dataframe))
-
 
 def _field_type_filter(
     dataframe: DataFrame,
@@ -661,9 +661,10 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         spark = SparkSession.builder.getOrCreate()
 
     # Compute the expression
-    rows, observation_result = _compute_observe_method(check._compute, dataframe)
-    select_result = _compute_select_method(check._compute, dataframe)
-    transform_result = _compute_transform_method(check._compute, dataframe)
+    computed_expressions = compute(check._rule)
+    rows, observation_result = _compute_observe_method(computed_expressions, dataframe)
+    select_result = _compute_select_method(computed_expressions, dataframe)
+    transform_result = _compute_transform_method(computed_expressions, dataframe)
 
     unified_results = {**observation_result, **select_result, **transform_result}
     logger.debug(unified_results)

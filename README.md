@@ -109,7 +109,7 @@ check.validate(df).first().status == "PASS"
 +---+-------------------+-----+-------+------+-----------------------------+-----+----+----------+---------+--------------+------+
 ```
 
-### `cualleee` __VS__ `pydeequ`
+### `cuallee` __VS__ `pydeequ`
 In the `test` folder there are `docker` containers with the requirements to match the tests. Also a `perftest.py` available at the root folder for interests.
 
 ```

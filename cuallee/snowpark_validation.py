@@ -231,13 +231,26 @@ class Compute:
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
-
-    # TODO: is_inside_interquartile_range
+    
     def is_inside_interquartile_range(self, rule: Rule):
         """Verifies values inside the IQR of a vector"""
-        raise NotImplementedError(
-            "[😔] We are working on this feature. Not ready yet..."
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            _iqr = dataframe.select(
+                [F.approx_percentile(rule.column, value) for value in rule.value]
+            ).first()
+            return dataframe.select(
+                self._sum_predicate_to_integer(
+                    F.col(rule.column).between(_iqr[0], _iqr[1])
+                ).alias(key)
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate, _execute, ComputeMethod.TRANSFORM
         )
+
+        return self.compute_instruction
 
     # TODO: min_by
     def has_min_by(self, rule: Rule):

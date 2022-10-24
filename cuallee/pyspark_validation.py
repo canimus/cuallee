@@ -489,7 +489,7 @@ class Compute(ComputeEngine):
             )
             return dataframe.select(
                 F.sum(
-                    (~F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")
+                    (F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")
                 ).alias(key)
             )
 

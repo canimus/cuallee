@@ -363,7 +363,7 @@ class Check:
                 "has_max_by",
                 [column_source, column_target],
                 value,
-                CheckDataType.NUMERIC,
+                CheckDataType.AGNOSTIC,
             )
             >> self._rule
         )

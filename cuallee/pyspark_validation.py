@@ -488,9 +488,9 @@ class Compute(ComputeEngine):
                 .iqr
             )
             return dataframe.select(
-                F.sum(
-                    (F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")
-                ).alias(key)
+                F.sum((F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")).alias(
+                    key
+                )
             )
 
         self.compute_instruction = ComputeInstruction(

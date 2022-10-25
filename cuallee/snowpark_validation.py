@@ -307,6 +307,20 @@ class Compute:
 
     def has_entropy(self, rule: Rule):
         """Validation for entropy calculation on continuous values"""
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            rows = dataframe.count()
+            probs = dataframe.groupBy(rule.column).count().select(F.array_agg('count').alias('freq')).flatten('freq').select('VALUE').withColumn('probs', F.div0(F.col('VALUE'), 10))
+            n_labels = probs.count()
+            return dataframe.groupBy('id').count().select(F.array_agg('count').alias('freq'))
+
+dataframe.groupBy('id').count().select(F.array_agg('count').alias('freq')).select(F.col('freq'), F.listagg(F.array_to_string(F.col('freq'), F.lit(',')), ',', False)).show()
+
+
+ dataframe.groupBy('id').count().select(F.array_agg('count').alias('freq')).flatten('FREQ').withColumn('probs', F.div0(F.col('VALUE'), 10)).withColumn("n_labels", F.array_size('freq')).
+    ...: withColumn('log_labels', F.log(2, 'n_labels')).show()
+
         raise NotImplementedError(
             "[😔] We are working on this feature. Not ready yet..."
         )
@@ -320,11 +334,11 @@ class Compute:
     #             .select(F.collect_list("count").alias("freq"))
     #             .select(
     #                 F.col("freq"),
-    #                 F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),
+    #                 F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),F
     #             )
     #             .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
     #             .withColumn("n_labels", F.size("probs"))
-    #             .withColumn("log_labels", F.log("n_labels"))
+    #             .withColumn("log_labels", F.log("n_labels")) # natural log
     #             .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
     #             .withColumn(
     #                 "log_classes",

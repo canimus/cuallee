@@ -231,7 +231,7 @@ class Compute:
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
-    
+
     def is_inside_interquartile_range(self, rule: Rule):
         """Verifies values inside the IQR of a vector"""
         predicate = None
@@ -252,23 +252,27 @@ class Compute:
 
         return self.compute_instruction
 
-    # TODO: min_by
     def has_min_by(self, rule: Rule):
-        """Validation of a column minimum based on other column minimum"""
-        raise NotImplementedError(
-            "[😔] We are working on this feature. Not ready yet..."
+        """Validation of a column value based on other column minimum"""
+
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            return (
+                dataframe.filter(
+                    F.col(rule.column[0])
+                    == dataframe.select(F.min(rule.column[0]).alias("MIN")).first().MIN
+                )
+                .filter(F.col(rule.column[1]) == rule.value)
+                .select(F.count(F.col(rule.column[1]) > 0).cast("boolean").alias(key))
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            _execute,
+            ComputeMethod.TRANSFORM,
         )
-
-    #df.select(F.sum((F.col('year') == 2012).cast("integer")))
-    #df.filter(F.col('earnings') == df.select(F.min('earnings').alias('MIN')).first().MIN)
-
-    #    predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value
-    #    self.compute_instruction = ComputeInstruction(
-    #        predicate,
-    #        F.min_by(rule.column[1], rule.column[0]) == rule.value,
-    #        "observe",
-    #    )
-    #    return self.compute_instruction
+        return self.compute_instruction
 
     # TODO: max_by
     def has_max_by(self, rule: Rule):  # To Do with Predicate

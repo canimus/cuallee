@@ -54,6 +54,7 @@ class CheckDataType(enum.Enum):
     STRING = 2
     DATE = 3
     TIMESTAMP = 4
+    DUO = 5
 
 
 class CheckStatus(enum.Enum):
@@ -378,7 +379,7 @@ class Check:
                 "has_min_by",
                 [column_source, column_target],
                 value,
-                CheckDataType.NUMERIC,
+                CheckDataType.DUO,
             )
             >> self._rule
         )

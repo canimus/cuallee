@@ -8,10 +8,7 @@ def test_numeric_columns(check: Check):
     assert check.validate(df).status.str.match("PASS").all()
 
 
-def test_empty_columns(check: Check):
-    check.has_max_by("id", "id2", None)
-    df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})
-    assert check.validate(df).status.str.match("PASS").all()
+
 
 
 def test_coverage(check: Check):

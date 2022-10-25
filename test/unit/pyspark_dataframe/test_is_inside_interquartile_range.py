@@ -61,7 +61,7 @@ def test_tendency(spark):
     )
     check = Check(CheckLevel.WARNING, "IQRTest")
     check.is_inside_interquartile_range("id")
-    assert check.validate(df).first().violations == 25
+    assert check.validate(df).first().violations == 23
 
 
 def test_iqr_pct(spark):
@@ -123,7 +123,7 @@ def test_iqr_pct(spark):
     )
     check = Check(CheckLevel.WARNING, "IQRTest")
     check.is_inside_interquartile_range("id", pct=0.5)
-    assert check.validate(df).first().status == "FAIL"
+    assert check.validate(df).first().status == "PASS"
 
 
 def test_integers(spark):

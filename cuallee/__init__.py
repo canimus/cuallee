@@ -32,7 +32,6 @@ except:
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
-
     print(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
 except:
     print(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
@@ -478,15 +477,16 @@ class Check:
         # Stop execution if the there is no rules in the check
         assert not self.empty, "Check is empty. Try adding some rules?"
 
+        
         # When dataframe is PySpark DataFrame API
-        if isinstance(dataframe, pyspark_dataframe):
+        if "pyspark_dataframe" in globals() and isinstance(dataframe, pyspark_dataframe):
             self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
 
         # When dataframe is Pandas DataFrame API
-        elif isinstance(dataframe, pandas_dataframe):
+        elif "pandas_dataframe" in globals() and isinstance(dataframe, pandas_dataframe):
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
-        elif isinstance(dataframe, snowpark_dataframe):
+        elif "snowpark_dataframe" in globals() and isinstance(dataframe, snowpark_dataframe):
             self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
 
         assert self.compute_engine.validate_data_types(

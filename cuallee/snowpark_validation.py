@@ -259,6 +259,9 @@ class Compute:
             "[😔] We are working on this feature. Not ready yet..."
         )
 
+    #df.select(F.sum((F.col('year') == 2012).cast("integer")))
+    #df.filter(F.col('earnings') == df.select(F.min('earnings').alias('MIN')).first().MIN)
+
     #    predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value
     #    self.compute_instruction = ComputeInstruction(
     #        predicate,

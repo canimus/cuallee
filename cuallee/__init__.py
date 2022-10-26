@@ -32,6 +32,7 @@ except:
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
+
     print(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
 except:
     print(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
@@ -355,15 +356,19 @@ class Check:
         return self
 
     def has_max_by(
-        self, column_source: str, column_target: str, value: float, pct: float = 1.0
+        self,
+        column_source: str,
+        column_target: str,
+        value: Union[float, str],
+        pct: float = 1.0,
     ):
-        """Validation of a column maximum based on other column maximum"""
+        """Validation of a column value based on another column maximum"""
         (
             Rule(
                 "has_max_by",
                 [column_source, column_target],
                 value,
-                CheckDataType.AGNOSTIC,
+                CheckDataType.DUO,
             )
             >> self._rule
         )
@@ -482,16 +487,21 @@ class Check:
         # Stop execution if the there is no rules in the check
         assert not self.empty, "Check is empty. Try adding some rules?"
 
-        
         # When dataframe is PySpark DataFrame API
-        if "pyspark_dataframe" in globals() and isinstance(dataframe, pyspark_dataframe):
+        if "pyspark_dataframe" in globals() and isinstance(
+            dataframe, pyspark_dataframe
+        ):
             self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
 
         # When dataframe is Pandas DataFrame API
-        elif "pandas_dataframe" in globals() and isinstance(dataframe, pandas_dataframe):
+        elif "pandas_dataframe" in globals() and isinstance(
+            dataframe, pandas_dataframe
+        ):
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
-        elif "snowpark_dataframe" in globals() and isinstance(dataframe, snowpark_dataframe):
+        elif "snowpark_dataframe" in globals() and isinstance(
+            dataframe, snowpark_dataframe
+        ):
             self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
 
         assert self.compute_engine.validate_data_types(

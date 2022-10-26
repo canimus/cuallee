@@ -274,20 +274,27 @@ class Compute:
         )
         return self.compute_instruction
 
-    # TODO: max_by
-    def has_max_by(self, rule: Rule):  # To Do with Predicate
-        """Validation of a column maximum based on other column maximum"""
-        raise NotImplementedError(
-            "[😔] We are working on this feature. Not ready yet..."
-        )
+    def has_max_by(self, rule: Rule):
+        """Validation of a column value based on another column maximum"""
 
-    #    predicate = None  # TODO: Does this function has a predicate?
-    #    self.compute_instruction = ComputeInstruction(
-    #        predicate,
-    #        F.max_by(rule.column[1], rule.column[0]) == rule.value,
-    #        "observe",
-    #    )
-    #    return self.compute_instruction
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            return (
+                dataframe.filter(
+                    F.col(rule.column[0])
+                    == dataframe.select(F.max(rule.column[0]).alias("MAX")).first().MAX
+                )
+                .filter(F.col(rule.column[1]) == rule.value)
+                .select(F.count(rule.column[1]).cast("boolean").alias(key))
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            _execute,
+            ComputeMethod.TRANSFORM,
+        )
+        return self.compute_instruction
 
     def has_correlation(self, rule: Rule):
         """Validates the correlation between 2 columns with some tolerance"""

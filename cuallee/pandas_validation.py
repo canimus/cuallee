@@ -245,7 +245,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
     }
 
     def _calculate_violations(result, nrows):
-        
+
         if isinstance(result, (bool, np.bool_)):
             if result:
                 return 0
@@ -258,7 +258,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
                 return nrows - result
 
     def _calculate_pass_rate(result, nrows):
-        
+
         if isinstance(result, (bool, np.bool_)):
             if result:
                 return 1.0
@@ -274,7 +274,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
                 return result / nrows
 
     def _evaluate_status(pass_rate, pass_threshold):
-        
+
         if pass_rate >= pass_threshold:
             return "PASS"
         else:

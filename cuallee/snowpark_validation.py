@@ -321,59 +321,44 @@ class Compute:
 
     def has_entropy(self, rule: Rule):
         """Validation for entropy calculation on continuous values"""
-        raise NotImplementedError(
-            "[😔] We are working on this feature. Not ready yet..."
+
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            rows = dataframe.count()
+            p = (
+                dataframe.groupBy(rule.column)
+                .count()
+                .select(F.array_agg("count").alias("freq"))
+                .flatten("freq")
+                .withColumn("probs", F.div0(F.col("VALUE"), rows))
+                .withColumn("n_labels", F.array_size("freq"))
+                .withColumn("log_labels", F.log(2, "n_labels"))
+                .withColumn("log_prob", F.log(2, F.col("probs")))
+                .withColumn("product_prob", F.col("probs") * F.col("log_prob"))
+            )
+            return p.select(
+                (
+                    F.div0(
+                        F.sum(F.col("product_prob")),
+                        p.select(F.col("log_labels").alias("LOG_LABELS"))
+                        .first()
+                        .LOG_LABELS,
+                    )
+                    * -1
+                ).alias("entropy")
+            ).select(
+                F.sql_expr(
+                    f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"
+                ).alias(key)
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            _execute,
+            ComputeMethod.TRANSFORM,
         )
-
-    #     predicate = None
-
-    #     def _execute(dataframe: DataFrame, key: str):
-    #         return (
-    #             dataframe.groupby(rule.column)
-    #             .count()
-    #             .select(F.collect_list("count").alias("freq"))
-    #             .select(
-    #                 F.col("freq"),
-    #                 F.aggregate("freq", F.lit(0.0), lambda a, b: a + b).alias("rows"),
-    #             )
-    #             .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
-    #             .withColumn("n_labels", F.size("probs"))
-    #             .withColumn("log_labels", F.log("n_labels"))
-    #             .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
-    #             .withColumn(
-    #                 "log_classes",
-    #                 F.transform("probs", lambda x: F.log((x / x) * F.col("n_labels"))),
-    #             )
-    #             .withColumn("entropy_vals", F.arrays_zip("probs", "log_prob"))
-    #             .withColumn(
-    #                 "product_prob",
-    #                 F.transform(
-    #                     "entropy_vals",
-    #                     lambda x: x.getItem("probs") * x.getItem("log_prob"),
-    #                 ),
-    #             )
-    #             .select(
-    #                 (
-    #                     F.aggregate(
-    #                         "product_prob", F.lit(0.0), lambda acc, x: acc + x
-    #                     ).alias("p")
-    #                     / F.col("log_labels")
-    #                     * -1
-    #                 ).alias("entropy")
-    #             )
-    #             .select(
-    #                 F.expr(
-    #                     f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"
-    #                 ).alias(key)
-    #             )
-    #         )
-
-    #     self.compute_instruction = ComputeInstruction(
-    #         predicate,
-    #         _execute,
-    #         "transform",
-    #     )
-    #     return self.compute_instruction
+        return self.compute_instruction
 
     def is_on_weekday(self, rule: Rule):
         """Validates a datetime column is in a Mon-Fri time range"""

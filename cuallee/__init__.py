@@ -371,9 +371,13 @@ class Check:
         return self
 
     def has_min_by(
-        self, column_source: str, column_target: str, value: float, pct: float = 1.0
+        self,
+        column_source: str,
+        column_target: str,
+        value: Union[float, str],
+        pct: float = 1.0,
     ):
-        """Validation of a column minimum based on other column minimum"""
+        """Validation of a column value based on another column minimum"""
         (
             Rule(
                 "has_min_by",

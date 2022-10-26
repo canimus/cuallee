@@ -253,7 +253,7 @@ class Compute:
         return self.compute_instruction
 
     def has_min_by(self, rule: Rule):
-        """Validation of a column value based on other column minimum"""
+        """Validation of a column value based on another column minimum"""
 
         predicate = None
 
@@ -264,7 +264,7 @@ class Compute:
                     == dataframe.select(F.min(rule.column[0]).alias("MIN")).first().MIN
                 )
                 .filter(F.col(rule.column[1]) == rule.value)
-                .select(F.count(F.col(rule.column[1]) > 0).cast("boolean").alias(key))
+                .select(F.count(rule.column[1]).cast("boolean").alias(key))
             )
 
         self.compute_instruction = ComputeInstruction(

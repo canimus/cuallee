@@ -4,7 +4,16 @@ import operator
 import snowflake.snowpark.functions as F  # type: ignore
 import snowflake.snowpark.types as T  # type: ignore
 
-from typing import Union, Dict, Collection, Type, Callable, Optional, Any, Tuple, List
+from typing import (
+    Union,
+    Dict,
+    Type,
+    Callable,
+    Optional,
+    Any,
+    Tuple,
+    List,
+)
 from dataclasses import dataclass
 from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
 from toolz import valfilter  # type: ignore
@@ -31,17 +40,17 @@ class ComputeInstruction:
 
 class Compute:
     def __init__(self):
-        self.compute_instruction = ComputeInstruction
+        self.compute_instruction = None
 
-    def __repr__(self):
-        return self.compute_instruction
+    # def __repr__(self):
+    #     return self.compute_instruction
 
     def _sum_predicate_to_integer(self, predicate: Column):
         return F.sum(predicate.cast("integer"))
 
     def _single_value_rule(
         self,
-        column: Union[Tuple, str],
+        column: Union[str, List[str], Tuple[str, str]],
         value: Optional[Any],
         operator: Callable,
     ):
@@ -49,7 +58,7 @@ class Compute:
 
     def _stats_fn_rule(
         self,
-        column: Union[Tuple, str],
+        column: Union[str, List[str], Tuple[str, str]],
         value: Optional[Any],
         operator: Callable,
     ):
@@ -209,9 +218,9 @@ class Compute:
         )
         return self.compute_instruction
 
-    def is_contained_in(self, rule: Rule):  # TODO: Type error
+    def is_contained_in(self, rule: Rule):
         """Validation of column value in set of given values"""
-        predicate = F.col(rule.column).isin(list(rule.value))
+        predicate = F.col(rule.column).isin(list(rule.value))  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
@@ -226,8 +235,10 @@ class Compute:
             predicate,
             F.approx_percentile(
                 F.col(rule.column).cast(T.DoubleType()),
-                rule.value[1],
-            ).eqNullSafe(rule.value[0]),
+                rule.value[1],  # type: ignore
+            ).eqNullSafe(
+                rule.value[0]  # type: ignore
+            ),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
@@ -238,7 +249,7 @@ class Compute:
 
         def _execute(dataframe: DataFrame, key: str):
             _iqr = dataframe.select(
-                [F.approx_percentile(rule.column, value) for value in rule.value]
+                [F.approx_percentile(rule.column, value) for value in rule.value]  # type: ignore
             ).first()
             return dataframe.select(
                 self._sum_predicate_to_integer(
@@ -349,7 +360,7 @@ class Compute:
                 ).alias("entropy")
             ).select(
                 F.sql_expr(
-                    f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"
+                    f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"  # type: ignore
                 ).alias(key)
             )
 
@@ -508,27 +519,27 @@ def _field_type_filter(
         Type[T.TimeType],
         Type[T.StringType],
     ],
-) -> Collection:
+) -> List[str]:
     """Internal method to search for column names based on data type"""
-    return set(
-        [f.name for f in dataframe.schema.fields if isinstance(f.datatype, field_type)]
-    )
+    return [
+        f.name for f in dataframe.schema.fields if isinstance(f.datatype, field_type)
+    ]
 
 
-def _column_set_comparison(
-    rules: Dict[str, Rule],
-    dataframe: DataFrame,
-    columns,
-    filter: Callable,
-    fn: Callable,
-) -> Collection:
-    """Compair type of the columns passed in rules and present in dataframe."""
-    return set(
-        map(
-            str.upper,
-            cuallee_utils.get_column_set(map(columns, valfilter(filter, rules).values())),  # type: ignore
-        )
-    ).difference(fn(dataframe))
+# def _column_set_comparison(
+#     rules: Dict[str, Rule],
+#     dataframe: DataFrame,
+#     columns,
+#     filter: Callable,
+#     fn: Callable,
+# ) -> Collection:
+#     """Compair type of the columns passed in rules and present in dataframe."""
+#     return set(
+#         map(
+#             str.upper,
+#             cuallee_utils.get_column_set(map(columns, valfilter(filter, rules).values())),
+#         )
+#     ).difference(fn(dataframe))
 
 
 def _compute_select_method(
@@ -551,7 +562,7 @@ def _compute_select_method(
             ]
         )
         .first()
-        .asDict()  # type: ignore
+        .asDict()
     )
 
 
@@ -570,22 +581,26 @@ def _compute_transform_method(
     }
 
 
-def numeric_fields(dataframe: DataFrame) -> Collection:
+def _get_snowflake_configurations(snowflake_env: Dict):
+    return {k: os.getenv(v, None) for k, v in snowflake_env.items()}  # type: ignore
+
+
+def numeric_fields(dataframe: DataFrame) -> List[str]:
     """Filter all numeric data types in data frame and returns field names"""
     return _field_type_filter(dataframe, T._NumericType)
 
 
-def string_fields(dataframe: DataFrame) -> Collection:
+def string_fields(dataframe: DataFrame) -> List[str]:
     """Filter all numeric data types in data frame and returns field names"""
     return _field_type_filter(dataframe, T.StringType)
 
 
-def date_fields(dataframe: DataFrame) -> Collection:
+def date_fields(dataframe: DataFrame) -> List[str]:
     """Filter all date data types in data frame and returns field names"""
     return _field_type_filter(dataframe, (T.DateType, T.TimestampType))
 
 
-def timestamp_fields(dataframe: DataFrame) -> Collection:
+def timestamp_fields(dataframe: DataFrame) -> List[str]:
     """Filter all date data types in data frame and returns field names"""
     return _field_type_filter(dataframe, T.TimestampType)
 
@@ -672,7 +687,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
             (observed_column < 0) & (F.abs(observed_column) > rows),
             rows / F.abs(observed_column),
         )
-        .otherwise(observed_column.cast(T.DoubleType()) / rows)  # type: ignore
+        .otherwise(observed_column.cast(T.DoubleType()) / rows)
     )
 
     _evaluate_status = lambda pass_rate, pass_threshold: (
@@ -691,7 +706,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     }
 
     if not check.config:
-        check.config = {k: os.getenv(v, None) for k, v in SNOWFLAKE_ENVIRONMENT.items()}
+        check.config = _get_snowflake_configurations(SNOWFLAKE_ENVIRONMENT)
 
     assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(
         check.config.keys()

@@ -9,6 +9,11 @@ from numbers import Number
 from cuallee import utils as cuallee_utils
 from pyspark.sql.session import SparkSession
 
+
 class Compute:
-    def is_complete(self, rule: Rule, connection: Union[dk.DuckDBPyConnection, SparkSession]) -> Union[bool, int]:
-        return connection.execute(f"SELECT sum(cast({rule.column} IS NULL AS INTEGER)) from {rule.table}")
+    def is_complete(
+        self, rule: Rule, connection: Union[dk.DuckDBPyConnection, SparkSession]
+    ) -> Union[bool, int]:
+        return connection.execute(
+            f"SELECT sum(cast({rule.column} IS NULL AS INTEGER)) from {rule.table}"
+        )

@@ -11,34 +11,34 @@ from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
-
+logger = logging.getLogger("cuallee")
 
 # Verify Libraries Available
 # ==========================
 try:
     from pandas import DataFrame as pandas_dataframe  # type: ignore
 
-    print(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
+    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
 except:
-    print(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
+    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
     from pyspark.sql import DataFrame as pyspark_dataframe
 
-    print(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
+    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
 
 except:
-    print(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
+    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
 
-    print(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
+    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
 except:
-    print(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
+    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
 
 
-print(Style.RESET_ALL)
+logger.debug(Style.RESET_ALL)
 
 logger = logging.getLogger(__name__)
 

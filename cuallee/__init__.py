@@ -37,6 +37,13 @@ try:
 except:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
 
+try:
+    from duckdb import DuckDBPyConnection as duckdb_dataframe  # type: ignore
+
+    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " DuckDB")
+except:
+    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " DuckDB")
+
 
 logger.debug(Style.RESET_ALL)
 
@@ -122,6 +129,7 @@ class Check:
         level: Union[CheckLevel, int],
         name: str,
         execution_date: datetime = datetime.today(),
+        table_name: str = None
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
@@ -136,9 +144,13 @@ class Check:
         self.date = execution_date
         self.rows = -1
         self.config: Dict[str, str] = {}
+        self.table_name = table_name
 
     def __repr__(self):
-        return f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
+        standard = f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
+        if self.table_name:
+            standard += f" / table:{self.table_name}"
+        return standard
 
     @property
     def sum(self):
@@ -503,6 +515,11 @@ class Check:
             dataframe, snowpark_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
+        
+        elif "duckdb_dataframe" in globals() and isinstance(
+            dataframe, duckdb_dataframe
+        ):
+            self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe

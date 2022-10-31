@@ -371,8 +371,7 @@ class Check:
         self,
         column_source: str,
         column_target: str,
-        value: Union[float, str],
-        pct: float = 1.0,
+        value: Union[float, str]
     ):
         """Validation of a column value based on another column maximum"""
         (
@@ -390,8 +389,7 @@ class Check:
         self,
         column_source: str,
         column_target: str,
-        value: Union[float, str],
-        pct: float = 1.0,
+        value: Union[float, str]
     ):
         """Validation of a column value based on another column minimum"""
         (

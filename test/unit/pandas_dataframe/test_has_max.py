@@ -18,3 +18,8 @@ def test_values(check: Check, extra_value):
     check.has_max("id", extra_value)
     df = pd.DataFrame({"id" : [0,1,2,3,4] + [extra_value]})
     assert check.validate(df).status.str.match("PASS").all()
+
+def test_coverage(check: Check):
+    with pytest.raises(TypeError):
+        check.has_max("id", 5, .1)
+    

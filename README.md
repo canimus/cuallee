@@ -191,7 +191,7 @@ conn = duckdb.connect(":memory:")
 check = Check(CheckLevel.WARNING, "DuckDB", table_name="temp/taxi/*.parquet")
 check.is_complete("VendorID")
 check.is_complete("tpep_pickup_datetime")
-check.validate(df)
+check.validate(conn)
 
    id            timestamp check    level                column         rule value      rows  violations  pass_rate  pass_threshold status
 0   1  2022-10-31 23:15:06  test  WARNING              VendorID  is_complete   N/A  19817583         0.0        1.0             1.0   PASS

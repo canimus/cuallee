@@ -11,4 +11,4 @@ colorama==0.4.5
 # loguru==0.6.0
 # termcolor==0.2.1
 duckdb==0.5.1
-polars==0.14.23
+polars==0.14.24

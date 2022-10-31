@@ -181,6 +181,23 @@ In order to establish a connection to your SnowFlake account `cuallee` relies in
 ## Databricks Connection
 By default `cuallee` will search for a SparkSession available in the `globals` so there is literally no need to ~~`SparkSession.builder`~~. When working in a local environment it will automatically search for an available session, or start one.
 
+## DuckDB
+
+For testing on `duckdb` simply pass your table name to your check _et voilà_
+
+```python
+import duckdb
+conn = duckdb.connect(":memory:")
+check = Check(CheckLevel.WARNING, "DuckDB", table_name="temp/taxi/*.parquet")
+check.is_complete("VendorID")
+check.is_complete("tpep_pickup_datetime")
+check.validate(df)
+
+   id            timestamp check    level                column         rule value      rows  violations  pass_rate  pass_threshold status
+0   1  2022-10-31 23:15:06  test  WARNING              VendorID  is_complete   N/A  19817583         0.0        1.0             1.0   PASS
+1   2  2022-10-31 23:15:06  test  WARNING  tpep_pickup_datetime  is_complete   N/A  19817583         0.0        1.0             1.0   PASS
+```
+
 ## Roadmap
 
 `100%` data frame agnostic implementation of data quality checks.
@@ -189,8 +206,8 @@ Define once, `run everywhere`
 - [x] PySpark 3.2.x 
 - [x] Snowpark DataFrame
 - [x] Pandas DataFrame
+- [x] DuckDB Tables
 - Polars DataFrame
-- DuckDB Tables
 - SQLite Tables
 - MS-SQL Tables
 

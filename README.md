@@ -22,7 +22,7 @@ Provider | API | Versions
 ![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `0.12.0`
 ![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.3.0`, `3.2.x`
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`|`1.5.1`, `1.4.x`
-
+![duckdb](logos/duckdb.png "DuckDB API")|`duckdb`|`0.5.1`
  
  <sub>Logos are trademarks of their own brands.</sub>
 

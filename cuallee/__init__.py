@@ -335,8 +335,7 @@ class Check:
         column: str,
         value: float,
         percentile: float,
-        precision: int = 10000,
-        pct: float = 1.0,
+        precision: int = 10000
     ):
         """Validation of a column percentile value"""
         (
@@ -344,8 +343,7 @@ class Check:
                 "has_percentile",
                 column,
                 (value, percentile, precision),
-                CheckDataType.NUMERIC,
-                pct,
+                CheckDataType.NUMERIC
             )
             >> self._rule
         )

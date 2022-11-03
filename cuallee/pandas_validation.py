@@ -71,8 +71,8 @@ class Compute:
 
     def has_percentile(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
-            np.percentile(dataframe.loc[:, rule.column].values, rule.value[0] * 100)  # type: ignore
-            == rule.value[1]  # type: ignore
+            np.percentile(dataframe.loc[:, rule.column].values, rule.value[1] * 100)  # type: ignore
+            == rule.value[0]  # type: ignore
         )
 
     def has_max_by(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
@@ -267,7 +267,10 @@ def summary(check: Check, dataframe: pd.DataFrame):
         elif isinstance(result, Number):
             if isinstance(result, complex):
                 if result.imag > 0:
-                    return nrows / result.imag
+                    if result.imag > nrows:
+                        return nrows / result.imag
+                    else:
+                        return result.imag / nrows
                 else:
                     return 1.0
             else:

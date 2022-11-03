@@ -262,7 +262,7 @@ def test_snowflake_config_already_set(configurations):
 def test_snowflake_get_config(snowpark):
     df = snowpark.range(10)
     check = Check(CheckLevel.WARNING, "check_snowflake_get_config")
-    check.is_complete('ID')
+    check.is_complete("ID")
     # if not check.config:
     #     check.config = SV._get_snowflake_configurations(SNOWFLAKE_ENVIRONMENT)
     assert check.config == {}

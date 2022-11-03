@@ -13,12 +13,6 @@ def test_negative(check: Check):
     df = pd.DataFrame({"id" : np.arange(10)})
     assert check.validate(df).status.str.match("FAIL").all()
 
-@pytest.mark.parametrize("extra_value", [4, 4.0], ids=("int", "float"))
-def test_values(check: Check, extra_value):
-    check.has_std("id", extra_value)
-    df = pd.DataFrame({"id" : [0,1,2,3,14] + [extra_value]})
-    assert check.validate(df).status.str.match("PASS").all()
-
 def test_coverage(check: Check):
     with pytest.raises(TypeError):
         check.has_std("id", 5, .1)

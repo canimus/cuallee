@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
+
 logger = logging.getLogger("cuallee")
 
 # Verify Libraries Available
@@ -129,7 +130,7 @@ class Check:
         level: Union[CheckLevel, int],
         name: str,
         execution_date: datetime = datetime.today(),
-        table_name: str = None
+        table_name: str = None,
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
@@ -331,11 +332,7 @@ class Check:
         return self.is_contained_in(column, value, pct)
 
     def has_percentile(
-        self,
-        column: str,
-        value: float,
-        percentile: float,
-        precision: int = 10000
+        self, column: str, value: float, percentile: float, precision: int = 10000
     ):
         """Validation of a column percentile value"""
         (
@@ -343,7 +340,7 @@ class Check:
                 "has_percentile",
                 column,
                 (value, percentile, precision),
-                CheckDataType.NUMERIC
+                CheckDataType.NUMERIC,
             )
             >> self._rule
         )
@@ -366,10 +363,7 @@ class Check:
         return self
 
     def has_max_by(
-        self,
-        column_source: str,
-        column_target: str,
-        value: Union[float, str]
+        self, column_source: str, column_target: str, value: Union[float, str]
     ):
         """Validation of a column value based on another column maximum"""
         (
@@ -384,10 +378,7 @@ class Check:
         return self
 
     def has_min_by(
-        self,
-        column_source: str,
-        column_target: str,
-        value: Union[float, str]
+        self, column_source: str, column_target: str, value: Union[float, str]
     ):
         """Validation of a column value based on another column minimum"""
         (
@@ -511,7 +502,7 @@ class Check:
             dataframe, snowpark_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
-        
+
         elif "duckdb_dataframe" in globals() and isinstance(
             dataframe, duckdb_dataframe
         ):

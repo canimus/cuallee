@@ -273,6 +273,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
                         return result.imag / nrows
                 else:
                     return 1.0
+
             else:
                 return result / nrows
 

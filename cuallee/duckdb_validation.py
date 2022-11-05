@@ -5,12 +5,12 @@ import numpy as np
 from toolz import first  # type: ignore
 from numbers import Number
 from functools import reduce
-import pandas as pd # type: ignore
+import pandas as pd  # type: ignore
 import textwrap
 
-from pygments import highlight # type: ignore
-from pygments.lexers import SqlLexer # type: ignore
-from pygments.formatters import TerminalTrueColorFormatter # type: ignore
+from pygments import highlight  # type: ignore
+from pygments.lexers import SqlLexer  # type: ignore
+from pygments.formatters import TerminalTrueColorFormatter  # type: ignore
 
 
 class Compute:

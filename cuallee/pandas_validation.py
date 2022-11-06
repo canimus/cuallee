@@ -281,8 +281,8 @@ def summary(check: Check, dataframe: pd.DataFrame):
 
         if pass_rate >= pass_threshold:
             return "PASS"
-        else:
-            return "FAIL"
+        
+        return "FAIL"
 
     rows = len(dataframe)
     computation_basis = [

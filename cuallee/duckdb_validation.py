@@ -1,16 +1,17 @@
-from cuallee import Check, Rule
-import duckdb as dk
 import operator
-import numpy as np
-from toolz import first  # type: ignore
-from numbers import Number
-from functools import reduce
-import pandas as pd  # type: ignore
 import textwrap
+from functools import reduce
+from numbers import Number
 
+import duckdb as dk
+import numpy as np
+import pandas as pd  # type: ignore
 from pygments import highlight  # type: ignore
-from pygments.lexers import SqlLexer  # type: ignore
 from pygments.formatters import TerminalTrueColorFormatter  # type: ignore
+from pygments.lexers import SqlLexer  # type: ignore
+from toolz import first  # type: ignore
+
+from cuallee import Check, Rule
 
 
 class Compute:

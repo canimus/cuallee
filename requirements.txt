@@ -4,4 +4,4 @@ pandas==1.5.1
 pyarrow==10.0.0
 colorama==0.4.6
 duckdb==0.5.1
-polars==0.14.24
+polars==0.14.26

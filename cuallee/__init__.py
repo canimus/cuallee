@@ -8,9 +8,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
+from numbers import Number
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
+import numpy as np
 
 logger = logging.getLogger("cuallee")
 
@@ -478,6 +480,11 @@ class Check:
     ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
         (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
+        return self
+
+    def has_workflow(self, column_group: str, column_event: str, column_order: str, edges: List[Tuple[str]], pct: float = 1.0):
+        """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
+        Rule("has_workflow", [column_group, column_event, column_order], edges, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def validate(self, dataframe: Any):

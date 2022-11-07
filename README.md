@@ -110,6 +110,41 @@ check.validate(df).first().status == "PASS"
 +---+-------------------+-----+-------+------+-----------------------------+-----+----+----------+---------+--------------+------+
 ```
 
+### Workflows (Process Mining)
+Besides the common `citizen-like` checks, `cuallee` offers out-of-the-box real-life checks. For example, suppose that you are working __SalesForce__ or __SAP__ environment. Very likely your business processes will be driven by a lifecycle:
+- `Order-To-Cash` 
+- `Request-To-Pay` 
+- `Inventory-Logistics-Delivery` 
+- Others.
+ In this scenario, `cuallee` offers the ability that the sequence of events registered over time, are according to a sequence of events, like the example below:
+
+ ```python
+import pyspark.sql.functions as F
+from cuallee import Check, CheckLevel
+
+data = pd.DataFrame({
+    "name":["herminio", "herminio", "virginie", "virginie"], 
+    "event":["new","active", "new", "active"], 
+    "date": ["2022-01-01", "2022-01-02", "2022-01-03", "2022-02-04"]}
+    )
+df = spark.createDataFrame(data).withColumn("date", F.to_date("date"))
+
+# Cuallee Process Mining
+# Testing that all edges on workflows
+check = Check(CheckLevel.WARNING, "WorkflowViolations")
+
+# Validate that 50% of data goes from new => active
+check.has_workflow("name", "event", "date", [("new", "active")], pct=0.5)
+check.validate(df).show(truncate=False)
+
++---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
+|id |timestamp          |check             |level  |column                   |rule        |value               |rows|violations|pass_rate|pass_threshold|status|
++---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
+|1  |2022-11-07 23:08:50|WorkflowViolations|WARNING|('name', 'event', 'date')|has_workflow|(('new', 'active'),)|4   |2.0       |0.5      |0.5           |PASS  |
++---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
+
+ ```
+
 ### `cuallee` __VS__ `pydeequ`
 In the `test` folder there are `docker` containers with the requirements to match the tests. Also a `perftest.py` available at the root folder for interests.
 

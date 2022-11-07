@@ -508,6 +508,9 @@ class Compute:
 
         return self.compute_instruction
 
+    def has_workflow(self, rule: Rule):
+        raise NotImplementedError("😔 Sorry, still working on this feature.")
+
 
 def _field_type_filter(
     dataframe: DataFrame,

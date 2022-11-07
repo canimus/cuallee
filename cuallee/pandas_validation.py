@@ -185,6 +185,9 @@ class Compute:
         lower, upper = dataframe[rule.column].quantile(rule.value).values
         return dataframe[rule.column].between(lower, upper).astype(int).sum()
 
+    def has_workflow(self, rule: Rule) -> Union[bool, int]:
+        raise NotImplementedError("😔 Sorry, still working on this feature.")
+
 
 def compute(rules: Dict[str, Rule]):
     pass

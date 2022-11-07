@@ -119,6 +119,8 @@ class Compute:
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         raise NotImplementedError("😔 Sorry, still working on this feature.")
 
+    def has_workflow(self, rule: Rule) -> str:
+        raise NotImplementedError("😔 Sorry, still working on this feature.")
 
 def validate_data_types(check: Check, dataframe: dk.DuckDBPyConnection):
     return True

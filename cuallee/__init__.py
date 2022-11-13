@@ -4,13 +4,14 @@ import importlib
 import logging
 import operator
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
+
 logger = logging.getLogger("cuallee")
 
 # Verify Libraries Available
@@ -77,6 +78,7 @@ class Rule:
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
+    settings: dict = field(default_factory={})  # type: ignore
     status: Union[str, None] = None
 
     @property
@@ -129,7 +131,7 @@ class Check:
         level: Union[CheckLevel, int],
         name: str,
         execution_date: datetime = datetime.today(),
-        table_name: str = None
+        table_name: str = None,
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
@@ -343,9 +345,10 @@ class Check:
             Rule(
                 "has_percentile",
                 column,
-                (value, percentile, precision),
+                value,
                 CheckDataType.NUMERIC,
-                pct,
+                coverage=pct,
+                settings={"percentile": percentile, "precision": precision},
             )
             >> self._rule
         )
@@ -405,9 +408,7 @@ class Check:
         )
         return self
 
-    def has_correlation(
-        self, column_left: str, column_right: str, value: float, pct: float = 1.0
-    ):
+    def has_correlation(self, column_left: str, column_right: str, value: float):
         """Validates the correlation between 2 columns with some tolerance"""
         (
             Rule(
@@ -428,7 +429,13 @@ class Check:
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
         """Validation for entropy calculation on continuous values"""
         (
-            Rule("has_entropy", column, (value, tolerance), CheckDataType.AGNOSTIC)
+            Rule(
+                "has_entropy",
+                column,
+                value,
+                CheckDataType.AGNOSTIC,
+                settings={"tolerance": tolerance},
+            )
             >> self._rule
         )
         return self
@@ -515,7 +522,7 @@ class Check:
             dataframe, snowpark_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
-        
+
         elif "duckdb_dataframe" in globals() and isinstance(
             dataframe, duckdb_dataframe
         ):

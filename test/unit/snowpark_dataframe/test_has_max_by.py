@@ -1,4 +1,3 @@
-
 import snowflake.snowpark.functions as F  # type: ignore
 
 from snowflake.snowpark import DataFrame  # type: ignore

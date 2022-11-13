@@ -29,7 +29,7 @@ def test_predicate_on_multi_column(snowpark, configurations):
 def test_predicate_on_unknown_columns(snowpark, configurations):
     df = snowpark.range(10).withColumn("id2", F.col("id") * 100)
     check = Check(CheckLevel.WARNING, "check_predicate_on_unknown_columns")
-    check.satisfies(["ID", "ID2"], "(id * id3) > 10", 0.9) 
+    check.satisfies(["ID", "ID2"], "(id * id3) > 10", 0.9)
     check.config = configurations
     with pytest.raises(SnowparkSQLException, match="invalid identifier"):
         check.validate(df)

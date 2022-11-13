@@ -1,3 +1,5 @@
+import pytest
+
 from cuallee import Check
 import pandas as pd
 import numpy as np
@@ -22,8 +24,5 @@ def test_values(check: Check):
 
 
 def test_coverage(check: Check):
-    check.has_correlation("id", "id2", 1.0, 0.75)
-    df = pd.DataFrame({"id": [10, None], "id2": [100, 200]})
-    result = check.validate(df)
-    assert result.status.str.match("FAIL").all()
-    assert result.pass_rate.max() == 0.0
+    with pytest.raises(TypeError, match="positional arguments"):
+        check.has_correlation("id", "id2", 1.0, 0.75)

@@ -59,7 +59,7 @@ class Compute:
         return f"CAST({rule.column} IN {rule.value} AS INTEGER)"
 
     def has_percentile(self, rule: Rule) -> str:
-        return f"APPROX_QUANTILE({rule.id}, {rule.value[0]}) = {rule.value[1]}"
+        return f"APPROX_QUANTILE({rule.id}, {rule.value}) = {rule.settings['percentile']}"
 
     def has_max_by(self, rule: Rule) -> str:
         return f"MAX_BY({rule.column[1]}, {rule.column[0]}) = {rule.value}"

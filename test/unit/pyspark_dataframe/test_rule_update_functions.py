@@ -21,7 +21,7 @@ def test_delete_rule_by_key(spark):
     assert len(c._rule) == 3
 
     c.delete_rule_by_key(
-        "c50361d748fe3ca294ed85751df113f4f7fbdb6faccb48ec531d865b71170268".upper()
+        "5F0384C5F6A020BD1B2CACB1F11CD94B7B19BC1551041B20E767CAB44E559895"
     )
     assert len(c._rule) == 2
 
@@ -29,7 +29,7 @@ def test_delete_rule_by_key(spark):
     assert len(c._rule) == 2
 
     c.delete_rule_by_key(
-        "33403fdc43f5c7665952ad9885063ab09e1c233716eaa21a4da49817eec8fb70".upper()
+        "EB58BDA44A0A4A4A2B4510C2F6013DB7D59F450C4FC8A3D628A370D4D8872DF7"
     )
     assert len(c._rule) == 1
 
@@ -45,7 +45,7 @@ def test_delete_rule_by_list_of_keys(spark):
     assert len(c._rule) == 3
 
     c.delete_rule_by_key(
-        "c50361d748fe3ca294ed85751df113f4f7fbdb6faccb48ec531d865b71170268".upper()
+        "B58F8BBF3BEFEBCE45F552AD29CC697673FB82A6D64F30C1F2AB3435E96D5431"
     )
     assert len(c._rule) == 2
 
@@ -54,8 +54,8 @@ def test_delete_rule_by_list_of_keys(spark):
 
     c.delete_rule_by_key(
         [
-            "33403fdc43f5c7665952ad9885063ab09e1c233716eaa21a4da49817eec8fb70".upper(),
-            "b342433c79ccb3ea8486bfb8b237b27bf74b81b37778cdb812ffb250111330b5".upper(),
+            "EB58BDA44A0A4A4A2B4510C2F6013DB7D59F450C4FC8A3D628A370D4D8872DF7",
+            "5F0384C5F6A020BD1B2CACB1F11CD94B7B19BC1551041B20E767CAB44E559895",
         ]
     )
     assert len(c._rule) == 0

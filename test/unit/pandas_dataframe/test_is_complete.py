@@ -1,9 +1,23 @@
 import pandas as pd
-from cuallee import Check, CheckLevel
+from cuallee import Check
+import pytest
 
 
-def test_natural_numer():
-    check = Check(CheckLevel.WARNING, "Completeness")
+def test_positive(check: Check):
     check.is_complete("id")
-    df = pd.DataFrame({"id": [10, 20, 30]})
-    assert check.validate(df).status.eq("PASS").all()
+    df = pd.DataFrame({"id": [10, 20], "id2": [300, 500]})
+    assert check.validate(df).status.str.match("PASS").all()
+
+
+def test_negative(check: Check):
+    check.is_complete("id")
+    df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})
+    assert check.validate(df).status.str.match("FAIL").all()
+
+
+def test_coverage(check: Check):
+    check.is_complete("id", 0.5)
+    df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})
+    result = check.validate(df)
+    assert result.status.str.match("PASS").all()
+    assert result.pass_rate.max() == 0.5

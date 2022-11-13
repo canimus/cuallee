@@ -8,9 +8,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
+from numbers import Number
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
+import numpy as np
 
 logger = logging.getLogger("cuallee")
 
@@ -333,12 +335,7 @@ class Check:
         return self.is_contained_in(column, value, pct)
 
     def has_percentile(
-        self,
-        column: str,
-        value: float,
-        percentile: float,
-        precision: int = 10000,
-        pct: float = 1.0,
+        self, column: str, value: float, percentile: float, precision: int = 10000
     ):
         """Validation of a column percentile value"""
         (
@@ -371,11 +368,7 @@ class Check:
         return self
 
     def has_max_by(
-        self,
-        column_source: str,
-        column_target: str,
-        value: Union[float, str],
-        pct: float = 1.0,
+        self, column_source: str, column_target: str, value: Union[float, str]
     ):
         """Validation of a column value based on another column maximum"""
         (
@@ -390,11 +383,7 @@ class Check:
         return self
 
     def has_min_by(
-        self,
-        column_source: str,
-        column_target: str,
-        value: Union[float, str],
-        pct: float = 1.0,
+        self, column_source: str, column_target: str, value: Union[float, str]
     ):
         """Validation of a column value based on another column minimum"""
         (
@@ -498,6 +487,11 @@ class Check:
     ):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
         (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
+        return self
+
+    def has_workflow(self, column_group: str, column_event: str, column_order: str, edges: List[Tuple[str]], pct: float = 1.0):
+        """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
+        Rule("has_workflow", [column_group, column_event, column_order], edges, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def validate(self, dataframe: Any):

@@ -22,6 +22,7 @@ Provider | API | Versions
 ![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `0.12.0`
 ![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.3.0`, `3.2.x`
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`|`1.5.1`, `1.4.x`
+![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb`|`0.5.1`
  
  <sub>Logos are trademarks of their own brands.</sub>
 
@@ -109,6 +110,41 @@ check.validate(df).first().status == "PASS"
 +---+-------------------+-----+-------+------+-----------------------------+-----+----+----------+---------+--------------+------+
 ```
 
+### Workflows (Process Mining)
+Besides the common `citizen-like` checks, `cuallee` offers out-of-the-box real-life checks. For example, suppose that you are working __SalesForce__ or __SAP__ environment. Very likely your business processes will be driven by a lifecycle:
+- `Order-To-Cash` 
+- `Request-To-Pay` 
+- `Inventory-Logistics-Delivery` 
+- Others.
+ In this scenario, `cuallee` offers the ability that the sequence of events registered over time, are according to a sequence of events, like the example below:
+
+ ```python
+import pyspark.sql.functions as F
+from cuallee import Check, CheckLevel
+
+data = pd.DataFrame({
+    "name":["herminio", "herminio", "virginie", "virginie"], 
+    "event":["new","active", "new", "active"], 
+    "date": ["2022-01-01", "2022-01-02", "2022-01-03", "2022-02-04"]}
+    )
+df = spark.createDataFrame(data).withColumn("date", F.to_date("date"))
+
+# Cuallee Process Mining
+# Testing that all edges on workflows
+check = Check(CheckLevel.WARNING, "WorkflowViolations")
+
+# Validate that 50% of data goes from new => active
+check.has_workflow("name", "event", "date", [("new", "active")], pct=0.5)
+check.validate(df).show(truncate=False)
+
++---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
+|id |timestamp          |check             |level  |column                   |rule        |value               |rows|violations|pass_rate|pass_threshold|status|
++---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
+|1  |2022-11-07 23:08:50|WorkflowViolations|WARNING|('name', 'event', 'date')|has_workflow|(('new', 'active'),)|4   |2.0       |0.5      |0.5           |PASS  |
++---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
+
+ ```
+
 ### `cuallee` __VS__ `pydeequ`
 In the `test` folder there are `docker` containers with the requirements to match the tests. Also a `perftest.py` available at the root folder for interests.
 
@@ -162,6 +198,7 @@ Check | Description | DataType
 `is_on_sunday` | For date fields confirms day is `Sun` | _date_
 `is_on_schedule` | For date fields confirms time windows i.e. `9:00 - 17:00` | _timestamp_
 `is_daily` | Can verify daily continuity on date fields by default. `[2,3,4,5,6]` which represents `Mon-Fri` in PySpark. However new schedules can be used for custom date continuity | _date_
+`has_workflow` | Adjacency matrix validation on `3-column` graph, based on `group`, `event`, `order` columns.  | _agnostic_
 `satisfies` | An open `SQL expression` builder to construct custom checks | _agnostic_
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
 
@@ -180,6 +217,23 @@ In order to establish a connection to your SnowFlake account `cuallee` relies in
 ## Databricks Connection
 By default `cuallee` will search for a SparkSession available in the `globals` so there is literally no need to ~~`SparkSession.builder`~~. When working in a local environment it will automatically search for an available session, or start one.
 
+## DuckDB
+
+For testing on `duckdb` simply pass your table name to your check _et voilà_
+
+```python
+import duckdb
+conn = duckdb.connect(":memory:")
+check = Check(CheckLevel.WARNING, "DuckDB", table_name="temp/taxi/*.parquet")
+check.is_complete("VendorID")
+check.is_complete("tpep_pickup_datetime")
+check.validate(conn)
+
+   id            timestamp check    level                column         rule value      rows  violations  pass_rate  pass_threshold status
+0   1  2022-10-31 23:15:06  test  WARNING              VendorID  is_complete   N/A  19817583         0.0        1.0             1.0   PASS
+1   2  2022-10-31 23:15:06  test  WARNING  tpep_pickup_datetime  is_complete   N/A  19817583         0.0        1.0             1.0   PASS
+```
+
 ## Roadmap
 
 `100%` data frame agnostic implementation of data quality checks.
@@ -188,8 +242,8 @@ Define once, `run everywhere`
 - [x] PySpark 3.2.x 
 - [x] Snowpark DataFrame
 - [x] Pandas DataFrame
+- [x] DuckDB Tables
 - Polars DataFrame
-- DuckDB Tables
 - SQLite Tables
 - MS-SQL Tables
 

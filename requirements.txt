@@ -1,14 +1,7 @@
-pyspark==3.3.0
+pyspark==3.3.1
 toolz==0.12.0
-# delta-spark==2.1.0
 pandas==1.5.1
-# numpy==1.23.3
-pyarrow==9.0.0
-colorama==0.4.5
-# quart==0.15.1
-# hypercorn==0.11.2
-# numba==0.56.2
-# loguru==0.6.0
-# termcolor==0.2.1
+pyarrow==10.0.0
+colorama==0.4.6
 duckdb==0.5.1
-polars==0.14.23
+polars==0.14.26

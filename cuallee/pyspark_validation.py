@@ -1,11 +1,13 @@
 import logging
 import operator
+from random import randint
 from dataclasses import dataclass
 from functools import reduce
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
+from pyspark.sql import Window as W
 from pyspark.sql import Column, DataFrame, Row
 from toolz import first, valfilter  # type: ignore
 
@@ -499,6 +501,27 @@ class Compute(ComputeEngine):
 
         return self.compute_instruction
 
+    def has_workflow(self, rule: Rule):
+        """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            # Where [a] is source node, and [b] destination node
+            edges = [F.array(F.lit(a), F.lit(b)) for a,b in rule.value]
+            group, event, order = rule.column
+            next_event = f"{event}_NEXT_{randint(13,19)}".upper()
+            return (
+                dataframe
+                .withColumn(next_event, F.lead(event).over(W.partitionBy(group).orderBy(order)))
+                .withColumn("CUALLEE_EDGE", F.array(F.col(event), F.col(next_event)))
+                .select(F.sum(F.col("CUALLEE_EDGE").isin(edges).cast("integer")).alias(key))
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate=predicate, expression=_execute, compute_method="transform"
+        )
+
+        return self.compute_instruction
 
 def _field_type_filter(
     dataframe: DataFrame,

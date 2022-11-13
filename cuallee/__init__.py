@@ -80,14 +80,14 @@ class Rule:
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
-    settings: dict = field(default_factory={})  # type: ignore
+    settings: Union[dict, None] = None
     status: Union[str, None] = None
 
     @property
     def key(self):
         return (
             hashlib.blake2s(
-                bytes(f"{self.method}{self.column}{self.value}{self.coverage}", "utf-8")
+                bytes(f"{self.method}{self.column}{self.value}{self.settings}{self.coverage}", "utf-8")
             )
             .hexdigest()
             .upper()
@@ -344,7 +344,6 @@ class Check:
                 column,
                 value,
                 CheckDataType.NUMERIC,
-                coverage=pct,
                 settings={"percentile": percentile, "precision": precision},
             )
             >> self._rule

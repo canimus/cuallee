@@ -235,9 +235,9 @@ class Compute:
             predicate,
             F.approx_percentile(
                 F.col(rule.column).cast(T.DoubleType()),
-                rule.value[1],  # type: ignore
+                rule.settings["percentile"],  # type: ignore
             ).eqNullSafe(
-                rule.value[0]  # type: ignore
+                rule.value  # type: ignore
             ),
             ComputeMethod.SELECT,
         )
@@ -360,7 +360,7 @@ class Compute:
                 ).alias("entropy")
             ).select(
                 F.sql_expr(
-                    f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"  # type: ignore
+                    f"entropy BETWEEN {rule.value-rule.settings['tolerance']} AND {rule.value+rule.settings['tolerance']}"
                 ).alias(key)
             )
 

@@ -2,6 +2,7 @@ import pytest
 import snowflake.snowpark.functions as F  # type: ignore
 
 from snowflake.snowpark import DataFrame, Row  # type: ignore
+from snowflake.snowpark.exceptions import SnowparkSQLException
 from cuallee import Check, CheckLevel
 
 
@@ -28,7 +29,7 @@ def test_predicate_on_multi_column(snowpark, configurations):
 def test_predicate_on_unknown_columns(snowpark, configurations):
     df = snowpark.range(10).withColumn("id2", F.col("id") * 100)
     check = Check(CheckLevel.WARNING, "check_predicate_on_unknown_columns")
-    check.satisfies(["ID", "ID3"], "(id * id2) > 10", 0.9)
+    check.satisfies(["ID", "ID2"], "(id * id3) > 10", 0.9)
     check.config = configurations
-    with pytest.raises(AssertionError, match="not present in dataframe"):
+    with pytest.raises(SnowparkSQLException, match="invalid identifier"):
         check.validate(df)

@@ -224,18 +224,18 @@ class Compute(ComputeEngine):
     def has_percentile(self, rule: Rule):  # To Do with Predicate
         """Validation of a column percentile value"""
         predicate = F.percentile_approx(
-            F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.value[1], rule.value[2]  # type: ignore
+            F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.settings["percentile"], rule.settings['precision']  # type: ignore
         ).eqNullSafe(
-            rule.value[0]  # type: ignore
+            rule.value  # type: ignore
         )
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.percentile_approx(
                 F.col(f"`{rule.column}`").cast(T.DoubleType()),
-                rule.value[1],  # type: ignore
-                rule.value[2],  # type: ignore
+                rule.settings["percentile"],  # type: ignore
+                rule.settings['precision'],  # type: ignore
             ).eqNullSafe(
-                rule.value[0]  # type: ignore
+                rule.value  # type: ignore
             ),
             "select",
         )
@@ -327,7 +327,7 @@ class Compute(ComputeEngine):
                 )
                 .select(
                     F.expr(
-                        f"entropy BETWEEN {rule.value[0]-rule.value[1]} AND {rule.value[0]+rule.value[1]}"  # type: ignore
+                        f"entropy BETWEEN {rule.value-rule.settings['tolerance']} AND {rule.value+rule.settings['tolerance']}"  # type: ignore
                     ).alias(key)
                 )
             )

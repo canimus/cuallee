@@ -1,24 +1,45 @@
+import pytest
 import snowflake.snowpark.functions as F  # type: ignore
 
-from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
-def test_are_complete(snowpark, configurations):
+def test_positive(snowpark):
     df = snowpark.range(10).withColumn("desc", F.col("id").cast("string"))
-    check = Check(CheckLevel.WARNING, "check_are_complete")
+    check = Check(CheckLevel.WARNING, "pytest")
     check.are_complete(("ID", "DESC"))
-    check.config = configurations
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
     assert rs.first().STATUS == "PASS"
 
 
-def test_are_complete_list_col(snowpark, configurations):
+def test_negative(snowpark):
+    df = snowpark.createDataFrame(
+        [[0, "zero"], [1, None], [2, "deux"], [3, "trois"]], ["id", "desc"]
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.are_complete(("ID", "DESC"))
+    rs = check.validate(df)
+    assert rs.first().STATUS == "FAIL"
+
+
+@pytest.mark.parametrize(
+    "rule_column", [tuple(["ID", "DESC"]), list(["ID", "DESC"])], ids=("tuple", "list")
+)
+def test_parameters(snowpark, rule_column):
     df = snowpark.range(10).withColumn("desc", F.col("id").cast("string"))
-    check = Check(CheckLevel.WARNING, "check_are_complete_with_list")
-    check.are_complete(["ID", "DESC"])
-    check.config = configurations
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.are_complete(rule_column)
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
     assert rs.first().STATUS == "PASS"
+
+
+def test_coverage(snowpark):
+    df = snowpark.createDataFrame(
+        [[0, "zero"], [1, None], [2, "deux"], [3, "trois"]], ["id", "desc"]
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.are_complete(("ID", "DESC"), 0.7)
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().PASS_THRESHOLD == 0.7
+    assert rs.first().PASS_RATE == 1 - 1 / 8

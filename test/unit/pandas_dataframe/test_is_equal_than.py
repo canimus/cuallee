@@ -6,7 +6,7 @@ import pytest
 
 def test_positve(check: Check):
     check.is_equal_than("id", 1)
-    df = pd.DataFrame({"id": np.repeat(1,10)})
+    df = pd.DataFrame({"id": np.repeat(1, 10)})
     assert check.validate(df).status.str.match("PASS").all()
 
 
@@ -25,7 +25,7 @@ def test_values(check: Check, extra_value):
 
 def test_coverage(check: Check):
     check.is_equal_than("id", 1, 0.75)
-    df = pd.DataFrame({"id": [1,1,1,0]})
+    df = pd.DataFrame({"id": [1, 1, 1, 0]})
     result = check.validate(df)
     assert result.status.str.match("PASS").all()
     assert result.pass_rate.max() == 0.75

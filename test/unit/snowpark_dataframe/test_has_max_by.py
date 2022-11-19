@@ -1,7 +1,28 @@
+import pytest
 import snowflake.snowpark.functions as F  # type: ignore
 
 from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
+
+
+@pytest.mark.parametrize(
+    "data, columns, parameter2, parameter3",
+    [
+        [[["Europe", 7073651], ["Asia", 73131839], ["Antartica", 62873]], ["CONTINENT", "POPULATION"], "CONTINENT", "Asia"],
+        [[[2012, 7073651], [2013, 73131839], [2014, 62873]], ["YEAR", "POPULATION"], "YEAR", 2013],
+        ], 
+    ids=["object", "numeric"],
+)
+def test_positive(snowpark, data, columns, parameter2, parameter3):
+    df = snowpark.createDataFrame(
+        data,
+        columns,
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.has_max_by("POPULATION", parameter2, parameter3)
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+
 
 
 def test_has_max_by_object(snowpark, configurations):

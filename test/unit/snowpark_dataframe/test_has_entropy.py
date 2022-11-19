@@ -39,3 +39,24 @@ def test_parameters(snowpark, rule_value):
     check.has_entropy("TEST", rule_value, 0.1)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
+
+
+def test_coverage():
+    check = Check(CheckLevel.WARNING, "pytest")
+    with pytest.raises(TypeError, match="positional arguments"):
+        check.has_correlation("ID", "ID2", 1.0, 0.5)
+
+
+@pytest.mark.parametrize(
+    "tolerance, expected",
+    [[1, "PASS"], [1.0, "PASS"], [0.00001, "PASS"]], 
+    ids=["int", "float", "low_tolerance"],
+)
+def test_settings(snowpark, tolerance, expected): #tolerance
+    df = snowpark.createDataFrame(
+        [[0], [0], [0], [0], [0], [1], [1], [1], [1], [1]], ["test"]
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.has_entropy("TEST", 1.0, tolerance)
+    rs = check.validate(df)
+    assert rs.first().STATUS == expected

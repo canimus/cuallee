@@ -80,14 +80,18 @@ class Rule:
     value: Optional[Any]
     data_type: CheckDataType
     coverage: float = 1.0
-    settings: Union[dict, None] = None
+    options: Union[List[Tuple], None] = None
     status: Union[str, None] = None
+
+    @property
+    def settings(self) -> dict:
+        return dict(self.options)
 
     @property
     def key(self):
         return (
             hashlib.blake2s(
-                bytes(f"{self.method}{self.column}{self.value}{self.settings}{self.coverage}", "utf-8")
+                bytes(f"{self.method}{self.column}{self.value}{self.options}{self.coverage}", "utf-8")
             )
             .hexdigest()
             .upper()
@@ -344,7 +348,7 @@ class Check:
                 column,
                 value,
                 CheckDataType.NUMERIC,
-                settings={"percentile": percentile, "precision": precision},
+                options = [tuple(["percentile", percentile]), tuple(["precision", precision])]
             )
             >> self._rule
         )
@@ -422,7 +426,7 @@ class Check:
                 column,
                 value,
                 CheckDataType.AGNOSTIC,
-                settings={"tolerance": tolerance},
+                options = [tuple(['tolerance', tolerance])]
             )
             >> self._rule
         )

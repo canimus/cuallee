@@ -57,6 +57,9 @@ class Compute:
     def has_mean(self, rule: Rule) -> str:
         return f"AVG({rule.column}) = {rule.value}"
 
+    def has_sum(self, rule: Rule) -> str:
+        return f"SUM({rule.column}) = {rule.value}"
+
     def is_between(self, rule: Rule) -> str:
         return f"CAST({rule.column} BETWEEN '{rule.value[0]}' AND '{rule.value[1]}' AS INTEGER)"
 

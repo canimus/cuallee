@@ -315,7 +315,7 @@ class Check:
 
     def has_sum(self, column: str, value: float):
         """Validation of a sum of all values of a column"""
-        Rule("has_ssum", column, value, CheckDataType.NUMERIC) >> self._rule
+        Rule("has_sum", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):

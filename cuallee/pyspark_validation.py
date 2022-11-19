@@ -180,6 +180,16 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
+    def has_sum(self, rule: Rule):  # To Do with Predicate
+        """Validation of a column’s sum of values"""
+        predicate = F.sum(F.col(f"`{rule.column}`")) == rule.value  # type: ignore
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.sum(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
+            "observe",
+        )
+        return self.compute_instruction
+
     def has_std(self, rule: Rule):  # To Do with Predicate
         """Validation of a column’s standard deviation"""
         predicate = F.stddev_pop(F.col(f"`{rule.column}`")) == rule.value  # type: ignore

@@ -62,6 +62,9 @@ class Compute:
 
     def has_mean(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].mean() == rule.value
+    
+    def has_sum(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
+        return dataframe.loc[:, rule.column].sum() == rule.value
 
     def is_between(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].between(*rule.value).astype(int).sum()

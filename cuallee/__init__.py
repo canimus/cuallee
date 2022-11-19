@@ -313,6 +313,11 @@ class Check:
         Rule("has_mean", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
+    def has_sum(self, column: str, value: float):
+        """Validation of a sum of all values of a column"""
+        Rule("has_ssum", column, value, CheckDataType.NUMERIC) >> self._rule
+        return self
+
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
         Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule

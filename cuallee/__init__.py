@@ -314,6 +314,11 @@ class Check:
         Rule("has_mean", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
+    def has_sum(self, column: str, value: float):
+        """Validation of a sum of all values of a column"""
+        Rule("has_sum", column, value, CheckDataType.NUMERIC) >> self._rule
+        return self
+
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """Validation of a column between a range"""
         Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule
@@ -492,9 +497,25 @@ class Check:
         (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
         return self
 
-    def has_workflow(self, column_group: str, column_event: str, column_order: str, edges: List[Tuple[str]], pct: float = 1.0):
+    def has_workflow(
+        self,
+        column_group: str,
+        column_event: str,
+        column_order: str,
+        edges: List[Tuple[str]],
+        pct: float = 1.0,
+    ):
         """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
-        Rule("has_workflow", [column_group, column_event, column_order], edges, CheckDataType.AGNOSTIC, pct) >> self._rule
+        (
+            Rule(
+                "has_workflow",
+                [column_group, column_event, column_order],
+                edges,
+                CheckDataType.AGNOSTIC,
+                pct,
+            )
+            >> self._rule
+        )
         return self
 
     def validate(self, dataframe: Any):

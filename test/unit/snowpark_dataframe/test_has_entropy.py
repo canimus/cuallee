@@ -17,7 +17,7 @@ def test_positive(snowpark, data):
     check.has_entropy("TEST", 1.0, 0.1)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
-    assert rs.first().VALUE == '1.0'
+    assert rs.first().VALUE == "1.0"
 
 
 def test_negative(snowpark):

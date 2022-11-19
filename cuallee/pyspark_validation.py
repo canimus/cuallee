@@ -224,7 +224,7 @@ class Compute(ComputeEngine):
     def has_percentile(self, rule: Rule):  # To Do with Predicate
         """Validation of a column percentile value"""
         predicate = F.percentile_approx(
-            F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.settings["percentile"], rule.settings['precision']  # type: ignore
+            F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.settings["percentile"], rule.settings["precision"]  # type: ignore
         ).eqNullSafe(
             rule.value  # type: ignore
         )
@@ -233,7 +233,7 @@ class Compute(ComputeEngine):
             F.percentile_approx(
                 F.col(f"`{rule.column}`").cast(T.DoubleType()),
                 rule.settings["percentile"],  # type: ignore
-                rule.settings['precision'],  # type: ignore
+                rule.settings["precision"],  # type: ignore
             ).eqNullSafe(
                 rule.value  # type: ignore
             ),
@@ -507,14 +507,17 @@ class Compute(ComputeEngine):
 
         def _execute(dataframe: DataFrame, key: str):
             # Where [a] is source node, and [b] destination node
-            edges = [F.array(F.lit(a), F.lit(b)) for a,b in rule.value]
+            edges = [F.array(F.lit(a), F.lit(b)) for a, b in rule.value]
             group, event, order = rule.column
             next_event = f"{event}_NEXT_{randint(13,19)}".upper()
             return (
-                dataframe
-                .withColumn(next_event, F.lead(event).over(W.partitionBy(group).orderBy(order)))
+                dataframe.withColumn(
+                    next_event, F.lead(event).over(W.partitionBy(group).orderBy(order))
+                )
                 .withColumn("CUALLEE_EDGE", F.array(F.col(event), F.col(next_event)))
-                .select(F.sum(F.col("CUALLEE_EDGE").isin(edges).cast("integer")).alias(key))
+                .select(
+                    F.sum(F.col("CUALLEE_EDGE").isin(edges).cast("integer")).alias(key)
+                )
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -522,6 +525,7 @@ class Compute(ComputeEngine):
         )
 
         return self.compute_instruction
+
 
 def _field_type_filter(
     dataframe: DataFrame,

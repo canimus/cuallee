@@ -71,7 +71,7 @@ class Compute:
 
     def has_percentile(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
-            np.percentile(dataframe.loc[:, rule.column].values, rule.settings['percentile'] * 100)  # type: ignore
+            np.percentile(dataframe.loc[:, rule.column].values, rule.settings["percentile"] * 100)  # type: ignore
             == rule.value  # type: ignore
         )
 
@@ -284,7 +284,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
 
         if pass_rate >= pass_threshold:
             return "PASS"
-        
+
         return "FAIL"
 
     rows = len(dataframe)

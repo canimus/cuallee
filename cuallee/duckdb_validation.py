@@ -64,7 +64,9 @@ class Compute:
         return f"CAST({rule.column} IN {rule.value} AS INTEGER)"
 
     def has_percentile(self, rule: Rule) -> str:
-        return f"APPROX_QUANTILE({rule.id}, {rule.value}) = {rule.settings['percentile']}"
+        return (
+            f"APPROX_QUANTILE({rule.id}, {rule.value}) = {rule.settings['percentile']}"
+        )
 
     def has_max_by(self, rule: Rule) -> str:
         return f"MAX_BY({rule.column[1]}, {rule.column[0]}) = {rule.value}"
@@ -121,6 +123,7 @@ class Compute:
 
     def has_workflow(self, rule: Rule) -> str:
         raise NotImplementedError("😔 Sorry, still working on this feature.")
+
 
 def validate_data_types(check: Check, dataframe: dk.DuckDBPyConnection):
     return True

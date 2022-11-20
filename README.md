@@ -26,6 +26,7 @@ Provider | API | Versions
  <sub>Logos are trademarks of their own brands.</sub>
 
 ## Stats
+[![ci](https://github.com/canimus/cuallee/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/canimus/cuallee/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/canimus/cuallee/branch/main/graph/badge.svg?token=D7SOV620MS)](https://codecov.io/gh/canimus/cuallee)
 
 ## Install

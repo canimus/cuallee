@@ -17,6 +17,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "colorama >= 0.4.6",
+    "toolz >= 0.12.0",
+]
 
 
 

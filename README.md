@@ -183,6 +183,7 @@ Check | Description | DataType
 `has_max` | `max(col) == x` | _numeric_
 `has_std` | `σ(col) == x` | _numeric_
 `has_mean` | `μ(col) == x` | _numeric_
+`has_sum` | `Σ(col) == x` | _numeric_
 `has_percentile` | `%(col) == x` | _numeric_
 `has_max_by` | A utilitary predicate for `max(col_a) == x for max(col_b)`  | _agnostic_
 `has_min_by` | A utilitary predicate for `min(col_a) == x for min(col_b)`  | _agnostic_

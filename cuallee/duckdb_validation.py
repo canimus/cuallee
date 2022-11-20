@@ -24,6 +24,7 @@ class Compute:
         return f"SUM(CAST({rule.column} IS NOT NULL AS INTEGER)) / { len(rule.column) }"
 
     def is_unique(self, rule: Rule) -> str:
+        """Confirms the absence of duplicate values in a column"""
         return f"COUNT(DISTINCT({rule.column}))"
 
     def are_unique(self, rule: Rule) -> str:

@@ -5,3 +5,4 @@ pyarrow==10.0.0
 colorama==0.4.6
 duckdb==0.5.1
 polars==0.14.28
+pygments==2.13.0

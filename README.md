@@ -1,13 +1,12 @@
 # cuallee
 Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
-This library provides an intuitive `API` to describe `checks` for Apache PySpark DataFrames `v3.3.0`.
+This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, and more.
 It is a replacement written in pure `python` of the `pydeequ` framework.
 
 I gave up in _deequ_ as after extensive use, the API is not user-friendly, the Python Callback servers produce additional costs in our compute clusters, and the lack of support to the newest version of PySpark.
 
-As result `cuallee` was born, with a simplistic, extremely user friendly interface, checks and rules that will solve the common-sense data quality checks, avoiding the non-sense.
-
+As result `cuallee` was born
 
 This implementation goes in hand with the latest API from PySpark and uses the `Observation` API to collect metrics
 at the lower cost of computation. 
@@ -25,6 +24,9 @@ Provider | API | Versions
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb`|`0.5.1`
  
  <sub>Logos are trademarks of their own brands.</sub>
+
+## Stats
+[![codecov](https://codecov.io/gh/canimus/cuallee/branch/main/graph/badge.svg?token=D7SOV620MS)](https://codecov.io/gh/canimus/cuallee)
 
 ## Install
 ```bash

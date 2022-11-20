@@ -20,8 +20,8 @@ class Compute:
         return f"SUM(CAST({rule.column} IS NOT NULL AS INTEGER))"
 
     def are_complete(self, rule: Rule) -> str:
-        """Verify that group of columns don't have empty values"""
-        return f"SUM(CAST({rule.column} IS NOT NULL AS INTEGER)) / { len(rule.column) }"
+        """Verify the abscence of null values on groups of columns"""
+        return f"SUM( " + " + ".join([f"(CAST({column} IS NOT NULL AS INTEGER))" for column in rule.column]) + f") / {float(len(rule.column))}"
 
     def is_unique(self, rule: Rule) -> str:
         """Confirms the absence of duplicate values in a column"""

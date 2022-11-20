@@ -37,3 +37,6 @@ unit: # Run unit test
 
 twine: # Upload to python index
 	@twine upload dist/*
+
+testers: # Generate all test functions on folder/
+	@for i in `ls -1 test/unit/pyspark_dataframe/*.py | cut -d"/" -f4`; do touch "$(folder)/$$i"; done

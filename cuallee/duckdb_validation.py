@@ -16,6 +16,7 @@ from cuallee import Check, Rule
 
 class Compute:
     def is_complete(self, rule: Rule) -> str:
+        """Verify the absence of null values in a column"""
         return f"SUM(CAST({rule.column} IS NOT NULL AS INTEGER))"
 
     def are_complete(self, rule: Rule) -> str:

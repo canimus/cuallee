@@ -8,13 +8,7 @@ on:
       - test
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    env:
-      OS: ${{ matrix.os }}
-      PYTHON: '3.8'
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
     - name: Setup Python
@@ -26,6 +20,7 @@ jobs:
         pip install pytest
         pip install pytest-cov
         pip install -r requirements.txt
+        pip install snowflake-snowpark-python==0.12.0
         pip install -e .
         pytest --cov=./cuallee --cov-report=xml
     - name: Upload coverage to Codecov

@@ -8,7 +8,6 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_unique(("id", "id2"))
     df = pd.DataFrame({"id": [10, 20], "id2": [300, 500]})
     check.table_name = "df"
-    breakpoint()
     assert check.validate(db).status.str.match("PASS").all()
 
 

@@ -4,7 +4,7 @@ from cuallee import Check
 import pytest
 
 
-def test_positve(check: Check):
+def test_positive(check: Check):
     check.has_percentile("id", 6.75, 0.75)
     df = pd.DataFrame({"id": np.arange(10)})
     assert check.validate(df).status.str.match("PASS").all()

@@ -5,7 +5,7 @@ import pytest
 from pyspark.sql import SparkSession
 
 
-def test_positve(spark: SparkSession, check: Check):
+def test_positive(spark: SparkSession, check: Check):
     check.has_sum("id", 45)
     df = spark.range(10)
     assert check.validate(df).first().status == "PASS"

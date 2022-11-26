@@ -5,7 +5,7 @@
 *.crt
 *.key
 .devcontainer/
-
+.py3815/
 temp/
 .vscode/
 cuallee/cuallee.egg-info

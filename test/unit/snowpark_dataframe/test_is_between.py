@@ -2,7 +2,6 @@ import pytest
 import snowflake.snowpark.functions as F  # type: ignore
 
 from datetime import datetime, date
-from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
@@ -37,3 +36,5 @@ def test_coverage(snowpark):
     check.is_between("ID", (0, 5), 0.5)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
+    assert rs.first().PASS_THRESHOLD == 0.5
+    assert rs.first().PASS_RATE == 6/10

@@ -49,10 +49,10 @@ def test_coverage():
 
 @pytest.mark.parametrize(
     "tolerance, expected",
-    [[1, "PASS"], [1.0, "PASS"], [0.00001, "PASS"]], 
+    [[1, "PASS"], [1.0, "PASS"], [0.00001, "PASS"]],
     ids=["int", "float", "low_tolerance"],
 )
-def test_settings(snowpark, tolerance, expected): #tolerance
+def test_settings(snowpark, tolerance, expected):  # tolerance
     df = snowpark.createDataFrame(
         [[0], [0], [0], [0], [0], [1], [1], [1], [1], [1]], ["test"]
     )

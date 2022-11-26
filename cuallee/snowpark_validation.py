@@ -3,12 +3,14 @@ import os
 import operator
 import snowflake.snowpark.functions as F  # type: ignore
 import snowflake.snowpark.types as T  # type: ignore
+import snowflake.snowpark.window as W  # type: ignore
 
 from typing import (
     Union,
     Dict,
     Type,
     Callable,
+    Iterable,
     Optional,
     Any,
     Tuple,
@@ -51,7 +53,7 @@ class Compute:
     def _single_value_rule(
         self,
         column: Union[str, List[str], Tuple[str, str]],
-        value: Optional[Any],
+        value: Optional[Union[Tuple[Any], Iterable[Any], Any]],
         operator: Callable,
     ):
         return operator(F.col(column), value)
@@ -220,7 +222,7 @@ class Compute:
 
     def is_contained_in(self, rule: Rule):
         """Validation of column value in set of given values"""
-        predicate = F.col(rule.column).isin(list(rule.value))  # type: ignore
+        predicate = F.col(rule.column).isin(list(rule.value))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
@@ -509,7 +511,38 @@ class Compute:
         return self.compute_instruction
 
     def has_workflow(self, rule: Rule):
-        raise NotImplementedError("😔 Sorry, still working on this feature.")
+        """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
+
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            # Where [a] is source node, and [b] destination node
+            edges = [F.array_construct(F.lit(a), F.lit(b)) for a, b in rule.value]
+            group, event, order = rule.column 
+            next_event = "CUALLEE_NEXT_EVENT"
+            return (
+                dataframe.withColumn(
+                    next_event,
+                    F.lead(event).over(W.Window.partitionBy(group).orderBy(order)),
+                )
+                .withColumn(
+                    "CUALLEE_EDGE", F.array_construct(F.col(event), F.col(next_event))
+                )
+                .select(
+                    self._sum_predicate_to_integer(
+                        reduce(
+                            operator.or_,
+                            [(F.col("CUALLEE_EDGE") == e) for e in edges],
+                        )
+                    ).alias(key)
+                )
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate, _execute, ComputeMethod.TRANSFORM
+        )
+
+        return self.compute_instruction
 
 
 def _field_type_filter(

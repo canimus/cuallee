@@ -287,3 +287,4 @@ def test_summary(snowpark, configurations):
     check.config = configurations
     rs = SV.summary(check, df)
     assert isinstance(rs, DataFrame)
+ 

@@ -32,6 +32,7 @@ Provider | API | Versions
 [![codecov](https://codecov.io/gh/canimus/cuallee/branch/main/graph/badge.svg?token=D7SOV620MS)](https://codecov.io/gh/canimus/cuallee)
 [![](https://img.shields.io/pypi/dm/cuallee.svg?style=popout-square)](https://pypi.org/project/cuallee/)
 [![License](https://img.shields.io/github/license/canimus/cuallee.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ## Install
 ```bash
 pip install cuallee

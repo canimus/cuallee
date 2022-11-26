@@ -8,9 +8,19 @@ from cuallee import Check, CheckLevel
 @pytest.mark.parametrize(
     "data, columns, parameter2, parameter3",
     [
-        [[["Europe", 7073651], ["Asia", 73131839], ["Antartica", 62873]], ["CONTINENT", "POPULATION"], "CONTINENT", "Asia"],
-        [[[2012, 7073651], [2013, 73131839], [2014, 62873]], ["YEAR", "POPULATION"], "YEAR", 2013],
-        ], 
+        [
+            [["Europe", 7073651], ["Asia", 73131839], ["Antartica", 62873]],
+            ["CONTINENT", "POPULATION"],
+            "CONTINENT",
+            "Asia",
+        ],
+        [
+            [[2012, 7073651], [2013, 73131839], [2014, 62873]],
+            ["YEAR", "POPULATION"],
+            "YEAR",
+            2013,
+        ],
+    ],
     ids=["object", "numeric"],
 )
 def test_positive(snowpark, data, columns, parameter2, parameter3):
@@ -22,7 +32,6 @@ def test_positive(snowpark, data, columns, parameter2, parameter3):
     check.has_max_by("POPULATION", parameter2, parameter3)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
-
 
 
 def test_has_max_by_object(snowpark, configurations):

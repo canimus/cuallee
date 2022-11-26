@@ -116,9 +116,10 @@ class Compute:
 
             if n_classes <= 1:
                 return 0
+        
             return -np.sum(probs * np.log(probs)) / np.log(n_classes)
 
-        return entropy(dataframe.loc[:, rule.column].values)
+        return entropy(dataframe.loc[:, rule.column].values) == float(rule.value)
 
     def is_on_weekday(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
@@ -291,6 +292,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
         return "FAIL"
 
     rows = len(dataframe)
+    
     computation_basis = [
         {
             "id": index,

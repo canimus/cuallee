@@ -28,7 +28,7 @@ class Compute:
         return f"COUNT(DISTINCT({rule.column}))"
 
     def are_unique(self, rule: Rule) -> str:
-        return f"COUNT(DISTINCT{rule.column}) / {float(len(rule.column))}"
+        return "( " + " + ".join([f"approx_count_distinct({column})" for column in rule.column]) + f") / cast({float(len(rule.column))} AS FLOAT)"
 
     def is_greater_than(self, rule: Rule) -> str:
         return f"CAST({rule.column} > {rule.value} AS INTEGER)"

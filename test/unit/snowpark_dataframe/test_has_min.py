@@ -1,22 +1,34 @@
-from snowflake.snowpark import DataFrame  # type: ignore
+import pytest
+
 from cuallee import Check, CheckLevel
 
 
-def test_stats_min_value(snowpark, configurations):
+def test_positive(snowpark):
     df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "check_has_min")
-    check.has_min("ID", 0.0)
-    check.config = configurations
-    rs = check.validate(df)
-    assert (rs, DataFrame)
-    assert rs.first().STATUS == "PASS"
-
-
-def test_stats_min_value_int(snowpark, configurations):
-    df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "check_has_min_int")
+    check = Check(CheckLevel.WARNING, "pytest")
     check.has_min("ID", 0)
-    check.config = configurations
     rs = check.validate(df)
-    assert (rs, DataFrame)
     assert rs.first().STATUS == "PASS"
+
+
+def test_negative(snowpark):
+    df = snowpark.range(10)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.has_min("ID", 4)
+    rs = check.validate(df)
+    assert rs.first().STATUS == "FAIL"
+
+
+@pytest.mark.parametrize("rule_value", [int(0), float(0.0)], ids=["int", "float"])
+def test_parameters(snowpark, rule_value):
+    df = snowpark.range(10)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.has_min("ID", rule_value)
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+
+
+def test_coverage():
+    check = Check(CheckLevel.WARNING, "pytest")
+    with pytest.raises(TypeError, match="positional arguments"):
+        check.has_min("ID", 0, 0.5)

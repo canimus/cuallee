@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 import duckdb
 
-
+@pytest.mark.skip(reason="Not implemented")
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_unique(("id", "id2"))
     df = pd.DataFrame({"id": [10, 20], "id2": [300, 500]})
@@ -11,13 +11,14 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     assert check.validate(db).status.str.match("PASS").all()
 
 
+@pytest.mark.skip(reason="Not implemented")
 def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_unique(("id", "id2"))
     df = pd.DataFrame({"id": [10, 10], "id2": [300, 300]})
     check.table_name = "df"
     assert check.validate(db).status.str.match("FAIL").all()
 
-
+@pytest.mark.skip(reason="Not implemented")
 @pytest.mark.parametrize(
     "rule_column", [tuple(["id", "id2"]), list(["id", "id2"])], ids=("tuple", "list")
 )
@@ -28,7 +29,7 @@ def test_parameters(check: Check, db: duckdb.DuckDBPyConnection, rule_column):
     result = check.validate(db)
     assert result.status.str.match("FAIL").all()
 
-
+@pytest.mark.skip(reason="Not implemented")
 def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_unique(("id", "id2"), 0.75)
     df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})

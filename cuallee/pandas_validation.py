@@ -191,7 +191,7 @@ class Compute:
         return dataframe[rule.column].between(lower, upper).astype(int).sum()
 
     def has_workflow(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
-        """Compliance with adjacency matrix"""
+        """Compliance with adjacency matrix on graph"""
         def workflow(dataframe):
             group, event, order = rule.column
             CUALLEE_EVENT = "cuallee_event"

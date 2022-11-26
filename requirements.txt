@@ -6,3 +6,4 @@ colorama==0.4.6
 duckdb==0.5.1
 polars==0.14.28
 pygments==2.13.0
+pendulum==2.1.2

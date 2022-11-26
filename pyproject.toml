@@ -23,6 +23,12 @@ dependencies = [
     "pygments >= 2.13.0"
 ]
 
+[project.optional-dependencies]
+tests = [
+  "pytest",
+  "pytest-cov"
+]
+
 
 
 [project.urls]

@@ -21,14 +21,24 @@ class Compute:
 
     def are_complete(self, rule: Rule) -> str:
         """Verify the abscence of null values on groups of columns"""
-        return f"SUM( " + " + ".join([f"(CAST({column} IS NOT NULL AS INTEGER))" for column in rule.column]) + f") / {float(len(rule.column))}"
+        return (
+            f"SUM( "
+            + " + ".join(
+                [f"(CAST({column} IS NOT NULL AS INTEGER))" for column in rule.column]
+            )
+            + f") / {float(len(rule.column))}"
+        )
 
     def is_unique(self, rule: Rule) -> str:
         """Confirms the absence of duplicate values in a column"""
         return f"COUNT(DISTINCT({rule.column}))"
 
     def are_unique(self, rule: Rule) -> str:
-        return "( " + " + ".join([f"approx_count_distinct({column})" for column in rule.column]) + f") / cast({float(len(rule.column))} AS FLOAT)"
+        return (
+            "( "
+            + " + ".join([f"approx_count_distinct({column})" for column in rule.column])
+            + f") / cast({float(len(rule.column))} AS FLOAT)"
+        )
 
     def is_greater_than(self, rule: Rule) -> str:
         return f"CAST({rule.column} > {rule.value} AS INTEGER)"

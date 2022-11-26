@@ -20,8 +20,13 @@ def test_negative(check: Check):
 
 
 def test_coverage(check: Check):
-    check.is_on_monday("id", pct=1/7)
-    df = pd.date_range(start="2022-11-20", end="2022-11-26", freq="D").rename("id").to_frame().reset_index(drop=True)
+    check.is_on_monday("id", pct=1 / 7)
+    df = (
+        pd.date_range(start="2022-11-20", end="2022-11-26", freq="D")
+        .rename("id")
+        .to_frame()
+        .reset_index(drop=True)
+    )
     result = check.validate(df)
     assert result.status.str.match("PASS").all()
-    assert result.pass_rate.max() == 1/7
+    assert result.pass_rate.max() == 1 / 7

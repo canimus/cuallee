@@ -63,7 +63,7 @@ class Compute:
 
     def has_mean(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].mean() == rule.value
-    
+
     def has_sum(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].sum() == rule.value
 
@@ -117,7 +117,7 @@ class Compute:
 
             if n_classes <= 1:
                 return 0
-        
+
             return -np.sum(probs * np.log(probs)) / np.log(n_classes)
 
         return entropy(dataframe.loc[:, rule.column].values) == float(rule.value)
@@ -192,16 +192,29 @@ class Compute:
 
     def has_workflow(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         """Compliance with adjacency matrix"""
+
         def workflow(dataframe):
             group, event, order = rule.column
             CUALLEE_EVENT = "cuallee_event"
             CUALLEE_EDGE = "cuallee_edge"
             CUALLEE_GRAPH = "cuallee_graph"
-            dataframe[CUALLEE_EVENT] = dataframe.loc[:, rule.column].sort_values(by=[group, order], ascending=True).groupby([group])[event].shift(-1).replace(np.nan, None)
-            dataframe[CUALLEE_EDGE] = dataframe[[event, CUALLEE_EVENT]].apply(lambda x: (x[event], x[CUALLEE_EVENT]), axis=1)
+            dataframe[CUALLEE_EVENT] = (
+                dataframe.loc[:, rule.column]
+                .sort_values(by=[group, order], ascending=True)
+                .groupby([group])[event]
+                .shift(-1)
+                .replace(np.nan, None)
+            )
+            dataframe[CUALLEE_EDGE] = dataframe[[event, CUALLEE_EVENT]].apply(
+                lambda x: (x[event], x[CUALLEE_EVENT]), axis=1
+            )
             dataframe[CUALLEE_GRAPH] = list(repeat(rule.value, len(dataframe)))
 
-            return dataframe.apply(lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1).astype("int").sum()
+            return (
+                dataframe.apply(lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1)
+                .astype("int")
+                .sum()
+            )
 
         return workflow(dataframe.loc[:, rule.column])
 
@@ -306,7 +319,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
         return "FAIL"
 
     rows = len(dataframe)
-    
+
     computation_basis = [
         {
             "id": index,

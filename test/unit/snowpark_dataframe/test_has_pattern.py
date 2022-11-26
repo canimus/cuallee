@@ -53,4 +53,4 @@ def test_coverage(snowpark):
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
     assert rs.first().PASS_THRESHOLD == 0.65
-    assert rs.first().PASS_RATE == 2/3
+    assert rs.first().PASS_RATE == 2 / 3

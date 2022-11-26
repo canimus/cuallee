@@ -528,7 +528,7 @@ class Compute:
         def _execute(dataframe: DataFrame, key: str):
             # Where [a] is source node, and [b] destination node
             edges = [F.array_construct(F.lit(a), F.lit(b)) for a, b in rule.value]
-            group, event, order = rule.column 
+            group, event, order = rule.column
             next_event = "CUALLEE_NEXT_EVENT"
             return (
                 dataframe.withColumn(

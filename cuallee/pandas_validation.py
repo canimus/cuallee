@@ -7,6 +7,7 @@ import re
 from toolz import first  # type: ignore
 from numbers import Number
 from cuallee import utils as cuallee_utils
+from itertools import repeat
 
 
 class Compute:
@@ -189,12 +190,25 @@ class Compute:
         lower, upper = dataframe[rule.column].quantile(rule.value).values
         return dataframe[rule.column].between(lower, upper).astype(int).sum()
 
-    def has_workflow(self, rule: Rule) -> Union[bool, int]:
-        raise NotImplementedError("😔 Sorry, still working on this feature.")
+    def has_workflow(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
+        """Compliance with adjacency matrix"""
+        def workflow(dataframe):
+            group, event, order = rule.column
+            CUALLEE_EVENT = "cuallee_event"
+            CUALLEE_EDGE = "cuallee_edge"
+            CUALLEE_GRAPH = "cuallee_graph"
+            dataframe[CUALLEE_EVENT] = dataframe.loc[:, rule.column].sort_values(by=[group, order], ascending=True).groupby([group])[event].shift(-1).replace(np.nan, None)
+            dataframe[CUALLEE_EDGE] = dataframe[[event, CUALLEE_EVENT]].apply(lambda x: (x[event], x[CUALLEE_EVENT]), axis=1)
+            dataframe[CUALLEE_GRAPH] = list(repeat(rule.value, len(dataframe)))
+
+            return dataframe.apply(lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1).astype("int").sum()
+
+        return workflow(dataframe.loc[:, rule.column])
 
 
 def compute(rules: Dict[str, Rule]):
-    pass
+    """Pandas computes directly on the predicates"""
+    return True
 
 
 def validate_data_types(rules: List[Rule], dataframe: pd.DataFrame):

@@ -208,6 +208,16 @@ class Compute:
         )
         return self.compute_instruction
 
+    def has_sum(self, rule: Rule):
+        """Validation of a column’s sum of values"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._stats_fn_rule(rule.column, rule.value, F.sum),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
+
     def is_between(self, rule: Rule):
         """Validation of a column between a range"""
         predicate = F.col(rule.column).between(*rule.value)

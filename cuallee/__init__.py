@@ -91,7 +91,10 @@ class Rule:
     def key(self):
         return (
             hashlib.blake2s(
-                bytes(f"{self.method}{self.column}{self.value}{self.options}{self.coverage}", "utf-8")
+                bytes(
+                    f"{self.method}{self.column}{self.value}{self.options}{self.coverage}",
+                    "utf-8",
+                )
             )
             .hexdigest()
             .upper()
@@ -353,7 +356,10 @@ class Check:
                 column,
                 value,
                 CheckDataType.NUMERIC,
-                options = [tuple(["percentile", percentile]), tuple(["precision", precision])]
+                options=[
+                    tuple(["percentile", percentile]),
+                    tuple(["precision", precision]),
+                ],
             )
             >> self._rule
         )
@@ -431,7 +437,7 @@ class Check:
                 column,
                 value,
                 CheckDataType.AGNOSTIC,
-                options = [tuple(['tolerance', tolerance])]
+                options=[tuple(["tolerance", tolerance])],
             )
             >> self._rule
         )

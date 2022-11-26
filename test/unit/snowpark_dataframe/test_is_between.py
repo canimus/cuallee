@@ -1,3 +1,4 @@
+import pytest
 import snowflake.snowpark.functions as F  # type: ignore
 
 from datetime import datetime, date
@@ -5,65 +6,34 @@ from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
-def test_between_numbers(snowpark, configurations):
+def test_positive(snowpark):
     df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "check_between_numbers")
+    check = Check(CheckLevel.WARNING, "pytest")
     check.is_between("ID", (0, 10))
-    check.config = configurations
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
     assert rs.first().STATUS == "PASS"
 
 
-def test_between_numbers_list(snowpark, configurations):
+def test_negative(snowpark):
     df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "check_between_numbers_passed_as_list")
-    check.is_between("ID", [0, 10])
-    check.config = configurations
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_between("ID", (0, 5))
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
+    assert rs.first().STATUS == "FAIL"
+
+
+@pytest.mark.parametrize("data, rule_column, rule_value", [[F.col('ID'), "ID_2", tuple([0, 10])], [F.col('ID'), "ID_2", list([0, 10])], [F.col('ID').cast('float'), "ID_2", tuple([0, 10])], [F.col("id") + 1, "NUMBER", tuple([float(0.5), float(10.5)])], [F.date_from_parts(2022, 10, F.col("id")), "DATE", (date(2022, 9, 1), date(2022, 11, 1))], [F.timestamp_from_parts(2022, 10, 22, F.col("id") + 5, 0, 0), "TIMESTAMP", (datetime(2022, 10, 22, 0, 0, 0), datetime(2022, 10, 22, 22, 0, 0))]], ids=["tuple", "list", "data_as_float", "value_float", "date", "timestamp"])
+def test_parameters(snowpark, data, rule_column, rule_value):
+    df = snowpark.range(10).withColumn(rule_column, data)
+    check = Check(CheckLevel.WARNING, "pytest") 
+    check.is_between(rule_column, rule_value)
+    rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
 
 
-def test_between_numbers_with_pct(snowpark, configurations):
+def test_coverage(snowpark):
     df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "check_between_numbers_with_pct")
+    check = Check(CheckLevel.WARNING, "pytest")
     check.is_between("ID", (0, 5), 0.5)
-    check.config = configurations
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "PASS"
-
-
-def test_between_float_numbers(snowpark, configurations):
-    df = snowpark.range(10).withColumn("number", F.col("id") + 1)
-    check = Check(CheckLevel.WARNING, "check_between_float_numbers")
-    check.is_between("NUMBER", (0.5, 10.5))
-    check.config = configurations
-    rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "PASS"
-
-
-def test_between_dates(snowpark, configurations):
-    df = snowpark.range(10).withColumn("date", F.date_from_parts(2022, 10, F.col("id")))
-    check = Check(CheckLevel.WARNING, "check_between_dates")
-    check.is_between("DATE", (date(2022, 9, 1), date(2022, 11, 1)))
-    check.config = configurations
-    rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "PASS"
-
-
-def test_between_timestamps(snowpark, configurations):
-    df = snowpark.range(10).withColumn(
-        "timestamp", F.timestamp_from_parts(2022, 10, 22, F.col("id") + 5, 0, 0)
-    )
-    check = Check(CheckLevel.WARNING, "check_between_timestamps")
-    check.is_between(
-        "TIMESTAMP", (datetime(2022, 10, 22, 0, 0, 0), datetime(2022, 10, 22, 22, 0, 0))
-    )
-    check.config = configurations
-    rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
     assert rs.first().STATUS == "PASS"

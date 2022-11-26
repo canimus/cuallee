@@ -3,6 +3,8 @@ toolz==0.12.0
 pandas==1.5.1
 pyarrow==10.0.0
 colorama==0.4.6
+pygments==2.13.0
+pendulum==2.1.2
 duckdb==0.6.0
 polars==0.14.29
 pygments==2.13.0

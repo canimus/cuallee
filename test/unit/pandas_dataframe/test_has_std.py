@@ -4,7 +4,7 @@ from cuallee import Check
 import pytest
 
 
-def test_positve(check: Check):
+def test_positive(check: Check):
     check.has_std("id", 3.0276503540974917)
     df = pd.DataFrame({"id": np.arange(10)})
     assert check.validate(df).status.str.match("PASS").all()

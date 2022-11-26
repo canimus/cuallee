@@ -2,7 +2,7 @@ from cuallee import Check
 import pandas as pd
 
 
-def test_positve(check: Check):
+def test_positive(check: Check):
     check.is_in_billions("id")
     df = pd.DataFrame({"id": [1e9, 1e9 + 1]})
     assert check.validate(df).status.eq("PASS").all()

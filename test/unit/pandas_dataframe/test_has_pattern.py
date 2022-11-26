@@ -4,7 +4,7 @@ from cuallee import Check
 import pytest
 
 
-def test_positve(check: Check):
+def test_positive(check: Check):
     check.has_pattern("id", r"^H.*")
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
     assert check.validate(df).status.str.match("PASS").all()

@@ -22,6 +22,7 @@ Provider | API | Versions
 ![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.3.0`, `3.2.x`
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`|`1.5.1`, `1.4.x`
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb`|`0.5.1`
+![polars](logos/polars.svg?raw=true "Polars API")|`polars`|`0.14.29 (wip)` 
  
  <sub>Logos are trademarks of their own brands.</sub>
 

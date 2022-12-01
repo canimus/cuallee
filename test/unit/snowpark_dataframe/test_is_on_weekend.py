@@ -4,6 +4,18 @@ from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
+def test_positive(snowpark):
+    df = snowpark.range(5).withColumn(
+        "ARRIVAL_DATE", F.date_from_parts(2022, 11, F.col("id") + 14)
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_on_weekday("ARRIVAL_DATE")
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 0
+    assert rs.first().PASS_THRESHOLD == 1.0
+    
+
 def test_is_on_weekend(snowpark, configurations):
     df = snowpark.range(10).withColumn(
         "date", F.date_from_parts(2022, 1, F.col("id") + 1)

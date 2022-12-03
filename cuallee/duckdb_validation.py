@@ -91,7 +91,7 @@ class Compute:
         return f"MIN_BY({rule.column[1]}, {rule.column[0]}) = {rule.value}"
 
     def has_correlation(self, rule: Rule) -> str:
-        return f"CORR({rule.columns[0]}, {rule.column[1]}) = {rule.value}"
+        return f"CORR({rule.column[0]}, {rule.column[1]}) = {rule.value}"
 
     def satisfies(self, rule: Rule) -> str:
         return f"CAST(({rule.value}) AS INTEGER)"

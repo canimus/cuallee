@@ -11,7 +11,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     assert check.validate(db).status.str.match("PASS").all()
 
 
-# def test_negative(check: Check):
+# def test_negative(cmakeheck: Check):
 #     check.has_entropy("id", 1.0)
 #     df = pd.DataFrame({"id": [10, 10, 10, 10, 50]})
 #     assert check.validate(df).status.str.match("FAIL").all()

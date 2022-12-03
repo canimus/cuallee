@@ -1,14 +1,25 @@
-from typing import Collection
+import pytest
+
+
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from cuallee import Check, CheckLevel
-from operator import attrgetter as at
-from toolz import compose
-import numpy as np
-import pandas as pd
-import logging
 
-logger = logging.getLogger(__name__)
+
+import numpy as np
+import pandas as pd#
+
+
+@pytest.mark.parametrize("column", ['id', 'id'], ids=["int", "float"])
+def test_positive(spark, column):
+    df = spark.range(10).select(column).withColumn("id2", F.col("id") * 10)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.has_correlation("id", "id2", 1.0)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+    assert rs.first().value == "1.0"
+
+
 
 
 def test_positive_correlation(spark: SparkSession):

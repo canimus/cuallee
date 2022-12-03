@@ -355,9 +355,9 @@ class Compute:
                 .count()
                 .select(F.array_agg("count").alias("FREQ"))
                 .join_table_function(
-                    _split_to_table(F.array_to_string(F.col("FREQ"), F.lit(" ")), F.lit(" ")).alias(
-                        "CUALLEE_SEQ", "CUALLEE_IDX", "CUALLEE_VALUE"
-                    )
+                    _split_to_table(
+                        F.array_to_string(F.col("FREQ"), F.lit(" ")), F.lit(" ")
+                    ).alias("CUALLEE_SEQ", "CUALLEE_IDX", "CUALLEE_VALUE")
                 )
                 .withColumn("probs", F.div0(F.col("CUALLEE_VALUE"), rows))
                 .withColumn("n_labels", F.array_size("FREQ"))

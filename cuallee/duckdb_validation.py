@@ -41,22 +41,22 @@ class Compute:
         )
 
     def is_greater_than(self, rule: Rule) -> str:
-        return f"CAST({rule.column} > {rule.value} AS INTEGER)"
+        return f"SUM(CAST({rule.column} > {rule.value} AS INTEGER))"
 
     def is_less_than(self, rule: Rule) -> str:
-        return f"CAST({rule.column} < {rule.value} AS INTEGER)"
+        return f"SUM(CAST({rule.column} < {rule.value} AS INTEGER))"
 
-    def is_grester_or_equal_than(self, rule: Rule) -> str:
-        return f"CAST({rule.column} >= {rule.value} AS INTEGER)"
+    def is_greater_or_equal_than(self, rule: Rule) -> str:
+        return f"SUM(CAST({rule.column} >= {rule.value} AS INTEGER))"
 
     def is_less_or_equal_than(self, rule: Rule) -> str:
-        return f"CAST({rule.column} <= {rule.value} AS INTEGER)"
+        return f"SUM(CAST({rule.column} <= {rule.value} AS INTEGER))"
 
     def is_equal_than(self, rule: Rule) -> str:
-        return f"CAST({rule.column} = {rule.value} AS INTEGER)"
+        return f"SUM(CAST({rule.column} = {rule.value} AS INTEGER))"
 
     def has_pattern(self, rule: Rule) -> str:
-        return f"CAST(REGEXP_MATCHES({rule.column}, '{rule.value}') AS INTEGER)"
+        return f"SUM(CAST(REGEXP_MATCHES({rule.column}, '{rule.value}') AS INTEGER))"
 
     def has_min(self, rule: Rule) -> str:
         return f"MIN({rule.column}) = {rule.value}"
@@ -65,7 +65,7 @@ class Compute:
         return f"MAX({rule.column}) = {rule.value}"
 
     def has_std(self, rule: Rule) -> str:
-        return f"STDDEV_POP({rule.column}) = {rule.value}"
+        return f"STDDEV_SAMP({rule.column}) = {rule.value}"
 
     def has_mean(self, rule: Rule) -> str:
         return f"AVG({rule.column}) = {rule.value}"
@@ -81,14 +81,14 @@ class Compute:
 
     def has_percentile(self, rule: Rule) -> str:
         return (
-            f"APPROX_QUANTILE({rule.id}, {rule.value}) = {rule.settings['percentile']}"
+            f"QUANTILE_CONT({rule.column}, {rule.settings['percentile']}) = {rule.value}"
         )
 
     def has_max_by(self, rule: Rule) -> str:
-        return f"MAX_BY({rule.column[1]}, {rule.column[0]}) = {rule.value}"
+        return f"MAX_BY({rule.column[0]}, {rule.column[1]}) = '{rule.value}'"
 
     def has_min_by(self, rule: Rule) -> str:
-        return f"MIN_BY({rule.column[1]}, {rule.column[0]}) = {rule.value}"
+        return f"MIN_BY({rule.column[0]}, {rule.column[1]}) = '{rule.value}'"
 
     def has_correlation(self, rule: Rule) -> str:
         return f"CORR({rule.column[0]}, {rule.column[1]}) = {rule.value}"

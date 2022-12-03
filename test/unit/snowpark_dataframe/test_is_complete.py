@@ -14,10 +14,15 @@ def test_positive(snowpark):
 
 
 @pytest.mark.parametrize(
-    "data, violation, pass_rate", [[[[0], [1], [None], [4], [5]], 1, 4/5], [[[0], [1], [None], [4], [None]], 2, 3/5]], ids=("one_null_value", "two_null_value")
+    "data, violation, pass_rate",
+    [
+        [[[0], [1], [None], [4], [5]], 1, 4 / 5],
+        [[[0], [1], [None], [4], [None]], 2, 3 / 5],
+    ],
+    ids=("one_null_value", "two_null_value"),
 )
 def test_negative(snowpark, data, violation, pass_rate):
-    df = snowpark.createDataFrame(data, ['ID'])
+    df = snowpark.createDataFrame(data, ["ID"])
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_complete("ID")
     rs = check.validate(df)
@@ -25,16 +30,14 @@ def test_negative(snowpark, data, violation, pass_rate):
     assert rs.first().VIOLATIONS == violation
     assert rs.first().PASS_THRESHOLD == 1.0
     assert rs.first().PASS_RATE == pass_rate
-    
+
 
 def test_parameters():
     return "😅 No parameters to be tested!"
 
 
 def test_coverage(snowpark):
-    df = snowpark.createDataFrame(
-        [[0], [1], [None], [4], [5]], ["ID"]
-    )
+    df = snowpark.createDataFrame([[0], [1], [None], [4], [5]], ["ID"])
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_complete("ID", 0.7)
     rs = check.validate(df)

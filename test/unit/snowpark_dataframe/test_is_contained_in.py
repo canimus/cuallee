@@ -26,13 +26,61 @@ def test_negative(snowpark):
     assert rs.first().STATUS == "FAIL"
     assert rs.first().VIOLATIONS == 2
     assert rs.first().PASS_THRESHOLD == 1.0
-    assert rs.first().PASS_RATE == 1/3
+    assert rs.first().PASS_RATE == 1 / 3
 
 
 @pytest.mark.parametrize(
-    "data, columns, rule_value", 
-    [[[[1, "blue"], [2, "green"], [3, "grey"]], ["id", "test_col"], tuple(["blue", "green", "grey"])], [[[1, "blue"], [2, "green"], [3, "grey"]], ["id", "test_col"], list(["blue", "green", "grey"])], [[[1, 10], [2, 15], [3, 17]], ["id", "test_col"], (10, 15, 17)], [[[1, 10], [2, 15], [3, 17]], ["id", "test_col"], (float(10.0), float(15.0), float(17.0))], [[[1, float(10)], [2, float(15)], [3, float(17)]], ["id", "test_col"], (10, 15, 17)], [[[1, date(2022, 10, 1)], [2, date(2022, 10, 2)], [3, date(2022, 10, 3)]], ["id", "test_col"], (date(2022, 10, 1), date(2022, 10, 2), date(2022, 10, 3))], [[[1, datetime(2022, 10, 1, 10, 0, 0)], [2, datetime(2022, 10, 1, 11, 0, 0)], [3, datetime(2022, 10, 1, 12, 0, 0)]], ["id", "test_col"], (datetime(2022, 10, 1, 10, 0, 0), datetime(2022, 10, 1, 11, 0, 0), datetime(2022, 10, 1, 12, 0, 0))]], 
-    ids=("tuple", "list", "value_int", "value_float", "data_float", "date", "timestamp")
+    "data, columns, rule_value",
+    [
+        [
+            [[1, "blue"], [2, "green"], [3, "grey"]],
+            ["id", "test_col"],
+            tuple(["blue", "green", "grey"]),
+        ],
+        [
+            [[1, "blue"], [2, "green"], [3, "grey"]],
+            ["id", "test_col"],
+            list(["blue", "green", "grey"]),
+        ],
+        [[[1, 10], [2, 15], [3, 17]], ["id", "test_col"], (10, 15, 17)],
+        [
+            [[1, 10], [2, 15], [3, 17]],
+            ["id", "test_col"],
+            (float(10.0), float(15.0), float(17.0)),
+        ],
+        [
+            [[1, float(10)], [2, float(15)], [3, float(17)]],
+            ["id", "test_col"],
+            (10, 15, 17),
+        ],
+        [
+            [[1, date(2022, 10, 1)], [2, date(2022, 10, 2)], [3, date(2022, 10, 3)]],
+            ["id", "test_col"],
+            (date(2022, 10, 1), date(2022, 10, 2), date(2022, 10, 3)),
+        ],
+        [
+            [
+                [1, datetime(2022, 10, 1, 10, 0, 0)],
+                [2, datetime(2022, 10, 1, 11, 0, 0)],
+                [3, datetime(2022, 10, 1, 12, 0, 0)],
+            ],
+            ["id", "test_col"],
+            (
+                datetime(2022, 10, 1, 10, 0, 0),
+                datetime(2022, 10, 1, 11, 0, 0),
+                datetime(2022, 10, 1, 12, 0, 0),
+            ),
+        ],
+    ],
+    ids=(
+        "tuple",
+        "list",
+        "value_int",
+        "value_float",
+        "data_float",
+        "date",
+        "timestamp",
+    ),
 )
 def test_parameters(snowpark, data, columns, rule_value):
     df = snowpark.createDataFrame(data, columns)
@@ -52,7 +100,7 @@ def test_coverage(snowpark):
     assert rs.first().STATUS == "PASS"
     assert rs.first().VIOLATIONS == 1
     assert rs.first().PASS_THRESHOLD == 0.5
-    assert rs.first().PASS_RATE == 2/3
+    assert rs.first().PASS_RATE == 2 / 3
 
 
 def test_value_error():

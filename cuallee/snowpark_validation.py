@@ -44,9 +44,6 @@ class Compute:
     def __init__(self):
         self.compute_instruction = None
 
-    # def __repr__(self):
-    #     return self.compute_instruction
-
     def _sum_predicate_to_integer(self, predicate: Column):
         return F.sum(predicate.cast("integer"))
 
@@ -277,17 +274,17 @@ class Compute:
 
     def has_min_by(self, rule: Rule):
         """Validation of a column value based on another column minimum"""
-
+        column_source, column_target = rule.column
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
             return (
                 dataframe.filter(
-                    F.col(rule.column[0])
-                    == dataframe.select(F.min(rule.column[0]).alias("MIN")).first().MIN
+                    F.col(column_source)
+                    == dataframe.select(F.min(column_source).alias("MIN")).first().MIN
                 )
-                .filter(F.col(rule.column[1]) == rule.value)
-                .select(F.count(rule.column[1]).cast("boolean").alias(key))
+                .filter(F.col(column_target) == rule.value)
+                .select(F.count(column_target).cast("boolean").alias(key))
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -299,17 +296,18 @@ class Compute:
 
     def has_max_by(self, rule: Rule):
         """Validation of a column value based on another column maximum"""
+        column_source, column_target = rule.column
 
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
             return (
                 dataframe.filter(
-                    F.col(rule.column[0])
-                    == dataframe.select(F.max(rule.column[0]).alias("MAX")).first().MAX
+                    F.col(column_source)
+                    == dataframe.select(F.max(column_source).alias("MAX")).first().MAX
                 )
-                .filter(F.col(rule.column[1]) == rule.value)
-                .select(F.count(rule.column[1]).cast("boolean").alias(key))
+                .filter(F.col(column_target) == rule.value)
+                .select(F.count(column_target).cast("boolean").alias(key))
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -321,12 +319,13 @@ class Compute:
 
     def has_correlation(self, rule: Rule):
         """Validates the correlation between 2 columns with some tolerance"""
+        column_left, column_right = rule.column
         predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.corr(
-                F.col(rule.column[0]).cast(T.DoubleType()),
-                F.col(rule.column[1]).cast(T.DoubleType()),
+                F.col(column_left).cast(T.DoubleType()),
+                F.col(column_right).cast(T.DoubleType()),
             ).eqNullSafe(F.lit(rule.value)),
             ComputeMethod.SELECT,
         )
@@ -675,6 +674,7 @@ def compute(rules: Dict[str, Rule]) -> Dict:
 
 def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
+
     # COLUMNS
     # =======
     rule_match = cuallee_utils.match_columns(rules, dataframe.columns)

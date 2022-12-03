@@ -37,4 +37,3 @@ def test_coverage(snowpark):
     assert rs.first().VIOLATIONS == 3
     assert rs.first().PASS_THRESHOLD == 0.7
     assert rs.first().PASS_RATE == 0.7
-

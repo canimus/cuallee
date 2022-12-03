@@ -22,10 +22,16 @@ def test_negative(snowpark):
 
 
 @pytest.mark.parametrize(
-    "columns, rule_value", [["ID", "((id BETWEEN 0 and 9) AND (id >= 0) AND (id <= 10))"], [tuple(["ID", "ID2"]), "((id * id2) > 10) OR ((id * id2) = 0)"], [list(["ID", "ID2"]), "((id * id2) > 10) OR ((id * id2) = 0)"]], ids=("one_column", "two_columns_tuple", "two_columns_list")
+    "columns, rule_value",
+    [
+        ["ID", "((id BETWEEN 0 and 9) AND (id >= 0) AND (id <= 10))"],
+        [tuple(["ID", "ID2"]), "((id * id2) > 10) OR ((id * id2) = 0)"],
+        [list(["ID", "ID2"]), "((id * id2) > 10) OR ((id * id2) = 0)"],
+    ],
+    ids=("one_column", "two_columns_tuple", "two_columns_list"),
 )
 def test_parameters(snowpark, columns, rule_value):
-    df = snowpark.range(10).withColumn("id2", (F.col("id")+1) * 100)
+    df = snowpark.range(10).withColumn("id2", (F.col("id") + 1) * 100)
     check = Check(CheckLevel.WARNING, "pytest")
     check.satisfies(columns, rule_value)
     rs = check.validate(df)

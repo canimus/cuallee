@@ -5,7 +5,7 @@ from cuallee import Check, CheckLevel
 
 def test_positive(snowpark):
     df = snowpark.range(10).withColumn(
-        "date", F.date_from_parts(2022, 11, 28 + F.col('ID')*7)
+        "date", F.date_from_parts(2022, 11, 28 + F.col("ID") * 7)
     )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_monday("DATE")
@@ -17,7 +17,7 @@ def test_positive(snowpark):
 
 def test_negative(snowpark):
     df = snowpark.range(10).withColumn(
-        "date", F.date_from_parts(2022, 11, 28 + F.col('ID'))
+        "date", F.date_from_parts(2022, 11, 28 + F.col("ID"))
     )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_monday("DATE")
@@ -34,7 +34,7 @@ def test_parameters(snowpark):
 
 def test_coverage(snowpark):
     df = snowpark.range(10).withColumn(
-        "date", F.date_from_parts(2022, 11, 28 + F.col('ID'))
+        "date", F.date_from_parts(2022, 11, 28 + F.col("ID"))
     )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_monday("DATE", 0.2)

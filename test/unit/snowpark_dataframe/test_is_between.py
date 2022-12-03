@@ -21,10 +21,29 @@ def test_negative(snowpark):
     assert rs.first().STATUS == "FAIL"
 
 
-@pytest.mark.parametrize("data, rule_column, rule_value", [[F.col('ID'), "ID_2", tuple([0, 10])], [F.col('ID'), "ID_2", list([0, 10])], [F.col('ID').cast('float'), "ID_2", tuple([0, 10])], [F.col("id") + 1, "NUMBER", tuple([float(0.5), float(10.5)])], [F.date_from_parts(2022, 10, F.col("id")), "DATE", (date(2022, 9, 1), date(2022, 11, 1))], [F.timestamp_from_parts(2022, 10, 22, F.col("id") + 5, 0, 0), "TIMESTAMP", (datetime(2022, 10, 22, 0, 0, 0), datetime(2022, 10, 22, 22, 0, 0))]], ids=["tuple", "list", "data_as_float", "value_float", "date", "timestamp"])
+@pytest.mark.parametrize(
+    "data, rule_column, rule_value",
+    [
+        [F.col("ID"), "ID_2", tuple([0, 10])],
+        [F.col("ID"), "ID_2", list([0, 10])],
+        [F.col("ID").cast("float"), "ID_2", tuple([0, 10])],
+        [F.col("id") + 1, "NUMBER", tuple([float(0.5), float(10.5)])],
+        [
+            F.date_from_parts(2022, 10, F.col("id")),
+            "DATE",
+            (date(2022, 9, 1), date(2022, 11, 1)),
+        ],
+        [
+            F.timestamp_from_parts(2022, 10, 22, F.col("id") + 5, 0, 0),
+            "TIMESTAMP",
+            (datetime(2022, 10, 22, 0, 0, 0), datetime(2022, 10, 22, 22, 0, 0)),
+        ],
+    ],
+    ids=["tuple", "list", "data_as_float", "value_float", "date", "timestamp"],
+)
 def test_parameters(snowpark, data, rule_column, rule_value):
     df = snowpark.range(10).withColumn(rule_column, data)
-    check = Check(CheckLevel.WARNING, "pytest") 
+    check = Check(CheckLevel.WARNING, "pytest")
     check.is_between(rule_column, rule_value)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
@@ -37,4 +56,4 @@ def test_coverage(snowpark):
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
     assert rs.first().PASS_THRESHOLD == 0.5
-    assert rs.first().PASS_RATE == 6/10
+    assert rs.first().PASS_RATE == 6 / 10

@@ -6,7 +6,9 @@ from cuallee import Check, CheckLevel
 
 
 def test_positive(snowpark):
-    df = snowpark.range(10).withColumn("DATE", F.date_from_parts(2022, 1, F.col('ID') + 1))
+    df = snowpark.range(10).withColumn(
+        "DATE", F.date_from_parts(2022, 1, F.col("ID") + 1)
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_daily("DATE")
     rs = check.validate(df)
@@ -14,7 +16,12 @@ def test_positive(snowpark):
 
 
 @pytest.mark.parametrize(
-    "data, column, violations", [[F.date_from_parts(2022, F.col("id"), 1), "DATE", 189], [F.date_from_parts(2022, 10, F.col("id") + 1), "DATE2", 1]], ids=("high_violations", "low_violations")
+    "data, column, violations",
+    [
+        [F.date_from_parts(2022, F.col("id"), 1), "DATE", 189],
+        [F.date_from_parts(2022, 10, F.col("id") + 1), "DATE2", 1],
+    ],
+    ids=("high_violations", "low_violations"),
 )
 def test_negative(snowpark, data, column, violations):
     df = (
@@ -35,10 +42,14 @@ def test_negative(snowpark, data, column, violations):
 
 
 @pytest.mark.parametrize(
-    "rule_value", [list([1, 2, 3, 4, 5]), list([1, 3, 5]), tuple([1, 3, 5])], ids=("default", "three_days_list", "three_days_tuple")
+    "rule_value",
+    [list([1, 2, 3, 4, 5]), list([1, 3, 5]), tuple([1, 3, 5])],
+    ids=("default", "three_days_list", "three_days_tuple"),
 )
 def test_parameters(snowpark, rule_value):
-    df = snowpark.range(31).withColumn("DATE", F.date_from_parts(2022, 1, F.col('ID') + 1))
+    df = snowpark.range(31).withColumn(
+        "DATE", F.date_from_parts(2022, 1, F.col("ID") + 1)
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_daily("DATE")
     rs = check.validate(df)
@@ -66,7 +77,7 @@ def test_coverage(snowpark):
         )
     )
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_daily("DATE_2", pct = 0.5)
+    check.is_daily("DATE_2", pct=0.5)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
     assert rs.first().VIOLATIONS == 5

@@ -13,7 +13,7 @@ def test_positive(snowpark):
     assert rs.first().STATUS == "PASS"
     assert rs.first().VIOLATIONS == 0
     assert rs.first().PASS_THRESHOLD == 1.0
-    
+
 
 def test_negative(snowpark):
     df = snowpark.range(5).withColumn(
@@ -25,8 +25,8 @@ def test_negative(snowpark):
     assert rs.first().STATUS == "FAIL"
     assert rs.first().VIOLATIONS == 3
     assert rs.first().PASS_THRESHOLD == 1.0
-    assert rs.first().PASS_RATE == 2/5
-    
+    assert rs.first().PASS_RATE == 2 / 5
+
 
 def test_parameters(snowpark):
     return "😅 No parameters to be tested!"
@@ -42,4 +42,4 @@ def test_coverage(snowpark):
     assert rs.first().STATUS == "PASS"
     assert rs.first().VIOLATIONS == 5
     assert rs.first().PASS_THRESHOLD == 0.4
-    assert rs.first().PASS_RATE == 4/9
+    assert rs.first().PASS_RATE == 4 / 9

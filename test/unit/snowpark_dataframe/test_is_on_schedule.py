@@ -7,7 +7,8 @@ from cuallee import Check, CheckLevel
 
 def test_positive(snowpark):
     df = snowpark.range(10).withColumn(
-        "ARRIVAL_TIMESTAMP", F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id")*10, 0)
+        "ARRIVAL_TIMESTAMP",
+        F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id") * 10, 0),
     )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", (9, 17))
@@ -19,7 +20,8 @@ def test_positive(snowpark):
 
 def test_negative(snowpark):
     df = snowpark.range(10).withColumn(
-        "ARRIVAL_TIMESTAMP", F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id")*60, 0)
+        "ARRIVAL_TIMESTAMP",
+        F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id") * 60, 0),
     )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", (9, 17))
@@ -31,11 +33,17 @@ def test_negative(snowpark):
 
 
 @pytest.mark.parametrize(
-    "rule_value", [tuple([9, 17]), list([9, 17])], ids=("tuple", "list") # TODO: check for the init 'Any' but only integer can be passed!
+    "rule_value",
+    [tuple([9, 17]), list([9, 17])],
+    ids=(
+        "tuple",
+        "list",
+    ),  # TODO: check for the init 'Any' but only integer can be passed!
 )
 def test_parameters(snowpark, rule_value):
     df = snowpark.range(10).withColumn(
-        "ARRIVAL_TIMESTAMP", F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id")*10, 0)
+        "ARRIVAL_TIMESTAMP",
+        F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id") * 10, 0),
     )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", rule_value)
@@ -45,7 +53,8 @@ def test_parameters(snowpark, rule_value):
 
 def test_coverage(snowpark):
     df = snowpark.range(10).withColumn(
-        "ARRIVAL_TIMESTAMP", F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id")*60, 0)
+        "ARRIVAL_TIMESTAMP",
+        F.timestamp_from_parts(2022, 1, F.col("id"), 10, F.col("id") * 60, 0),
     )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", (9, 17), 0.8)

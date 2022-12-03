@@ -495,6 +495,7 @@ class Compute:
                 day_mask = [1, 2, 3, 4, 5]
 
             _to_date = F.col(rule.column).cast(T.DateType())
+            split_to_table = F.table_function("split_to_table")
 
             date_range = dataframe.select(
                 F.datediff("days", F.min(_to_date), F.max(_to_date))
@@ -502,17 +503,27 @@ class Compute:
 
             full_interval = (
                 dataframe.select(
-                    F.array_construct(
-                        *[F.min(_to_date) + i for i in range(date_range)]
-                    ).alias("D_ARRAY")
+                    F.array_to_string(
+                        F.array_construct(
+                            *[F.min(_to_date) + i for i in range(date_range)]
+                        ),
+                        F.lit(" "),
+                    ).alias("CUALLEE_DATE_SEQ")
                 )
-                .flatten(F.col("D_ARRAY"))
-                .select(F.col("VALUE").cast(T.DateType()).alias(rule.column))
+                .join_table_function(
+                    split_to_table(F.col("CUALLEE_DATE_SEQ"), F.lit(" ")).alias(
+                        "CUALLEE_SEQ", "CUALLEE_IDX", "CUALLEE_VALUE"
+                    )
+                )
+                .select(F.col("CUALLEE_VALUE").cast(T.DateType()).alias(rule.column))
                 .filter(F.dayofweek(rule.column).isin(day_mask))
             )
             return full_interval.join(dataframe, rule.column, how="left_anti").select(
-                #(F.count(rule.column) * -1).alias(key)
-                 F.when(F.count(rule.column) > 0, (F.count(rule.column) * -1).cast('string')).otherwise('True').alias(key)
+                F.when(
+                    F.count(rule.column) > 0, (F.count(rule.column) * -1).cast("string")
+                )
+                .otherwise("True")
+                .alias(key)
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -529,7 +540,7 @@ class Compute:
         def _execute(dataframe: DataFrame, key: str):
             # Where [a] is source node, and [b] destination node
             edges = [F.array_construct(F.lit(a), F.lit(b)) for a, b in rule.value]
-            group, event, order = rule.column 
+            group, event, order = rule.column
             next_event = "CUALLEE_NEXT_EVENT"
             return (
                 dataframe.withColumn(

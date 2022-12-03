@@ -1,30 +1,43 @@
-import snowflake.snowpark.functions as F  # type: ignore
+import pytest
 
-from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
-def test_is_complete(snowpark, configurations):
+def test_positive(snowpark):
     df = snowpark.range(10)
-    check = Check(CheckLevel.WARNING, "check_is_complete")
+    check = Check(CheckLevel.WARNING, "pytest")
     check.is_complete("ID")
-    check.config = configurations
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
     assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 0
+    assert rs.first().PASS_THRESHOLD == 1.0
 
 
-def test_name_with_space(snowpark, configurations):
-    df = snowpark.range(10).withColumn("id 2", F.col("id"))
-    check = Check(CheckLevel.WARNING, "check_name_with_space")
-    check.is_complete('"id 2"')
-    check.config = configurations
-    assert check.validate(df).first().STATUS == "PASS"
+@pytest.mark.parametrize(
+    "data, violation, pass_rate", [[[[0], [1], [None], [4], [5]], 1, 4/5], [[[0], [1], [None], [4], [None]], 2, 3/5]], ids=("one_null_value", "two_null_value")
+)
+def test_negative(snowpark, data, violation, pass_rate):
+    df = snowpark.createDataFrame(data, ['ID'])
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_complete("ID")
+    rs = check.validate(df)
+    assert rs.first().STATUS == "FAIL"
+    assert rs.first().VIOLATIONS == violation
+    assert rs.first().PASS_THRESHOLD == 1.0
+    assert rs.first().PASS_RATE == pass_rate
+    
+
+def test_parameters():
+    return "😅 No parameters to be tested!"
 
 
-def test_name_with_dot(snowpark, configurations):
-    df = snowpark.range(10).withColumn("id.2", F.col("id"))
-    check = Check(CheckLevel.WARNING, "check_name_with_space")
-    check.is_complete('"id.2"')
-    check.config = configurations
-    assert check.validate(df).first().STATUS == "PASS"
+def test_coverage(snowpark):
+    df = snowpark.createDataFrame(
+        [[0], [1], [None], [4], [5]], ["ID"]
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_complete("ID", 0.7)
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().PASS_THRESHOLD == 0.7
+    assert rs.first().PASS_RATE == 4 / 5

@@ -1,97 +1,61 @@
 import pytest
-import snowflake.snowpark.functions as F  # type: ignore
 
 from datetime import datetime, date
-from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
-def test_string_is_contained_in(snowpark, configurations):
+def test_positive(snowpark):
     df = snowpark.createDataFrame(
         [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
     )
-    check = Check(CheckLevel.WARNING, "is_contained_in_string_test")
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_contained_in("DESC", ("blue", "red", "green", "grey", "black"))
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 0
+    assert rs.first().PASS_THRESHOLD == 1.0
+
+
+def test_negative(snowpark):
+    df = snowpark.createDataFrame(
+        [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
     check.is_contained_in("DESC", ("blue", "red"))
-    check.config = configurations
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
     assert rs.first().STATUS == "FAIL"
     assert rs.first().VIOLATIONS == 2
+    assert rs.first().PASS_THRESHOLD == 1.0
+    assert rs.first().PASS_RATE == 1/3
 
 
-def test_list_is_contained_in(snowpark, configurations):
+@pytest.mark.parametrize(
+    "data, columns, rule_value", 
+    [[[[1, "blue"], [2, "green"], [3, "grey"]], ["id", "test_col"], tuple(["blue", "green", "grey"])], [[[1, "blue"], [2, "green"], [3, "grey"]], ["id", "test_col"], list(["blue", "green", "grey"])], [[[1, 10], [2, 15], [3, 17]], ["id", "test_col"], (10, 15, 17)], [[[1, 10], [2, 15], [3, 17]], ["id", "test_col"], (float(10.0), float(15.0), float(17.0))], [[[1, float(10)], [2, float(15)], [3, float(17)]], ["id", "test_col"], (10, 15, 17)], [[[1, date(2022, 10, 1)], [2, date(2022, 10, 2)], [3, date(2022, 10, 3)]], ["id", "test_col"], (date(2022, 10, 1), date(2022, 10, 2), date(2022, 10, 3))], [[[1, datetime(2022, 10, 1, 10, 0, 0)], [2, datetime(2022, 10, 1, 11, 0, 0)], [3, datetime(2022, 10, 1, 12, 0, 0)]], ["id", "test_col"], (datetime(2022, 10, 1, 10, 0, 0), datetime(2022, 10, 1, 11, 0, 0), datetime(2022, 10, 1, 12, 0, 0))]], 
+    ids=("tuple", "list", "value_int", "value_float", "data_float", "date", "timestamp")
+)
+def test_parameters(snowpark, data, columns, rule_value):
+    df = snowpark.createDataFrame(data, columns)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_contained_in("TEST_COL", rule_value)
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+
+
+def test_coverage(snowpark):
     df = snowpark.createDataFrame(
-        [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
+        [[1, "blue"], [2, "green"], [3, "red"]], ["id", "desc"]
     )
-    check = Check(CheckLevel.WARNING, "is_contained_in_string_test")
-    check.is_contained_in("DESC", ["blue", "red"])
-    check.config = configurations
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_contained_in("DESC", ("blue", "red"), 0.5)
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 2
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 1
+    assert rs.first().PASS_THRESHOLD == 0.5
+    assert rs.first().PASS_RATE == 2/3
 
 
-def test_value_error_is_contained_in(
-    snowpark, configurations
-):  # TODO: type check is not executed as it should
-    df = snowpark.createDataFrame([[1, 10], [2, 15], [3, 17]], ["id", "value"])
-    check = Check(CheckLevel.WARNING, "is_contained_in_value_error")
+def test_value_error():
+    check = Check(CheckLevel.WARNING, "pytest")
     with pytest.raises(ValueError, match="Data types in rule values are inconsistent"):
         check.is_contained_in("VALUE", (10, "17"))
-
-
-def test_number_is_contained_in(snowpark, configurations):
-    df = snowpark.createDataFrame([[1, 10], [2, 15], [3, 17]], ["id", "value"])
-    check = Check(CheckLevel.WARNING, "is_contained_in_number_test")
-    check.is_contained_in("VALUE", (10, 13, 17))
-    check.config = configurations
-    rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 1
-
-
-def test_float_number_is_contained_in(snowpark, configurations):
-    df = snowpark.createDataFrame([[1, 10], [2, 15], [3, 17]], ["id", "value"])
-    check = Check(CheckLevel.WARNING, "is_contained_in_float_number_test")
-    check.is_contained_in("VALUE", (10.5, 15.5, 17.0))
-    check.config = configurations
-    rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 2
-
-
-def test_date_is_contained_in(snowpark, configurations):
-    df = snowpark.createDataFrame(
-        [[1, date(2022, 10, 1)], [2, date(2022, 10, 2)], [3, date(2022, 10, 3)]],
-        ["id", "date"],
-    )
-    check = Check(CheckLevel.WARNING, "is_contained_in_date_test")
-    check.is_contained_in("DATE", (date(2022, 10, 1), date(2022, 11, 1)))
-    check.config = configurations
-    rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 2
-
-
-def test_timestamp_is_contained_in(snowpark, configurations):
-    df = snowpark.createDataFrame(
-        [
-            [1, datetime(2022, 10, 1, 10, 0, 0)],
-            [2, datetime(2022, 10, 1, 11, 0, 0)],
-            [3, datetime(2022, 10, 1, 12, 0, 0)],
-        ],
-        ["id", "timestamp"],
-    )
-    check = Check(CheckLevel.WARNING, "is_contained_in_timestamp_test")
-    check.is_contained_in(
-        "TIMESTAMP", (datetime(2022, 10, 1, 9, 0, 0), datetime(2022, 10, 1, 10, 0, 0))
-    )
-    check.config = configurations
-    rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 2

@@ -511,7 +511,8 @@ class Compute:
                 .filter(F.dayofweek(rule.column).isin(day_mask))
             )
             return full_interval.join(dataframe, rule.column, how="left_anti").select(
-                (F.count(rule.column) * -1).alias(key)
+                #(F.count(rule.column) * -1).alias(key)
+                 F.when(F.count(rule.column) > 0, (F.count(rule.column) * -1).cast('string')).otherwise('True').alias(key)
             )
 
         self.compute_instruction = ComputeInstruction(

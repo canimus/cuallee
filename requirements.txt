@@ -8,3 +8,4 @@ pendulum==2.1.2
 duckdb==0.6.0
 polars==0.15.1
 pygments==2.13.0
+snowflake-snowpark-python==1.0.0

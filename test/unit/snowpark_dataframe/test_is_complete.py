@@ -27,7 +27,7 @@ def test_negative(snowpark, data, violation, pass_rate):
     assert rs.first().PASS_RATE == pass_rate
     
 
-def test_parameters(snowpark):
+def test_parameters():
     return "😅 No parameters to be tested!"
 
 

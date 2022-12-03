@@ -349,13 +349,18 @@ class Compute:
 
         def _execute(dataframe: DataFrame, key: str):
             rows = dataframe.count()
+            _split_to_table = F.table_function("split_to_table")
             p = (
                 dataframe.groupBy(rule.column)
                 .count()
-                .select(F.array_agg("count").alias("freq"))
-                .flatten("freq")
-                .withColumn("probs", F.div0(F.col("VALUE"), rows))
-                .withColumn("n_labels", F.array_size("freq"))
+                .select(F.array_agg("count").alias("FREQ"))
+                .join_table_function(
+                    _split_to_table(F.array_to_string(F.col("FREQ"), F.lit(" ")), F.lit(" ")).alias(
+                        "CUALLEE_SEQ", "CUALLEE_IDX", "CUALLEE_VALUE"
+                    )
+                )
+                .withColumn("probs", F.div0(F.col("CUALLEE_VALUE"), rows))
+                .withColumn("n_labels", F.array_size("FREQ"))
                 .withColumn("log_labels", F.log(2, "n_labels"))
                 .withColumn("log_prob", F.log(2, F.col("probs")))
                 .withColumn("product_prob", F.col("probs") * F.col("log_prob"))

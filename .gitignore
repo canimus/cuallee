@@ -1,18 +1,27 @@
+# Environments
 .venv/
 .py3812/
 .py311/
+.py3815/
+.py3812/
+
+# Cache
 **__pycache__/
+
+# Security
 *.crt
 *.key
 .devcontainer/
-.py3815/
+
+# Development
 temp/
 .vscode/
+.env
+
+# Build
 cuallee/cuallee.egg-info
 cuallee.egg-info/
 dist/
-.env
-.py3812/
 build/
 
 # Testing

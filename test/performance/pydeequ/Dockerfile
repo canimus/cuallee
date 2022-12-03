@@ -9,7 +9,7 @@ RUN wget https://repo1.maven.org/maven2/com/amazon/deequ/deequ/2.0.1-spark-3.2/d
 RUN apt install openjdk-11-jdk -y
 RUN pip install pyspark==3.3.0
 RUN pip install pydeequ==1.0.1
-RUN pip install cuallee==0.1.2
+RUN pip install cuallee==0.2.5
 RUN pip install colorama
 RUN pip install pyarrow
 RUN pip install fastparquet

@@ -1,0 +1,1 @@
+docker run -it --rm --name soda -v $PWD/temp/taxi:/usr/src/data -w /usr/src cuallee-container bash

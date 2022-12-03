@@ -26,13 +26,15 @@ def init():
     quiet_logs(spark.sparkContext)
     
     df = spark.read.parquet("temp/taxi/*.parquet")
+    
 
     check = Check(CheckLevel.WARNING, "Taxi")
     [check.is_complete(name) for name in df.columns]
+    [check.is_unique(name) for name in df.columns]
     [check.is_greater_than(name, 0) for name in numeric_fields(df)]
     [check.is_less_than(name, 1e4) for name in numeric_fields(df)]
     [check.is_on_weekday(name, .7) for name in timestamp_fields(df)]
-    [check.has_entropy(name, 1.0, 0.5) for name in numeric_fields(df)]
+    # [check.has_entropy(name, 1.0, 0.5) for name in numeric_fields(df)]
     [check.is_between(name, (1000,2000)) for name in numeric_fields(df)]
     [check.is_between(name, ("2000-01-01", "2022-12-31"), .9) for name in timestamp_fields(df)]
     # for i in range(1000):
@@ -62,6 +64,8 @@ if __name__ == "__main__":
     print("END:",end)
     print("ELAPSED:", end-start)
     print("RULES:", len(check.rules))
-    print("FRAMEWORK: cuallee [0.0.14]")
-# 0.10513386
+    print("FRAMEWORK: cuallee")
+    print(f"CACHE: {len(spark.sparkContext._jsc.getPersistentRDDs().items())}")
+
+
 

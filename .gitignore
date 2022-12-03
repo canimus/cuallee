@@ -13,6 +13,7 @@ cuallee.egg-info/
 dist/
 .env
 .py3812/
+build/
 
 # Testing
 .coverage

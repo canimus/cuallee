@@ -161,7 +161,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
     SELECT
     \t{unified_columns}
     FROM
-    \t{check.table_name}
+    \t'{check.table_name}'
     """
 
     print(
@@ -211,7 +211,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
     )
 
     rows = first(
-        connection.execute(f"select count(*) from {check.table_name}").fetchone()
+        connection.execute(f"select count(*) from '{check.table_name}'").fetchone()
     )
     computation_basis = [
         {

@@ -138,7 +138,20 @@ class Compute:
         raise NotImplementedError("😔 Sorry, still working on this feature.")
 
     def has_workflow(self, rule: Rule) -> str:
-        raise NotImplementedError("😔 Sorry, still working on this feature.")
+        from string import Template
+        template = Template("""
+        (select sum(A.CUALLEE_RESULT) from (
+            select
+            lead($event) over (partition by $name order by $ord) as CUALLEE_EVENT,
+            LIST_VALUE($event, CUALLEE_EVENT) as CUALLEE_EDGE,
+            LIST_VALUE$basis as CUALLEE_GRAPH,
+            CAST(array_has(CUALLEE_GRAPH, CUALLEE_EDGE) AS INTEGER) as CUALLEE_RESULT
+            from df
+        ) as A)
+        """.strip())
+        name, event, ord = rule.column
+        basis = str(tuple(map(list, rule.value))).replace("None", "NULL")
+        return template.substitute({"name" : name, "event" : event, "ord" : ord, "basis" : basis})
 
 
 def validate_data_types(check: Check, dataframe: dk.DuckDBPyConnection):

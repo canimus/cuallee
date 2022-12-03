@@ -495,7 +495,7 @@ class Compute:
                 day_mask = [1, 2, 3, 4, 5]
 
             _to_date = F.col(rule.column).cast(T.DateType())
-            split_to_table = F.table_function("split_to_table")
+            _split_to_table = F.table_function("split_to_table")
 
             date_range = dataframe.select(
                 F.datediff("days", F.min(_to_date), F.max(_to_date))
@@ -511,7 +511,7 @@ class Compute:
                     ).alias("CUALLEE_DATE_SEQ")
                 )
                 .join_table_function(
-                    split_to_table(F.col("CUALLEE_DATE_SEQ"), F.lit(" ")).alias(
+                    _split_to_table(F.col("CUALLEE_DATE_SEQ"), F.lit(" ")).alias(
                         "CUALLEE_SEQ", "CUALLEE_IDX", "CUALLEE_VALUE"
                     )
                 )

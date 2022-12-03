@@ -20,6 +20,9 @@ def test_negative(snowpark):
     check.are_complete(("ID", "DESC"))
     rs = check.validate(df)
     assert rs.first().STATUS == "FAIL"
+    assert rs.first().VIOLATIONS == 1
+    assert rs.first().PASS_THRESHOLD == 1.0
+    assert rs.first().PASS_RATE == 7 / 8
 
 
 @pytest.mark.parametrize(
@@ -41,5 +44,6 @@ def test_coverage(snowpark):
     check.are_complete(("ID", "DESC"), 0.7)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 1
     assert rs.first().PASS_THRESHOLD == 0.7
     assert rs.first().PASS_RATE == 7 / 8

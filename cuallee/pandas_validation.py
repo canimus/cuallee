@@ -161,6 +161,8 @@ class Compute:
     def is_daily(self, rule: Rule, dataframe: pd.DataFrame) -> complex:
         if rule.value is None:
             day_mask = [0, 1, 2, 3, 4]
+        else:
+            day_mask = rule.value
 
         lower, upper = (
             dataframe.loc[:, rule.column].agg([np.min, np.max]).dt.strftime("%Y-%m-%d")

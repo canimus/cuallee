@@ -10,11 +10,15 @@ from pygments import highlight  # type: ignore
 from pygments.formatters import TerminalTrueColorFormatter  # type: ignore
 from pygments.lexers import SqlLexer  # type: ignore
 from toolz import first  # type: ignore
+from string import Template
 
 from cuallee import Check, Rule
 
 
 class Compute:
+    def __init__(self, table_name: str = None):
+        self.table_name = table_name
+
     def is_complete(self, rule: Rule) -> str:
         """Verify the absence of null values in a column"""
         return f"SUM(CAST({rule.column} IS NOT NULL AS INTEGER))"
@@ -74,10 +78,10 @@ class Compute:
         return f"SUM({rule.column}) = {rule.value}"
 
     def is_between(self, rule: Rule) -> str:
-        return f"CAST({rule.column} BETWEEN '{rule.value[0]}' AND '{rule.value[1]}' AS INTEGER)"
+        return f"SUM(CAST({rule.column} BETWEEN '{rule.value[0]}' AND '{rule.value[1]}' AS INTEGER))"
 
     def is_contained_in(self, rule: Rule) -> str:
-        return f"CAST({rule.column} IN {rule.value} AS INTEGER)"
+        return f"SUM(CAST({rule.column} IN {rule.value} AS INTEGER))"
 
     def has_percentile(self, rule: Rule) -> str:
         return (
@@ -132,13 +136,26 @@ class Compute:
         )
 
     def is_daily(self, rule: Rule) -> str:
-        raise NotImplementedError("😔 Sorry, still working on this feature.")
+        if rule.value is None:
+            day_mask = tuple([1, 2, 3, 4, 5])
+        else:
+            day_mask = rule.value
+        
+        template = Template("""
+            distinct(select LIST_VALUE(count(B.$id),SUM(CAST(B.$id IS NULL AS INTEGER))::INTEGER) as r from (
+            select distinct(unnest(range(min($id)::DATE, max($id)::DATE + 1, INTERVAL 1 DAY))) as w, 
+            extract(dow from w) as y from '$table'
+            ) A LEFT JOIN df B ON A.w = CAST(B.$id AS DATE) where A.y in $value)
+        """.strip())
+
+        return template.substitute({"id" : rule.column, "value" : str(day_mask), "table" : self.table_name})
+
 
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         raise NotImplementedError("😔 Sorry, still working on this feature.")
 
     def has_workflow(self, rule: Rule) -> str:
-        from string import Template
+        
         template = Template("""
         (select sum(A.CUALLEE_RESULT) from (
             select
@@ -146,12 +163,12 @@ class Compute:
             LIST_VALUE($event, CUALLEE_EVENT) as CUALLEE_EDGE,
             LIST_VALUE$basis as CUALLEE_GRAPH,
             CAST(array_has(CUALLEE_GRAPH, CUALLEE_EDGE) AS INTEGER) as CUALLEE_RESULT
-            from df
+            from '$table'
         ) as A)
         """.strip())
         name, event, ord = rule.column
         basis = str(tuple(map(list, rule.value))).replace("None", "NULL")
-        return template.substitute({"name" : name, "event" : event, "ord" : ord, "basis" : basis})
+        return template.substitute({"name" : name, "event" : event, "ord" : ord, "basis" : basis, "table" : self.table_name})
 
 
 def validate_data_types(check: Check, dataframe: dk.DuckDBPyConnection):
@@ -166,7 +183,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
 
     unified_columns = ",\n\t".join(
         [
-            operator.methodcaller(rule.method, rule)(Compute()) + f" AS '{rule.key}'"
+            operator.methodcaller(rule.method, rule)(Compute(check.table_name)) + f" AS '{rule.key}'"
             for rule in check.rules
         ]
     )
@@ -194,6 +211,9 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
                 return result.imag
             else:
                 return nrows - result
+        elif isinstance(result, list):
+            if len(result) == 2:
+                return result[1]
 
     def _calculate_pass_rate(result, nrows):
 
@@ -210,6 +230,14 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
                     return 1.0
             else:
                 return result / nrows
+        elif isinstance(result, list):
+            if result[1] > 0:
+                if result[1] > nrows:
+                    return nrows / result[1]
+                else:
+                    return result[1] / nrows
+            else:
+                return 1.0
 
     def _evaluate_status(pass_rate, pass_threshold):
 

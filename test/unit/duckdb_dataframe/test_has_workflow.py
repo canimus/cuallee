@@ -14,6 +14,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
 
 def test_parameters(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_workflow("X", "Y", "Z", [("x", "y"), ("y", "z"), ("z", None)])
+    check.is_complete("X")
     df = pd.DataFrame(
         {"X": list("AAABBB"), "Y": list("xyzxyz"), "Z": [1, 2, 3, 1, 2, 3]}
     )

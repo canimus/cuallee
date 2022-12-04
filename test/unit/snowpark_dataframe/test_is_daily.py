@@ -1,25 +1,32 @@
+import pytest
 import snowflake.snowpark.functions as F  # type: ignore
 
 from datetime import date
-from snowflake.snowpark import DataFrame  # type: ignore
 from cuallee import Check, CheckLevel
 
 
-def test_is_daily_high_violations(snowpark, configurations):
-    df = snowpark.range(10).withColumn("date", F.date_from_parts(2022, F.col("id"), 1))
-    check = Check(CheckLevel.WARNING, "check_is_daily_with_high_number_violation")
+def test_positive(snowpark):
+    df = snowpark.range(10).withColumn(
+        "DATE", F.date_from_parts(2022, 1, F.col("ID") + 1)
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
     check.is_daily("DATE")
-    check.config = configurations
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 189
+    assert rs.first().STATUS == "PASS"
 
 
-def test_is_daily_low_violations(snowpark, configurations):
+@pytest.mark.parametrize(
+    "data, column, violations",
+    [
+        [F.date_from_parts(2022, F.col("id"), 1), "DATE", 189],
+        [F.date_from_parts(2022, 10, F.col("id") + 1), "DATE2", 1],
+    ],
+    ids=("high_violations", "low_violations"),
+)
+def test_negative(snowpark, data, column, violations):
     df = (
         snowpark.range(10)
-        .withColumn("date", F.date_from_parts(2022, 10, F.col("id") + 1))
+        .withColumn("date", data)
         .withColumn(
             "date2",
             F.when(F.col("date") == date(2022, 10, 6), date(2022, 10, 11)).otherwise(
@@ -27,21 +34,34 @@ def test_is_daily_low_violations(snowpark, configurations):
             ),
         )
     )
-    check = Check(CheckLevel.WARNING, "check_is_daily_with_low_number_violation")
-    check.is_daily("DATE2")
-    check.config = configurations
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_daily(column)
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
     assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 1
+    assert rs.first().VIOLATIONS == violations
 
 
-def test_is_daily_with_rows_eq_violations(snowpark, configurations):
+@pytest.mark.parametrize(
+    "rule_value",
+    [list([1, 2, 3, 4, 5]), list([1, 3, 5]), tuple([1, 3, 5])],
+    ids=("default", "three_days_list", "three_days_tuple"),
+)
+def test_parameters(snowpark, rule_value):
+    df = snowpark.range(31).withColumn(
+        "DATE", F.date_from_parts(2022, 1, F.col("ID") + 1)
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_daily("DATE")
+    rs = check.validate(df)
+    assert rs.first().STATUS == "PASS"
+
+
+def test_coverage(snowpark):
     df = (
         snowpark.range(10)
         .withColumn("date", F.date_from_parts(2022, 10, F.col("id") + 1))
         .withColumn(
-            "date2",
+            "date_2",
             F.when(
                 F.col("date").isin(
                     [
@@ -56,11 +76,10 @@ def test_is_daily_with_rows_eq_violations(snowpark, configurations):
             ).otherwise(F.col("date")),
         )
     )
-    check = Check(CheckLevel.WARNING, "check_is_daily_with_rows_eq_violations")
-    check.is_daily("DATE2")
-    check.config = configurations
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_daily("DATE_2", pct=0.5)
     rs = check.validate(df)
-    assert isinstance(rs, DataFrame)
-    assert rs.first().STATUS == "FAIL"
+    assert rs.first().STATUS == "PASS"
     assert rs.first().VIOLATIONS == 5
+    assert rs.first().PASS_THRESHOLD == 0.5
     assert rs.first().PASS_RATE == 0.5

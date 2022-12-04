@@ -1,6 +1,6 @@
 import logging
+import enum
 import operator
-from random import randint
 from dataclasses import dataclass
 from functools import reduce
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
@@ -18,11 +18,17 @@ from colorama import Fore, Style  # type: ignore
 logger = logging.getLogger(__name__)
 
 
+class ComputeMethod(enum.Enum):
+    OBSERVE = "OBSERVE"
+    SELECT = "SELECT"
+    TRANSFORM = "TRANSFORM"
+
+
 @dataclass
 class ComputeInstruction:
     predicate: Union[Column, List[Column], None]
     expression: Union[Callable[[DataFrame, str], Any], Column]
-    compute_method: str
+    compute_method: ComputeMethod
 
     def __repr__(self):
         return f"ComputeInstruction({self.compute_method})"
@@ -32,8 +38,8 @@ class Compute(ComputeEngine):
     def __init__(self):
         self.compute_instruction: Union[ComputeInstruction, None] = None
 
-    def __repr__(self):
-        return self.compute_instruction
+    def _sum_predicate_to_integer(self, predicate: Column):
+        return F.sum(predicate.cast("integer"))
 
     def _single_value_rule(
         self,
@@ -43,8 +49,13 @@ class Compute(ComputeEngine):
     ):
         return operator(F.col(f"`{column}`"), value)
 
-    def _sum_predicate_to_integer(self, predicate: Column):
-        return F.sum(predicate.cast("integer"))
+    def _stats_fn_rule(
+        self,
+        column: Union[str, List[str], Tuple[str, str]],
+        value: Optional[Any],
+        operator: Callable,
+    ):
+        return operator(F.col(column)).eqNullSafe(value)
 
     # Method functions
 
@@ -54,46 +65,41 @@ class Compute(ComputeEngine):
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def are_complete(self, rule: Rule):  # To Do with Predicate
+    def are_complete(self, rule: Rule):
         """Validation for non-null values in a group of columns"""
         predicate = [F.col(f"`{c}`").isNotNull() for c in rule.column]
         self.compute_instruction = ComputeInstruction(
             predicate,
             reduce(
                 operator.add,
-                [
-                    F.sum(F.col(f"`{c}`").isNotNull().cast("integer"))
-                    for c in rule.column
-                ],
+                [self._sum_predicate_to_integer(p) for p in predicate],
             )
             / len(rule.column),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def is_unique(self, rule: Rule):  # To Do with Predicate
+    def is_unique(self, rule: Rule):
         """Validation for unique values in column"""
-        predicate = F.col(
-            f"`{rule.column}`"
-        ).isNotNull()  # F.count_distinct(F.col(rule.column))
+        predicate = None  # F.count_distinct(F.col(rule.column))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.approx_count_distinct(F.col(f"`{rule.column}`")),
-            "select",
+            ComputeMethod.SELECT,
         )
         return self.compute_instruction
 
-    def are_unique(self, rule: Rule):  # To Do with Predicate
+    def are_unique(self, rule: Rule):
         """Validation for unique values in a group of columns"""
-        predicate = F.count_distinct(*[F.col(c) for c in rule.column])
+        predicate = None  # TODO:  .groupBy("value").count.filter("count > 1")
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.count_distinct(*[F.col(c) for c in rule.column]),
-            "select",
+            ComputeMethod.SELECT,
         )
         return self.compute_instruction
 
@@ -103,51 +109,51 @@ class Compute(ComputeEngine):
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def is_greater_or_equal_than(self, rule: Rule):  # To Do with Predicate
+    def is_greater_or_equal_than(self, rule: Rule):
         """Validation for numeric greater or equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.ge)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def is_less_than(self, rule: Rule):  # To Do with Predicate
+    def is_less_than(self, rule: Rule):
         """Validation for numeric less than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.lt)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def is_less_or_equal_than(self, rule: Rule):  # To Do with Predicate
+    def is_less_or_equal_than(self, rule: Rule):
         """Validation for numeric less or equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.le)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def is_equal_than(self, rule: Rule):  # To Do with Predicate
+    def is_equal_than(self, rule: Rule):
         """Validation for numeric column equal than value"""
         predicate = self._single_value_rule(rule.column, rule.value, operator.eq)
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def has_pattern(self, rule: Rule):  # To Do with Predicate
+    def has_pattern(self, rule: Rule):
         """Validation for string type column matching regex expression"""
         predicate = (
             F.length(F.regexp_extract(F.col(f"`{rule.column}`"), f"{rule.value}", 0))
@@ -156,88 +162,83 @@ class Compute(ComputeEngine):
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def has_min(self, rule: Rule):  # To Do with Predicate
+    def has_min(self, rule: Rule):
         """Validation of a column’s minimum value"""
-        predicate = F.min(F.col(f"`{rule.column}`")).eqNullSafe(rule.value)  # type: ignore
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.min(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
-            "observe",
+            self._stats_fn_rule(rule.column, rule.value, F.min),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def has_max(self, rule: Rule):  # To Do with Predicate
+    def has_max(self, rule: Rule):
         """Validation of a column’s maximum value"""
-        predicate = F.max(F.col(f"`{rule.column}`")) == rule.value  # type: ignore
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.max(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
-            "observe",
+            self._stats_fn_rule(rule.column, rule.value, F.max),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def has_sum(self, rule: Rule):  # To Do with Predicate
-        """Validation of a column’s sum of values"""
-        predicate = F.sum(F.col(f"`{rule.column}`")) == rule.value  # type: ignore
-        self.compute_instruction = ComputeInstruction(
-            predicate,
-            F.sum(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
-            "observe",
-        )
-        return self.compute_instruction
-
-    def has_std(self, rule: Rule):  # To Do with Predicate
-        """Validation of a column’s standard deviation"""
-        predicate = F.stddev_pop(F.col(f"`{rule.column}`")) == rule.value  # type: ignore
-        logger.debug(predicate)
-        self.compute_instruction = ComputeInstruction(
-            predicate,
-            F.stddev_pop(F.col(f"`{rule.column}`")) == rule.value,  # type: ignore
-            "select",
-        )
-        return self.compute_instruction
-
-    def has_mean(self, rule: Rule):  # To Do with Predicate
+    def has_mean(self, rule: Rule):
         """Validation of a column's average/mean"""
-        predicate = F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value)  # type: ignore
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.mean(F.col(f"`{rule.column}`")).eqNullSafe(rule.value),  # type: ignore
-            "observe",
+            self._stats_fn_rule(rule.column, rule.value, F.mean),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def is_between(self, rule: Rule):  # To Do with Predicate
-        """Validation of a column between a range"""
-        predicate = F.col(f"`{rule.column}`").between(*rule.value).cast("integer")  # type: ignore
+    def has_std(self, rule: Rule):
+        """Validation of a column’s standard deviation"""
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum(predicate),  # type: ignore
-            "observe",
+            self._stats_fn_rule(rule.column, rule.value, F.stddev_pop),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
+
+    def has_sum(self, rule: Rule):
+        """Validation of a column’s sum of values"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._stats_fn_rule(rule.column, rule.value, F.sum),
+            ComputeMethod.OBSERVE,
+        )
+        return self.compute_instruction
+
+    def is_between(self, rule: Rule):
+        """Validation of a column between a range"""
+        predicate = F.col(f"`{rule.column}`").between(*rule.value)
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
     def is_contained_in(self, rule: Rule):  # To Do with Predicate
         """Validation of column value in set of given values"""
-        predicate = F.col(f"`{rule.column}`").isin(list(rule.value))  # type: ignore
+        predicate = F.col(f"`{rule.column}`").isin(list(rule.value))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
-            "observe",
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
-    def has_percentile(self, rule: Rule):  # To Do with Predicate
+    def has_percentile(self, rule: Rule):
         """Validation of a column percentile value"""
-        predicate = F.percentile_approx(
-            F.col(f"`{rule.column}`").cast(T.DoubleType()), rule.settings["percentile"], rule.settings["precision"]  # type: ignore
-        ).eqNullSafe(
-            rule.value  # type: ignore
-        )
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.percentile_approx(
@@ -247,58 +248,87 @@ class Compute(ComputeEngine):
             ).eqNullSafe(
                 rule.value  # type: ignore
             ),
-            "select",
+            ComputeMethod.SELECT,
         )
         return self.compute_instruction
 
-    def has_max_by(self, rule: Rule):  # To Do with Predicate
-        """Validation of a column maximum based on other column maximum"""
-        predicate = F.max_by(rule.column[1], rule.column[0]) == rule.value  # type: ignore
+    def is_inside_interquartile_range(self, rule: Rule):
+        """Validates a number resides inside the Q3 - Q1 range of values"""
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            _iqr = (
+                dataframe.select(
+                    F.percentile_approx(
+                        f"`{rule.column}`", rule.value  # type: ignore
+                    ).alias("iqr")
+                )
+                .first()
+                .iqr
+            )
+            return dataframe.select(
+                F.sum((F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")).alias(
+                    key
+                )
+            )
+
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.max_by(rule.column[1], rule.column[0]) == rule.value,  # type: ignore
-            "observe",
+            _execute,
+            ComputeMethod.TRANSFORM,
         )
+
         return self.compute_instruction
 
-    def has_min_by(self, rule: Rule):  # To Do with Predicate
+    def has_min_by(self, rule: Rule):
         """Validation of a column minimum based on other column minimum"""
-        predicate = F.min_by(rule.column[1], rule.column[0]) == rule.value  # type: ignore
+        column_source, column_target = rule.column
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.min_by(rule.column[1], rule.column[0]) == rule.value,  # type: ignore
-            "observe",
+            F.min_by(column_target, column_source) == rule.value,  # type: ignore
+            ComputeMethod.OBSERVE,
+        )
+        return self.compute_instruction
+
+    def has_max_by(self, rule: Rule):
+        """Validation of a column maximum based on other column maximum"""
+        column_source, column_target = rule.column
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.max_by(column_target, column_source) == rule.value,  # type: ignore
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
     def has_correlation(self, rule: Rule):  # To Do with Predicate
         """Validates the correlation between 2 columns with some tolerance"""
-        predicate = F.corr(
-            F.col(f"`{rule.column[0]}`").cast(T.DoubleType()),
-            F.col(f"`{rule.column[1]}`").cast(T.DoubleType()),
-        ).eqNullSafe(F.lit(rule.value))
+        column_left, column_right = rule.column
+        predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.corr(
-                F.col(f"`{rule.column[0]}`").cast(T.DoubleType()),
-                F.col(f"`{rule.column[1]}`").cast(T.DoubleType()),
+                F.col(f"`{column_left}`").cast(T.DoubleType()),
+                F.col(f"`{column_right}`").cast(T.DoubleType()),
             ).eqNullSafe(F.lit(rule.value)),
-            "select",
+            ComputeMethod.SELECT,
         )
         return self.compute_instruction
 
     def satisfies(self, rule: Rule):  # To Do with Predicate
         """Validation of a column satisfying a SQL-like predicate"""
-        predicate = F.expr(f"{rule.value}").cast("integer")
+        predicate = F.expr(f"{rule.value}")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum(F.expr(rule.value).cast("integer")),  # type: ignore
-            "observe",
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
     def has_entropy(self, rule: Rule):
         """Validation for entropy calculation on continuous values"""
+
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
@@ -345,7 +375,7 @@ class Compute(ComputeEngine):
         self.compute_instruction = ComputeInstruction(
             predicate,
             _execute,
-            "transform",
+            ComputeMethod.TRANSFORM,
         )
         return self.compute_instruction
 
@@ -353,9 +383,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is in a Mon-Fri time range"""
         predicate = F.dayofweek(f"`{rule.column}`").between(2, 6)
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -363,9 +393,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is in a Sat-Sun time range"""
         predicate = F.dayofweek(f"`{rule.column}`").isin([1, 7])
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -373,9 +403,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is on Mon"""
         predicate = F.dayofweek(f"`{rule.column}`") == 2
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -383,9 +413,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is on Tue"""
         predicate = F.dayofweek(f"`{rule.column}`") == 3
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -393,9 +423,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is on Wed"""
         predicate = F.dayofweek(f"`{rule.column}`") == 4
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -403,9 +433,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is on Thu"""
         predicate = F.dayofweek(f"`{rule.column}`") == 5
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -413,9 +443,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is on Fri"""
         predicate = F.dayofweek(f"`{rule.column}`") == 6
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -423,9 +453,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is on Sat"""
         predicate = F.dayofweek(f"`{rule.column}`") == 7
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -433,9 +463,9 @@ class Compute(ComputeEngine):
         """Validates a datetime column is on Sun"""
         predicate = F.dayofweek(f"`{rule.column}`") == 1
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate,
-            expression=F.sum(predicate.cast("integer")),
-            compute_method="observe",
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
@@ -444,12 +474,14 @@ class Compute(ComputeEngine):
         predicate = F.hour(F.col(f"`{rule.column}`")).between(*rule.value)  # type: ignore
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum(predicate.cast("integer")),
-            "observe",
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
 
     def is_daily(self, rule: Rule):
+        """Validates that there is no missing dates using only week days in the date/timestamp column"""
+
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
@@ -477,61 +509,47 @@ class Compute(ComputeEngine):
             )
             return full_interval.join(  # type: ignore
                 dataframe.select(_date_only), rule.column, how="left_anti"  # type: ignore
-            ).select((F.count(f"`{rule.column}`") * -1).alias(key))
-
-        self.compute_instruction = ComputeInstruction(
-            predicate=predicate, expression=_execute, compute_method="transform"
-        )
-
-        return self.compute_instruction
-
-    def is_inside_interquartile_range(self, rule: Rule):
-        """Validates a number resides inside the Q3 - Q1 range of values"""
-        predicate = None
-
-        def _execute(dataframe: DataFrame, key: str):
-            _iqr = (
-                dataframe.select(
-                    F.percentile_approx(
-                        f"`{rule.column}`", rule.value  # type: ignore
-                    ).alias("iqr")
+            ).select(
+                F.when(
+                    F.count(f"`{rule.column}`") > 0,
+                    (F.count(f"`{rule.column}`") * -1).cast("string"),
                 )
-                .first()
-                .iqr
-            )
-            return dataframe.select(
-                F.sum((F.col(f"`{rule.column}`").between(*_iqr)).cast("integer")).alias(
-                    key
-                )
+                .otherwise("True")
+                .alias(key)
             )
 
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate, expression=_execute, compute_method="transform"
+            predicate,
+            _execute,
+            ComputeMethod.TRANSFORM,
         )
 
         return self.compute_instruction
 
     def has_workflow(self, rule: Rule):
         """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
+
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
             # Where [a] is source node, and [b] destination node
             edges = [F.array(F.lit(a), F.lit(b)) for a, b in rule.value]
             group, event, order = rule.column
-            next_event = f"{event}_NEXT_{randint(13,19)}".upper()
+            next_event = "CUALLEE_NEXT_EVENT"
             return (
                 dataframe.withColumn(
                     next_event, F.lead(event).over(W.partitionBy(group).orderBy(order))
                 )
                 .withColumn("CUALLEE_EDGE", F.array(F.col(event), F.col(next_event)))
                 .select(
-                    F.sum(F.col("CUALLEE_EDGE").isin(edges).cast("integer")).alias(key)
+                    self._sum_predicate_to_integer(
+                        F.col("CUALLEE_EDGE").isin(edges)
+                    ).alias(key)
                 )
             )
 
         self.compute_instruction = ComputeInstruction(
-            predicate=predicate, expression=_execute, compute_method="transform"
+            predicate, _execute, ComputeMethod.TRANSFORM
         )
 
         return self.compute_instruction
@@ -553,8 +571,9 @@ def _compute_observe_method(
     compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame
 ) -> Tuple[int, Dict]:
     """Compute rules throught spark Observation"""
+
     # Filter expression directed to observe
-    _observe = lambda x: x.compute_method == "observe"
+    _observe = lambda x: x.compute_method.name == ComputeMethod.OBSERVE.name
     observe = valfilter(_observe, compute_set)
 
     try:
@@ -592,7 +611,7 @@ def _compute_select_method(
     """Compute rules throught spark select"""
 
     # Filter expression directed to select
-    _select = lambda x: x.compute_method == "select"
+    _select = lambda x: x.compute_method.name == ComputeMethod.SELECT.name
     select = valfilter(_select, compute_set)
 
     return (
@@ -613,7 +632,7 @@ def _compute_transform_method(
     """Compute rules throught spark transform"""
 
     # Filter expression directed to transform
-    _transform = lambda x: x.compute_method == "transform"
+    _transform = lambda x: x.compute_method.name == ComputeMethod.TRANSFORM.name
     transform = valfilter(_transform, compute_set)
 
     return {

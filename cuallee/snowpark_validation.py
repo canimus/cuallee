@@ -44,9 +44,6 @@ class Compute:
     def __init__(self):
         self.compute_instruction = None
 
-    # def __repr__(self):
-    #     return self.compute_instruction
-
     def _sum_predicate_to_integer(self, predicate: Column):
         return F.sum(predicate.cast("integer"))
 
@@ -277,17 +274,17 @@ class Compute:
 
     def has_min_by(self, rule: Rule):
         """Validation of a column value based on another column minimum"""
-
+        column_source, column_target = rule.column
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
             return (
                 dataframe.filter(
-                    F.col(rule.column[0])
-                    == dataframe.select(F.min(rule.column[0]).alias("MIN")).first().MIN
+                    F.col(column_source)
+                    == dataframe.select(F.min(column_source).alias("MIN")).first().MIN
                 )
-                .filter(F.col(rule.column[1]) == rule.value)
-                .select(F.count(rule.column[1]).cast("boolean").alias(key))
+                .filter(F.col(column_target) == rule.value)
+                .select(F.count(column_target).cast("boolean").alias(key))
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -299,17 +296,18 @@ class Compute:
 
     def has_max_by(self, rule: Rule):
         """Validation of a column value based on another column maximum"""
+        column_source, column_target = rule.column
 
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
             return (
                 dataframe.filter(
-                    F.col(rule.column[0])
-                    == dataframe.select(F.max(rule.column[0]).alias("MAX")).first().MAX
+                    F.col(column_source)
+                    == dataframe.select(F.max(column_source).alias("MAX")).first().MAX
                 )
-                .filter(F.col(rule.column[1]) == rule.value)
-                .select(F.count(rule.column[1]).cast("boolean").alias(key))
+                .filter(F.col(column_target) == rule.value)
+                .select(F.count(column_target).cast("boolean").alias(key))
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -321,12 +319,13 @@ class Compute:
 
     def has_correlation(self, rule: Rule):
         """Validates the correlation between 2 columns with some tolerance"""
+        column_left, column_right = rule.column
         predicate = None
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.corr(
-                F.col(rule.column[0]).cast(T.DoubleType()),
-                F.col(rule.column[1]).cast(T.DoubleType()),
+                F.col(column_left).cast(T.DoubleType()),
+                F.col(column_right).cast(T.DoubleType()),
             ).eqNullSafe(F.lit(rule.value)),
             ComputeMethod.SELECT,
         )
@@ -349,13 +348,18 @@ class Compute:
 
         def _execute(dataframe: DataFrame, key: str):
             rows = dataframe.count()
+            _split_to_table = F.table_function("split_to_table")
             p = (
                 dataframe.groupBy(rule.column)
                 .count()
-                .select(F.array_agg("count").alias("freq"))
-                .flatten("freq")
-                .withColumn("probs", F.div0(F.col("VALUE"), rows))
-                .withColumn("n_labels", F.array_size("freq"))
+                .select(F.array_agg("count").alias("FREQ"))
+                .join_table_function(
+                    _split_to_table(
+                        F.array_to_string(F.col("FREQ"), F.lit(" ")), F.lit(" ")
+                    ).alias("CUALLEE_SEQ", "CUALLEE_IDX", "CUALLEE_VALUE")
+                )
+                .withColumn("probs", F.div0(F.col("CUALLEE_VALUE"), rows))
+                .withColumn("n_labels", F.array_size("FREQ"))
                 .withColumn("log_labels", F.log(2, "n_labels"))
                 .withColumn("log_prob", F.log(2, F.col("probs")))
                 .withColumn("product_prob", F.col("probs") * F.col("log_prob"))
@@ -495,6 +499,7 @@ class Compute:
                 day_mask = [1, 2, 3, 4, 5]
 
             _to_date = F.col(rule.column).cast(T.DateType())
+            _split_to_table = F.table_function("split_to_table")
 
             date_range = dataframe.select(
                 F.datediff("days", F.min(_to_date), F.max(_to_date))
@@ -502,16 +507,27 @@ class Compute:
 
             full_interval = (
                 dataframe.select(
-                    F.array_construct(
-                        *[F.min(_to_date) + i for i in range(date_range)]
-                    ).alias("D_ARRAY")
+                    F.array_to_string(
+                        F.array_construct(
+                            *[F.min(_to_date) + i for i in range(date_range)]
+                        ),
+                        F.lit(" "),
+                    ).alias("CUALLEE_DATE_SEQ")
                 )
-                .flatten(F.col("D_ARRAY"))
-                .select(F.col("VALUE").cast(T.DateType()).alias(rule.column))
+                .join_table_function(
+                    _split_to_table(F.col("CUALLEE_DATE_SEQ"), F.lit(" ")).alias(
+                        "CUALLEE_SEQ", "CUALLEE_IDX", "CUALLEE_VALUE"
+                    )
+                )
+                .select(F.col("CUALLEE_VALUE").cast(T.DateType()).alias(rule.column))
                 .filter(F.dayofweek(rule.column).isin(day_mask))
             )
             return full_interval.join(dataframe, rule.column, how="left_anti").select(
-                (F.count(rule.column) * -1).alias(key)
+                F.when(
+                    F.count(rule.column) > 0, (F.count(rule.column) * -1).cast("string")
+                )
+                .otherwise("True")
+                .alias(key)
             )
 
         self.compute_instruction = ComputeInstruction(
@@ -658,6 +674,7 @@ def compute(rules: Dict[str, Rule]) -> Dict:
 
 def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
+
     # COLUMNS
     # =======
     rule_match = cuallee_utils.match_columns(rules, dataframe.columns)

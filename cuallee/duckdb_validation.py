@@ -84,9 +84,7 @@ class Compute:
         return f"SUM(CAST({rule.column} IN {rule.value} AS INTEGER))"
 
     def has_percentile(self, rule: Rule) -> str:
-        return (
-            f"QUANTILE_CONT({rule.column}, {rule.settings['percentile']}) = {rule.value}"
-        )
+        return f"QUANTILE_CONT({rule.column}, {rule.settings['percentile']}) = {rule.value}"
 
     def has_max_by(self, rule: Rule) -> str:
         return f"MAX_BY({rule.column[0]}, {rule.column[1]}) = '{rule.value}'"
@@ -98,41 +96,41 @@ class Compute:
         return f"CORR({rule.column[0]}, {rule.column[1]}) = {rule.value}"
 
     def satisfies(self, rule: Rule) -> str:
-        return f"CAST(({rule.value}) AS INTEGER)"
+        return f"SUM(CAST(({rule.value}) AS INTEGER))"
 
     def has_entropy(self, rule: Rule) -> str:
         return f"ENTROPY({rule.column}) = {rule.value}"
 
     def is_on_weekday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) BETWEEN (1,5) AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) BETWEEN 1 AND 5 AS INTEGER))"
 
     def is_on_weekend(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) IN (0,6) AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) IN (0,6) AS INTEGER))"
 
     def is_on_monday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) = 1 AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 1 AS INTEGER))"
 
     def is_on_tuesday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) = 2 AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 2 AS INTEGER))"
 
     def is_on_wednesday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) = 3 AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 3 AS INTEGER))"
 
     def is_on_thursday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) = 4 AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 4 AS INTEGER))"
 
     def is_on_friday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) = 5 AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 5 AS INTEGER))"
 
     def is_on_saturday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) = 6 AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 6 AS INTEGER))"
 
     def is_on_sunday(self, rule: Rule) -> str:
-        return f"CAST(EXTRACT('dayofweek' from {rule.column}) = 0 AS INTEGER)"
+        return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 0 AS INTEGER))"
 
     def is_on_schedule(self, rule: Rule) -> str:
         return (
-            f"CAST(EXTRACT('hour' from {rule.column}) BETWEEN {rule.value} AS INTEGER)"
+            f"SUM(CAST(EXTRACT(hour from {rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]} AS INTEGER))"
         )
 
     def is_daily(self, rule: Rule) -> str:
@@ -140,23 +138,31 @@ class Compute:
             day_mask = tuple([1, 2, 3, 4, 5])
         else:
             day_mask = rule.value
-        
-        template = Template("""
+
+        template = Template(
+            """
             distinct(select LIST_VALUE(count(B.$id),SUM(CAST(B.$id IS NULL AS INTEGER))::INTEGER) as r from (
             select distinct(unnest(range(min($id)::DATE, max($id)::DATE + 1, INTERVAL 1 DAY))) as w, 
             extract(dow from w) as y from '$table'
             ) A LEFT JOIN df B ON A.w = CAST(B.$id AS DATE) where A.y in $value)
-        """.strip())
+        """.strip()
+        )
 
-        return template.substitute({"id" : rule.column, "value" : str(day_mask), "table" : self.table_name})
-
+        return template.substitute(
+            {"id": rule.column, "value": str(day_mask), "table": self.table_name}
+        )
 
     def is_inside_interquartile_range(self, rule: Rule) -> str:
-        raise NotImplementedError("😔 Sorry, still working on this feature.")
+        template = Template("""
+            (select SUM(CAST(A.$id BETWEEN B.q[1] AND B.q[2] AS INTEGER)) as r from $table A,(
+            select QUANTILE_CONT($id, [0.25, 0.75]) as q from $table) B)
+        """.strip())
+        return template.substitute({"id" : rule.column, "table" : self.table_name})
 
     def has_workflow(self, rule: Rule) -> str:
-        
-        template = Template("""
+
+        template = Template(
+            """
         (select sum(A.CUALLEE_RESULT) from (
             select
             lead($event) over (partition by $name order by $ord) as CUALLEE_EVENT,
@@ -165,10 +171,19 @@ class Compute:
             CAST(array_has(CUALLEE_GRAPH, CUALLEE_EDGE) AS INTEGER) as CUALLEE_RESULT
             from '$table'
         ) as A)
-        """.strip())
+        """.strip()
+        )
         name, event, ord = rule.column
         basis = str(tuple(map(list, rule.value))).replace("None", "NULL")
-        return template.substitute({"name" : name, "event" : event, "ord" : ord, "basis" : basis, "table" : self.table_name})
+        return template.substitute(
+            {
+                "name": name,
+                "event": event,
+                "ord": ord,
+                "basis": basis,
+                "table": self.table_name,
+            }
+        )
 
 
 def validate_data_types(check: Check, dataframe: dk.DuckDBPyConnection):
@@ -183,7 +198,8 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
 
     unified_columns = ",\n\t".join(
         [
-            operator.methodcaller(rule.method, rule)(Compute(check.table_name)) + f" AS '{rule.key}'"
+            operator.methodcaller(rule.method, rule)(Compute(check.table_name))
+            + f" AS '{rule.key}'"
             for rule in check.rules
         ]
     )
@@ -207,10 +223,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
             else:
                 return nrows
         elif isinstance(result, Number):
-            if isinstance(result, complex):
-                return result.imag
-            else:
-                return nrows - result
+            return nrows - result
         elif isinstance(result, list):
             if len(result) == 2:
                 return result[1]
@@ -223,13 +236,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
             else:
                 return 0.0
         elif isinstance(result, Number):
-            if isinstance(result, complex):
-                if result.imag > 0:
-                    return nrows / result.imag
-                else:
-                    return 1.0
-            else:
-                return result / nrows
+            return result / nrows
         elif isinstance(result, list):
             if result[1] > 0:
                 if result[1] > nrows:

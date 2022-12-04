@@ -2,9 +2,9 @@ import pandas as pd
 from cuallee import Check
 import pytest
 from datetime import datetime, timedelta
+import duckdb
 
-
-def test_positive(check: Check):
+def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_on_schedule("id", (9, 17))
     df = pd.DataFrame(
         {
@@ -23,10 +23,11 @@ def test_positive(check: Check):
             )
         }
     )
-    assert check.validate(df).status.str.match("PASS").all()
+    check.table_name = "df"
+    assert check.validate(db).status.str.match("PASS").all()
 
 
-def test_negative(check: Check):
+def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_on_schedule("id", (9, 17))
     df = pd.DataFrame(
         {
@@ -45,11 +46,11 @@ def test_negative(check: Check):
             )
         }
     )
+    check.table_name = "df"
+    assert check.validate(db).status.str.match("FAIL").all()
 
-    assert check.validate(df).status.str.match("FAIL").all()
 
-
-def test_coverage(check: Check):
+def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_on_schedule("id", (9, 17), pct=7 / 8)
     df = pd.DataFrame(
         {
@@ -68,6 +69,7 @@ def test_coverage(check: Check):
             )
         }
     )
-    result = check.validate(df)
+    check.table_name = "df"
+    result = check.validate(db)
     assert result.status.str.match("PASS").all()
     assert result.pass_rate.max() == 7 / 8

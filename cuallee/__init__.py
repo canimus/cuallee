@@ -144,6 +144,7 @@ class Check:
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
+        # TODO: Should be a compute engine protocol
         self.compute_engine: ModuleType
 
         if isinstance(level, int):

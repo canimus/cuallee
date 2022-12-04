@@ -16,7 +16,9 @@ def test_negative(check: Check):
 
 
 @pytest.mark.parametrize(
-    "values", [[0,1,2], [0.1, 0.2, 0.0003], [1e2, 1e3, 1e4]], ids=("int", "float", "scientific")
+    "values",
+    [[0, 1, 2], [0.1, 0.2, 0.0003], [1e2, 1e3, 1e4]],
+    ids=("int", "float", "scientific"),
 )
 def test_parameters(check: Check, values):
     check.is_unique("id")
@@ -26,8 +28,8 @@ def test_parameters(check: Check, values):
 
 
 def test_coverage(check: Check):
-    check.is_unique("id", pct=3/4)
+    check.is_unique("id", pct=3 / 4)
     df = pd.DataFrame({"id": [10, 20, 30, 10]})
     result = check.validate(df)
     assert result.status.str.match("PASS").all()
-    assert result.pass_rate.max() == 3/4
+    assert result.pass_rate.max() == 3 / 4

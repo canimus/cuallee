@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_unique(("id", "id2"))
     df = pd.DataFrame({"id": [10, 20], "id2": [300, 500]})
@@ -35,5 +36,3 @@ def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     result = check.validate(db)
     assert result.status.str.match("PASS").all()
     assert result.pass_rate.max() == 0.75
-
-

@@ -10,6 +10,10 @@ clean: # Remove workspace files
 	@rm -rf cuallee/cuallee.egg-info/
 	@rm -rf cuallee.egg-info/
 	@rm -rf build/
+	@rm -rf __blobstorage__
+	@rm -rf .mypy_cache
+	@rm -rf .coverage
+
 	@rm -rf spark-warehouse
 	@python -c "print('Cleaning: 👌')"
 

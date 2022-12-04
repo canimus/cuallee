@@ -6,8 +6,8 @@ RUN apt install wget -y
 WORKDIR /usr/src
 
 RUN apt install openjdk-11-jdk -y
-RUN pip install pyspark==3.3.0
-RUN pip install cuallee==0.1.2
+RUN pip install pyspark==3.3.1
+RUN pip install cuallee==0.2.5
 RUN pip install colorama
 RUN pip install pyarrow
 RUN pip install fastparquet

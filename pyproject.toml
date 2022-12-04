@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.2.5"
+version = "0.3.0"
 authors = [
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" },
   { name="Herminio Vazquez", email="canimus@gmail.com"}
@@ -24,11 +24,25 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tests = [
+pyspark = [
+  "pyspark>=3.0.1"
+]
+snowpark = [
+  "snowflake-snowpark-python>=0.0.12"
+]
+pandas = [
+  "pandas>=1.4.1"
+]
+duckdb = [
+  "duckdb>=0.6.0"
+]
+polars = [
+  "polars>=0.14.29"
+]
+test = [
   "pytest",
   "pytest-cov",
   "pendulum >= 2.1.2"
-
 ]
 
 

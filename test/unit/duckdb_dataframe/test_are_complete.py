@@ -3,11 +3,13 @@ from cuallee import Check
 import pytest
 import pandas as pd
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_complete(("id", "id2"))
     df = pd.DataFrame({"id": [10, 20], "id2": [300, 500]})
     check.table_name = "df"
     assert check.validate(db).status.str.match("PASS").all()
+
 
 def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_complete(("id", "id2"))

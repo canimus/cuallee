@@ -1,22 +1,35 @@
-import pandas as pd
-import numpy as np
-from cuallee import Check
 import pytest
-from pyspark.sql import SparkSession
+import pyspark.sql.functions as F  # type: ignore
+
+from cuallee import Check, CheckLevel
 
 
-def test_positive(spark: SparkSession, check: Check):
+def test_positive(spark):
+    df = spark.range(10)
+    check = Check(CheckLevel.WARNING, "pytest")
     check.has_sum("id", 45)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+
+
+def test_negative(spark):
     df = spark.range(10)
-    assert check.validate(df).first().status == "PASS"
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.has_sum("id", 30)
+    rs = check.validate(df)
+    assert rs.first().status == "FAIL"
 
 
-def test_negative(spark: SparkSession, check: Check):
-    check.has_sum("id", 5)
+@pytest.mark.parametrize("rule_value", [int(45), float(45.0)], ids=("int", "float"))
+def test_parameters(spark, rule_value):
     df = spark.range(10)
-    assert check.validate(df).first().status == "FAIL"
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.has_sum("id", rule_value)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
 
 
-def test_coverage(spark: SparkSession, check: Check):
-    with pytest.raises(TypeError):
-        check.has_sum("id", 5, 0.1)
+def test_coverage():
+    check = Check(CheckLevel.WARNING, "pytest")
+    with pytest.raises(TypeError, match="positional arguments"):
+        check.has_sum("id", 45, 0.5)

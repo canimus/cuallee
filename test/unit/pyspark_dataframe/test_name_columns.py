@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
-from cuallee import Check
+from cuallee import Check, CheckLevel
+import inspect
 
 
 def test_column_names_with_dots(spark: SparkSession, check: Check):
@@ -27,3 +28,20 @@ def test_column_names_with_spaces(spark: SparkSession, check: Check):
         col1,
         col2,
     ), "Invalid column names with spaces"
+
+
+
+def test_between_method():
+    check = Check(CheckLevel.WARNING, "CheckIsBetween")
+    assert callable(check.is_between)
+
+
+def test_between_args():
+    check = Check(CheckLevel.WARNING, "CheckIsBetween")
+    signature = inspect.signature(check.is_between)
+    params = signature.parameters
+    # Expect column and array of values
+    assert "column" in params.keys(), "Expected column parameter"
+    assert "value" in params.keys(), "Expected value parameter"
+
+

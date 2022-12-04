@@ -38,6 +38,10 @@ def test_negative(snowpark):
     assert rs.first().VIOLATIONS == 1, "Uno should violate the expression"
 
 
+def test_parameters():
+    return "😅 No parameters to be tested!"
+
+
 def test_coverage(snowpark):
     df = snowpark.createDataFrame(
         [

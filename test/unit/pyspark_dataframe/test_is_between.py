@@ -1,41 +1,68 @@
+import pytest
+import pyspark.sql.functions as F
+
+from datetime import datetime, date
 from cuallee import Check, CheckLevel
-import inspect
 
 
-def test_between_method():
-    check = Check(CheckLevel.WARNING, "CheckIsBetween")
-    assert callable(check.is_between)
+def test_positive(spark):
+    df = spark.range(10)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_between("id", (0, 10))
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
 
 
-def test_between_args():
-    check = Check(CheckLevel.WARNING, "CheckIsBetween")
-    signature = inspect.signature(check.is_between)
-    params = signature.parameters
-    # Expect column and array of values
-    assert "column" in params.keys(), "Expected column parameter"
-    assert "value" in params.keys(), "Expected value parameter"
+def test_negative(spark):
+    df = spark.range(10)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_between("id", (0, 5))
+    rs = check.validate(df)
+    assert rs.first().status == "FAIL"
 
 
-def test_between_numbers(spark):
-    check = Check(CheckLevel.WARNING, "CheckIsBetween")
-    assert check.is_between("id", (0, 10)).validate(spark.range(10)).first().status
+@pytest.mark.parametrize(
+    "data, data_type, number, rule_column, rule_value",
+    [
+        ["id", "integer", 0, "id_2", tuple([0, 10])],
+        ["id", "integer", 0, "id_2", list([0, 10])],
+        ["id", "float", 0.0, "id_2", tuple([0, 10])],
+        ["id", "integer", 1, "number", tuple([float(0.5), float(10.5)])],
+    ],
+    ids=["tuple", "list", "data_as_float", "value_float",
+    ],
+)
+def test_parameters(spark, data, data_type, number, rule_column, rule_value):
+    df = spark.range(10).withColumn(rule_column, F.col(data).cast(data_type) + number)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_between(rule_column, rule_value)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
 
 
-def test_between_number_with_pct(spark):
-    check = Check(CheckLevel.WARNING, "CheckIsBetween")
-    assert (
-        check.is_between("id", (0, 5), pct=0.5).validate(spark.range(10)).first().status
-    )
+@pytest.mark.parametrize(
+    "year, month, day, hour, minute, second, incr_d, incr_h, data_type, rule_column, rule_value",
+    [
+        [2022, 10, 1, 0, 0, 0, range(10), [0]*10, "date", "date", tuple([date(2022, 9, 1), date(2022, 11, 1)])],
+        [
+            2022, 10, 22, 5, 0, 0, [0]*10, range(10), "timestamp", "timestamp", tuple([datetime(2022, 10, 22, 0, 0, 0), datetime(2022, 10, 22, 22, 0, 0)])
+        ]
+    ],
+    ids=["date", "timestamp"],
+)
+def test_parameters_dates(spark, year, month, day, hour, minute, second, incr_d, incr_h, data_type, rule_column, rule_value):
+    df = spark.createDataFrame([[datetime(year, month, day + d, hour + h, minute, second)] for d, h in zip(incr_d, incr_h)], [rule_column]).select(F.col(rule_column).cast(data_type))
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_between(rule_column, rule_value)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
 
 
-def test_between_dates(spark):
-    check = Check(CheckLevel.WARNING, "CheckIsBetweenDates")
-    df = spark.sql(
-        "select explode(sequence(to_date('2022-01-01'), to_date('2022-01-10'), interval 1 day)) as date"
-    )
-    assert (
-        check.is_between("date", ("2022-01-01", "2022-01-10"))
-        .validate(df)
-        .first()
-        .status
-    )
+def test_coverage(spark):
+    df = spark.range(10)
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_between("id", (0, 5), 0.5)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+    assert rs.first().pass_threshold == 0.5
+    assert rs.first().pass_rate == 6 / 10

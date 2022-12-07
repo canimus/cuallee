@@ -1,7 +1,6 @@
 import pyspark.sql.functions as F
 
 from cuallee import Check, CheckLevel
-import pandas as pd
 
 
 def test_positive(spark):

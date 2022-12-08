@@ -30,7 +30,6 @@ def test_column_names_with_spaces(spark: SparkSession, check: Check):
     ), "Invalid column names with spaces"
 
 
-
 def test_between_method():
     check = Check(CheckLevel.WARNING, "CheckIsBetween")
     assert callable(check.is_between)
@@ -52,5 +51,3 @@ def test_integer_casting(spark, check: Check):
 
     # Validate columns in ComputeInstruction
     assert "status" in check.validate(df).first().asDict()
-
-

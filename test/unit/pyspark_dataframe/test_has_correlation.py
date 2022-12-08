@@ -6,9 +6,13 @@ import pyspark.sql.functions as F
 from cuallee import Check, CheckLevel
 
 
-@pytest.mark.parametrize("type", ['integer', "double"], ids=["int", "float"])
+@pytest.mark.parametrize("type", ["integer", "double"], ids=["int", "float"])
 def test_positive(spark, type):
-    df = spark.range(10).select(F.col('id').cast(type)).withColumn("id2", F.col("id") * 10)
+    df = (
+        spark.range(10)
+        .select(F.col("id").cast(type))
+        .withColumn("id2", F.col("id") * 10)
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.has_correlation("id", "id2", 1.0)
     rs = check.validate(df)

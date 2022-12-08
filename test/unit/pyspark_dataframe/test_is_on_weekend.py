@@ -4,7 +4,9 @@ from cuallee import Check, CheckLevel
 
 
 def test_positive(spark):
-    df = spark.range(2).withColumn("ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col('id') + 12))
+    df = spark.range(2).withColumn(
+        "ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col("id") + 12)
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_weekend("ARRIVAL_DATE")
     rs = check.validate(df)
@@ -14,7 +16,9 @@ def test_positive(spark):
 
 
 def test_negative(spark):
-    df = spark.range(5).withColumn("ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col('id') + 12))
+    df = spark.range(5).withColumn(
+        "ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col("id") + 12)
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_weekend("ARRIVAL_DATE")
     rs = check.validate(df)
@@ -29,7 +33,9 @@ def test_parameters(spark):
 
 
 def test_coverage(spark):
-    df = spark.range(9).withColumn("ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col('id') + 12))
+    df = spark.range(9).withColumn(
+        "ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col("id") + 12)
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_weekend("ARRIVAL_DATE", 0.4)
     rs = check.validate(df)

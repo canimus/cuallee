@@ -6,7 +6,18 @@ from cuallee import Check, CheckLevel
 
 
 def test_positive(spark):
-    df = spark.range(10).withColumn("ARRIVAL_TIMESTAMP", F.to_timestamp(F.concat(F.lit("2022-01-"), F.col('id')+1, F.lit(" 10:"), (F.col('id')+1)*5, F.lit(":0"))))
+    df = spark.range(10).withColumn(
+        "ARRIVAL_TIMESTAMP",
+        F.to_timestamp(
+            F.concat(
+                F.lit("2022-01-"),
+                F.col("id") + 1,
+                F.lit(" 10:"),
+                (F.col("id") + 1) * 5,
+                F.lit(":0"),
+            )
+        ),
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", (9, 17))
     rs = check.validate(df)
@@ -16,7 +27,18 @@ def test_positive(spark):
 
 
 def test_negative(spark):
-    df = spark.range(10).withColumn("ARRIVAL_TIMESTAMP", F.to_timestamp(F.concat(F.lit("2022-01-"), F.col('id')+1, F.lit(" "), F.col('id')+10, F.lit(":0:0"))))
+    df = spark.range(10).withColumn(
+        "ARRIVAL_TIMESTAMP",
+        F.to_timestamp(
+            F.concat(
+                F.lit("2022-01-"),
+                F.col("id") + 1,
+                F.lit(" "),
+                F.col("id") + 10,
+                F.lit(":0:0"),
+            )
+        ),
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", (9, 17))
     rs = check.validate(df)
@@ -36,7 +58,18 @@ def test_negative(spark):
     ),
 )
 def test_parameters(spark, rule_value):
-    df = spark.range(10).withColumn("ARRIVAL_TIMESTAMP", F.to_timestamp(F.concat(F.lit("2022-01-"), F.col('id')+1, F.lit(" 10:"), (F.col('id')+1)*5, F.lit(":0"))))
+    df = spark.range(10).withColumn(
+        "ARRIVAL_TIMESTAMP",
+        F.to_timestamp(
+            F.concat(
+                F.lit("2022-01-"),
+                F.col("id") + 1,
+                F.lit(" 10:"),
+                (F.col("id") + 1) * 5,
+                F.lit(":0"),
+            )
+        ),
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", rule_value)
     rs = check.validate(df)
@@ -44,7 +77,18 @@ def test_parameters(spark, rule_value):
 
 
 def test_coverage(spark):
-    df = spark.range(10).withColumn("ARRIVAL_TIMESTAMP", F.to_timestamp(F.concat(F.lit("2022-01-"), F.col('id')+1, F.lit(" "), F.col('id')+10, F.lit(":0:0"))))
+    df = spark.range(10).withColumn(
+        "ARRIVAL_TIMESTAMP",
+        F.to_timestamp(
+            F.concat(
+                F.lit("2022-01-"),
+                F.col("id") + 1,
+                F.lit(" "),
+                F.col("id") + 10,
+                F.lit(":0:0"),
+            )
+        ),
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_schedule("ARRIVAL_TIMESTAMP", (9, 17), 0.8)
     rs = check.validate(df)

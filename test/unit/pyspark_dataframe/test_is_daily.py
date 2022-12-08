@@ -25,8 +25,14 @@ def test_positive(spark):
 )
 def test_negative(spark, col_months, start_month, col_days, column, violations):
     df = (
-        spark.range(10).withColumn('zeros', F.lit(0))
-        .withColumn("date", F.make_date(F.lit(2022), F.col(col_months) + start_month, F.col(col_days) + 1))
+        spark.range(10)
+        .withColumn("zeros", F.lit(0))
+        .withColumn(
+            "date",
+            F.make_date(
+                F.lit(2022), F.col(col_months) + start_month, F.col(col_days) + 1
+            ),
+        )
         .withColumn(
             "date2",
             F.when(F.col("date") == date(2022, 10, 6), date(2022, 10, 11)).otherwise(

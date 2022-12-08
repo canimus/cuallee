@@ -15,7 +15,7 @@ def test_positive(spark):
     assert rs.first().status == "PASS"
 
 
-def test_negative(spark): #TODO: check why results are different than snwopark
+def test_negative(spark):  # TODO: check why results are different than snwopark
     df = spark.range(10)
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_inside_interquartile_range("id")
@@ -44,7 +44,7 @@ def test_parameters(spark, rule_value, value):
     assert rs.first().value == value
 
 
-def test_coverage(spark): #TODO: check why results are different than snwopark
+def test_coverage(spark):  # TODO: check why results are different than snwopark
     df = spark.range(10)
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_inside_interquartile_range("id", pct=0.5)

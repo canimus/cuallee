@@ -1,17 +1,45 @@
+import pyspark.sql.functions as F
+
 from cuallee import Check, CheckLevel
-import pandas as pd
 
 
-def test_all_weekends(spark):
-    check = Check(CheckLevel.ERROR, "WeekendTest")
-    df = spark.createDataFrame(
-        pd.date_range(start="2022-01-01", end="2022-01-10", freq="D")
-        .rename("ts")
-        .to_frame(),
-        schema="ts timestamp",
+def test_positive(spark):
+    df = spark.range(2).withColumn(
+        "ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col("id") + 12)
     )
-    check.is_on_weekend("ts")
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_on_weekend("ARRIVAL_DATE")
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+    assert rs.first().violations == 0
+    assert rs.first().pass_threshold == 1.0
 
-    assert (
-        check.validate(df).first().violations == 6
-    ), "Incorrect calulation of Weekend filters"
+
+def test_negative(spark):
+    df = spark.range(5).withColumn(
+        "ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col("id") + 12)
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_on_weekend("ARRIVAL_DATE")
+    rs = check.validate(df)
+    assert rs.first().status == "FAIL"
+    assert rs.first().violations == 3
+    assert rs.first().pass_threshold == 1.0
+    assert rs.first().pass_rate == 2 / 5
+
+
+def test_parameters(spark):
+    return "😅 No parameters to be tested!"
+
+
+def test_coverage(spark):
+    df = spark.range(9).withColumn(
+        "ARRIVAL_DATE", F.make_date(F.lit(2022), F.lit(11), F.col("id") + 12)
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_on_weekend("ARRIVAL_DATE", 0.4)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+    assert rs.first().violations == 5
+    assert rs.first().pass_threshold == 0.4
+    assert rs.first().pass_rate == 4 / 9

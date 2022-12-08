@@ -1,17 +1,45 @@
+import pyspark.sql.functions as F
+
 from cuallee import Check, CheckLevel
-import pandas as pd
 
 
-def test_all_friday(spark):
-    check = Check(CheckLevel.ERROR, "FridayTest")
-    df = spark.createDataFrame(
-        pd.date_range(start="2022-01-01", end="2022-01-10", freq="D")
-        .rename("ts")
-        .to_frame(),
-        schema="ts timestamp",
+def test_positive(spark):
+    df = spark.range(4).withColumn(
+        "date", F.make_date(F.lit(2022), F.lit(12), 2 + F.col("id") * 7)
     )
-    check.is_on_friday("ts")
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_on_friday("date")
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+    assert rs.first().violations == 0
+    assert rs.first().pass_threshold == 1.0
 
-    assert (
-        check.validate(df).first().violations == 9
-    ), "Incorrect calulation of Friday filters"
+
+def test_negative(spark):
+    df = spark.range(10).withColumn(
+        "date", F.make_date(F.lit(2022), F.lit(12), 2 + F.col("id"))
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_on_friday("date")
+    rs = check.validate(df)
+    assert rs.first().status == "FAIL"
+    assert rs.first().violations == 8
+    assert rs.first().pass_threshold == 1.0
+    assert rs.first().pass_rate == 0.2
+
+
+def test_parameters(spark):
+    return "😅 No parameters to be tested!"
+
+
+def test_coverage(spark):
+    df = spark.range(10).withColumn(
+        "date", F.make_date(F.lit(2022), F.lit(12), 2 + F.col("id"))
+    )
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.is_on_friday("date", 0.2)
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+    assert rs.first().violations == 8
+    assert rs.first().pass_threshold == 0.2
+    assert rs.first().pass_rate == 0.2

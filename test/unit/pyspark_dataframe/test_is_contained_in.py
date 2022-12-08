@@ -5,9 +5,7 @@ from cuallee import Check, CheckLevel
 
 
 def test_positive(spark):
-    df = spark.createDataFrame(
-        [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
-    )
+    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"])
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_contained_in("desc", ("blue", "red", "green", "grey", "black"))
     rs = check.validate(df)
@@ -17,9 +15,7 @@ def test_positive(spark):
 
 
 def test_negative(spark):
-    df = spark.createDataFrame(
-        [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
-    )
+    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"])
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_contained_in("desc", ("blue", "red"))
     rs = check.validate(df)
@@ -91,9 +87,7 @@ def test_parameters(spark, data, columns, rule_value):
 
 
 def test_coverage(spark):
-    df = spark.createDataFrame(
-        [[1, "blue"], [2, "green"], [3, "red"]], ["id", "desc"]
-    )
+    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "red"]], ["id", "desc"])
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_contained_in("desc", ("blue", "red"), 0.5)
     rs = check.validate(df)

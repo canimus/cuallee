@@ -514,7 +514,7 @@ class Compute(ComputeEngine):
                     F.count(f"`{rule.column}`") > 0,
                     (F.count(f"`{rule.column}`") * -1).cast("string"),
                 )
-                .otherwise("True")
+                .otherwise("true")
                 .alias(key)
             )
 

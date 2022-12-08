@@ -29,7 +29,11 @@ def test_negative(spark):
         ["id", "float", 0.0, "id_2", tuple([0, 10])],
         ["id", "integer", 1, "number", tuple([float(0.5), float(10.5)])],
     ],
-    ids=["tuple", "list", "data_as_float", "value_float",
+    ids=[
+        "tuple",
+        "list",
+        "data_as_float",
+        "value_float",
     ],
 )
 def test_parameters(spark, data, data_type, number, rule_column, rule_value):
@@ -41,17 +45,53 @@ def test_parameters(spark, data, data_type, number, rule_column, rule_value):
 
 
 @pytest.mark.parametrize(
-    "year, month, day, hour, minute, second, incr_d, incr_h, data_type, rule_column, rule_value",
+    "col_days, col_hours, start_day, start_hour, data_type, rule_column, rule_value",
     [
-        [2022, 10, 1, 0, 0, 0, range(10), [0]*10, "date", "date", tuple([date(2022, 9, 1), date(2022, 11, 1)])],
         [
-            2022, 10, 22, 5, 0, 0, [0]*10, range(10), "timestamp", "timestamp", tuple([datetime(2022, 10, 22, 0, 0, 0), datetime(2022, 10, 22, 22, 0, 0)])
-        ]
+            "id",
+            "zeros",
+            1,
+            0,
+            "date",
+            "date",
+            tuple([date(2022, 9, 1), date(2022, 11, 1)]),
+        ],
+        [
+            "zeros",
+            "id",
+            22,
+            5,
+            "timestamp",
+            "timestamp",
+            tuple([datetime(2022, 10, 22, 0, 0, 0), datetime(2022, 10, 22, 22, 0, 0)]),
+        ],
     ],
     ids=["date", "timestamp"],
 )
-def test_parameters_dates(spark, year, month, day, hour, minute, second, incr_d, incr_h, data_type, rule_column, rule_value):
-    df = spark.createDataFrame([[datetime(year, month, day + d, hour + h, minute, second)] for d, h in zip(incr_d, incr_h)], [rule_column]).select(F.col(rule_column).cast(data_type))
+def test_parameters_dates(
+    spark,
+    col_days,
+    col_hours,
+    start_day,
+    start_hour,
+    data_type,
+    rule_column,
+    rule_value,
+):
+    df = (
+        spark.range(10)
+        .withColumn("zeros", F.lit(0))
+        .withColumn(
+            rule_column,
+            F.concat(
+                F.lit("2022-10-"),
+                F.col(col_days) + start_day,
+                F.lit(" "),
+                F.col(col_hours) + start_hour,
+                F.lit(":0:0"),
+            ).cast(data_type),
+        )
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_between(rule_column, rule_value)
     rs = check.validate(df)

@@ -3,7 +3,7 @@ from cuallee import Check
 import pytest
 import duckdb
 
-
+@pytest.mark.skip(reason='Reimplementation')
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_workflow("name", "event", "ord", [("x", "y"), ("y", "z"), ("z", None)])
     df = pd.DataFrame(
@@ -12,6 +12,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.table_name = "df"
     assert check.validate(db).status.str.match("PASS").all()
 
+@pytest.mark.skip(reason='Reimplementation')
 def test_parameters(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_workflow("X", "Y", "Z", [("x", "y"), ("y", "z"), ("z", None)])
     check.is_complete("X")
@@ -21,7 +22,7 @@ def test_parameters(check: Check, db: duckdb.DuckDBPyConnection):
     check.table_name = "df"
     assert check.validate(db).status.str.match("PASS").all()
 
-
+@pytest.mark.skip(reason='Reimplementation')
 def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_workflow("name", "event", "ord", [("x", "y"), ("y", "z")])
     df = pd.DataFrame(
@@ -30,7 +31,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.table_name = "df"
     assert check.validate(db).status.str.match("FAIL").all()
 
-
+@pytest.mark.skip(reason='Reimplementation')
 def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_workflow("name", "event", "ord", [("x", "y"), ("y", "z")], pct=4 / 6)
     df = pd.DataFrame(

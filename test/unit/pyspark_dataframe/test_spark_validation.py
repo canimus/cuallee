@@ -1,8 +1,9 @@
 import pytest
+from unittest.mock import patch
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from typing import Tuple, Dict, Set, List
 from toolz import valfilter  # type: ignore
 
@@ -201,25 +202,21 @@ def test_get_compute_dictionary(spark):
     assert set(rs.keys()) == set(check._rule.keys())
 
 
-# def test_get_spark_version():
-#     pass
-
-
-# def test_overwrite_observe_method(spark):
-#     check = (
-#         Check(CheckLevel.WARNING, "test_overwrite_observe_method")
-#         .is_complete("id")
-#         .is_unique("id")
-#         .is_greater_or_equal_than("id", 2)
-#     )
-#     computed_expression_dict = PSV.compute(check._rule)
-#     _observe = lambda x: x.compute_method == "observe"
-#     _select = lambda x: x.compute_method == "select"
-#     assert len(valfilter(_observe, computed_expression_dict)) == 2
-#     assert len(valfilter(_select, computed_expression_dict)) == 1
-#     PSV.summary
-#     assert len(valfilter(_observe, c._compute)) == 0
-#     assert len(valfilter(_select, c._compute)) == 3
+def test_overwrite_observe_method(spark):
+    check = (
+        Check(CheckLevel.WARNING, "test_overwrite_observe_method")
+        .is_complete("id")
+        .is_unique("id")
+        .is_greater_or_equal_than("id", 2)
+    )
+    computed_expression_dict = PSV.compute(check._rule)
+    _observe = lambda x: x.compute_method.name == PSV.ComputeMethod.OBSERVE.name
+    _select = lambda x: x.compute_method.name == PSV.ComputeMethod.SELECT.name
+    assert len(valfilter(_observe, computed_expression_dict)) == 2
+    assert len(valfilter(_select, computed_expression_dict)) == 1
+    new_computed_expression_dict = PSV._replace_observe_compute(computed_expression_dict)
+    assert len(valfilter(_observe, new_computed_expression_dict)) == 0
+    assert len(valfilter(_select, new_computed_expression_dict)) == 3
 
 
 minversion = pytest.mark.skipif(
@@ -241,10 +238,6 @@ def test_observe_method_return_tuple(spark):
     assert isinstance(observe, Dict)
     assert row == df.count()
     assert len(observe) == 1
-
-
-def test_message_spark_version():
-    pass
 
 
 def test_observe_no_compute(spark):
@@ -276,6 +269,15 @@ def test_compute_summary_return_dataframe(spark):
     check = Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id")
     rs = PSV.summary(check, df)
     assert isinstance(rs, DataFrame)
+
+
+@patch.object(SparkSession, "version", "3.2.0")
+def test_lower_spark_version(spark):
+    df = spark.range(10)
+    check = Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id")
+    rs = PSV.summary(check, df)
+    assert isinstance(rs, DataFrame)
+    assert str(spark.version) == "3.2.0"
 
 
 

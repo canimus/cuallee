@@ -567,6 +567,23 @@ def _field_type_filter(
     )
 
 
+def _replace_observe_compute(computed_expressions: dict) -> dict:
+    """Replace observe based check with select"""
+    print(
+            "[😔]"
+            + Fore.YELLOW
+            + " PySpark < 3.3.0 | When you upgrade checks will run 2x faster."
+        )
+    print(Style.RESET_ALL)
+    select_only_expressions = {}
+    for k, v in computed_expressions.items():
+        instruction = v
+        if instruction.compute_method.name == ComputeMethod.OBSERVE.name:
+            instruction.compute_method = ComputeMethod.SELECT
+        select_only_expressions[k] = instruction
+    return select_only_expressions
+
+
 def _compute_observe_method(
     compute_set: Dict[str, ComputeInstruction], dataframe: DataFrame
 ) -> Tuple[int, Dict]:
@@ -576,17 +593,8 @@ def _compute_observe_method(
     _observe = lambda x: x.compute_method.name == ComputeMethod.OBSERVE.name
     observe = valfilter(_observe, compute_set)
 
-    try:
-        from pyspark.sql import Observation
-    except:
-        print(
-            "[😔]"
-            + Fore.YELLOW
-            + " PySpark < 3.3.0 | When you upgrade checks will run 2x faster."
-        )
-        print(Style.RESET_ALL)
-
     if observe:
+        from pyspark.sql import Observation
         observation = Observation("observation")
 
         df_observation = dataframe.observe(
@@ -730,13 +738,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     # Compute the expression
     computed_expressions = compute(check._rule)
     if int(spark.version.replace(".", "")) < 330:
-        select_only_expressions = {}
-        for k, v in computed_expressions.items():
-            instruction = v
-            if instruction.compute_method == "observe":
-                instruction.compute_method = "select"
-            select_only_expressions[k] = instruction
-        computed_expressions = select_only_expressions
+        computed_expressions = _replace_observe_compute(computed_expressions)
 
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)
     select_result = _compute_select_method(computed_expressions, dataframe)

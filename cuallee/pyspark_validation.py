@@ -570,10 +570,10 @@ def _field_type_filter(
 def _replace_observe_compute(computed_expressions: dict) -> dict:
     """Replace observe based check with select"""
     print(
-            "[😔]"
-            + Fore.YELLOW
-            + " PySpark < 3.3.0 | When you upgrade checks will run 2x faster."
-        )
+        "[😔]"
+        + Fore.YELLOW
+        + " PySpark < 3.3.0 | When you upgrade checks will run 2x faster."
+    )
     print(Style.RESET_ALL)
     select_only_expressions = {}
     for k, v in computed_expressions.items():
@@ -595,6 +595,7 @@ def _compute_observe_method(
 
     if observe:
         from pyspark.sql import Observation
+
         observation = Observation("observation")
 
         df_observation = dataframe.observe(

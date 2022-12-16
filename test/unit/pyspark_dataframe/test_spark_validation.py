@@ -104,8 +104,16 @@ def test_date_fields(spark):
         spark.range(10)
         .withColumn("date", F.make_date(F.lit(2022), F.lit(10), F.col("id") + 1))
         .withColumn(
-            "timestamp", F.to_timestamp(F.concat(F.lit("2022-10-"), (F.col("id") + 1).cast('string'), F.lit(" 10:10:10")))
-            ))
+            "timestamp",
+            F.to_timestamp(
+                F.concat(
+                    F.lit("2022-10-"),
+                    (F.col("id") + 1).cast("string"),
+                    F.lit(" 10:10:10"),
+                )
+            ),
+        )
+    )
     rs = PSV.date_fields(df)
     assert isinstance(rs, Set)
     assert len(rs) == 2
@@ -117,7 +125,14 @@ def test_timestamp_fields(spark):
         spark.range(10)
         .withColumn("date", F.make_date(F.lit(2022), F.lit(10), F.col("id") + 1))
         .withColumn(
-            "timestamp", F.to_timestamp(F.concat(F.lit('2022-10-'), (F.col("id") + 1).cast('integer'), F.lit(' 10:10:10')))
+            "timestamp",
+            F.to_timestamp(
+                F.concat(
+                    F.lit("2022-10-"),
+                    (F.col("id") + 1).cast("integer"),
+                    F.lit(" 10:10:10"),
+                )
+            ),
         )
     )
     rs = PSV.timestamp_fields(df)
@@ -158,7 +173,7 @@ def test_numeric_column_validation(spark):
     check.is_greater_than("desc", 2)
     with pytest.raises(AssertionError, match="are not numeric"):
         PSV.validate_data_types(check.rules, df)
-        
+
 
 def test_string_column_validation(spark):
     df = spark.range(10).withColumn("desc", F.col("id").cast("string"))
@@ -214,7 +229,9 @@ def test_overwrite_observe_method(spark):
     _select = lambda x: x.compute_method.name == PSV.ComputeMethod.SELECT.name
     assert len(valfilter(_observe, computed_expression_dict)) == 2
     assert len(valfilter(_select, computed_expression_dict)) == 1
-    new_computed_expression_dict = PSV._replace_observe_compute(computed_expression_dict)
+    new_computed_expression_dict = PSV._replace_observe_compute(
+        computed_expression_dict
+    )
     assert len(valfilter(_observe, new_computed_expression_dict)) == 0
     assert len(valfilter(_select, new_computed_expression_dict)) == 3
 
@@ -257,7 +274,9 @@ def test_compute_select_method(spark):
 
 
 def test_compute_transform_method(spark):
-    df = spark.range(10).withColumn("date", F.make_date(F.lit(2022), F.col("id") + 1, F.lit(1)))
+    df = spark.range(10).withColumn(
+        "date", F.make_date(F.lit(2022), F.col("id") + 1, F.lit(1))
+    )
     check = Check(CheckLevel.WARNING, "test_transform_method").is_daily("date")
     transform = PSV._compute_transform_method(PSV.compute(check._rule), df)
     assert isinstance(transform, Dict)
@@ -278,8 +297,6 @@ def test_lower_spark_version(spark):
     rs = PSV.summary(check, df)
     assert isinstance(rs, DataFrame)
     assert str(spark.version) == "3.2.0"
-
-
 
 
 # def test_update_rule_status(spark):

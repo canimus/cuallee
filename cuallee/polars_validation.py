@@ -12,7 +12,7 @@ from itertools import repeat
 
 class Compute:
     def is_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.select(pl.col(rule.column).null_count())
+        return first(dataframe.select(pl.col(rule.column).is_not_null().cast(pl.Int8).sum()).to_dict()[rule.column])
 
     def are_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].notnull().astype(int).sum().sum() / len(
@@ -222,53 +222,53 @@ class Compute:
 
 
 def compute(rules: Dict[str, Rule]):
-    """Pandas computes directly on the predicates"""
+    """Polars computes directly on the predicates"""
     return True
 
 
 def validate_data_types(rules: List[Rule], dataframe: pl.DataFrame):
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
 
-    # COLUMNS
-    # =======
-    rule_match = cuallee_utils.match_columns(rules, dataframe.columns)
-    assert not rule_match, f"Column(s): {rule_match} are not present in dataframe"
+    # # COLUMNS
+    # # =======
+    # rule_match = cuallee_utils.match_columns(rules, dataframe.columns)
+    # assert not rule_match, f"Column(s): {rule_match} are not present in dataframe"
 
-    # NUMERIC
-    # =======
-    numeric_columns = cuallee_utils.get_rule_colums(
-        cuallee_utils.get_numeric_rules(rules)
-    )
-    numeric_dtypes = dataframe.select_dtypes("number")
-    numeric_match = cuallee_utils.match_data_types(numeric_columns, numeric_dtypes)
-    assert not numeric_match, f"Column(s): {numeric_match} are not numeric"
+    # # NUMERIC
+    # # =======
+    # numeric_columns = cuallee_utils.get_rule_colums(
+    #     cuallee_utils.get_numeric_rules(rules)
+    # )
+    # numeric_dtypes = dataframe.select_dtypes("number")
+    # numeric_match = cuallee_utils.match_data_types(numeric_columns, numeric_dtypes)
+    # assert not numeric_match, f"Column(s): {numeric_match} are not numeric"
 
-    # DATE
-    # =======
-    date_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_date_rules(rules))
-    date_dtypes = dataframe.select_dtypes("datetime")
-    date_match = cuallee_utils.match_data_types(date_columns, date_dtypes)
-    assert not date_match, f"Column(s): {date_match} are not date"
+    # # DATE
+    # # =======
+    # date_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_date_rules(rules))
+    # date_dtypes = dataframe.select_dtypes("datetime")
+    # date_match = cuallee_utils.match_data_types(date_columns, date_dtypes)
+    # assert not date_match, f"Column(s): {date_match} are not date"
 
-    # TIMESTAMP
-    # =======
-    timestamp_columns = cuallee_utils.get_rule_colums(
-        cuallee_utils.get_timestamp_rules(rules)
-    )
-    timestamp_dtypes = dataframe.select_dtypes("datetime64")
-    timestamp_match = cuallee_utils.match_data_types(
-        timestamp_columns, timestamp_dtypes
-    )
-    assert not timestamp_match, f"Column(s): {timestamp_match} are not timestamp"
+    # # TIMESTAMP
+    # # =======
+    # timestamp_columns = cuallee_utils.get_rule_colums(
+    #     cuallee_utils.get_timestamp_rules(rules)
+    # )
+    # timestamp_dtypes = dataframe.select_dtypes("datetime64")
+    # timestamp_match = cuallee_utils.match_data_types(
+    #     timestamp_columns, timestamp_dtypes
+    # )
+    # assert not timestamp_match, f"Column(s): {timestamp_match} are not timestamp"
 
-    # STRING
-    # =======
-    string_columns = cuallee_utils.get_rule_colums(
-        cuallee_utils.get_string_rules(rules)
-    )
-    string_dtypes = dataframe.select_dtypes("object")
-    string_match = cuallee_utils.match_data_types(string_columns, string_dtypes)
-    assert not string_match, f"Column(s): {string_match} are not string"
+    # # STRING
+    # # =======
+    # string_columns = cuallee_utils.get_rule_colums(
+    #     cuallee_utils.get_string_rules(rules)
+    # )
+    # string_dtypes = dataframe.select_dtypes("object")
+    # string_match = cuallee_utils.match_data_types(string_columns, string_dtypes)
+    # assert not string_match, f"Column(s): {string_match} are not string"
 
     return True
 
@@ -279,7 +279,7 @@ def summary(check: Check, dataframe: pl.DataFrame):
         rule.key: [operator.methodcaller(rule.method, rule, dataframe)(compute)]
         for rule in check.rules
     }
-
+    
     def _calculate_violations(result, nrows):
 
         if isinstance(result, (bool, np.bool_)):
@@ -342,4 +342,5 @@ def summary(check: Check, dataframe: pl.DataFrame):
         }
         for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
     ]
+    pl.cfg.Config.set_tbl_cols(12)
     return pl.DataFrame(computation_basis)

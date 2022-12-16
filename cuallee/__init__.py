@@ -26,6 +26,13 @@ except:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
+    from polars import DataFrame as polars_dataframe  # type: ignore
+
+    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Polars")
+except:
+    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Polars")
+
+try:
     from pyspark.sql import DataFrame as pyspark_dataframe
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
@@ -553,6 +560,10 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
         
+        elif "polars_dataframe" in globals() and isinstance(
+            dataframe, polars_dataframe
+        ):
+            self.compute_engine = importlib.import_module("cuallee.polars_validation")
         
 
         assert self.compute_engine.validate_data_types(

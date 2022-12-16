@@ -23,7 +23,7 @@ def test_negative(check: Check):
 def test_coverage(check: Check):
     check.is_daily("id", pct=0.6)
     df = pd.DataFrame(
-        {"id": [datetime.today() + timedelta(days=i) for i in range(1, 10, 2)]}
+        {"id": [datetime(2022, 12, 12) + timedelta(days=i) for i in range(1, 10, 2)]}
     )
     result = check.validate(df)
     assert result.status.str.match("PASS").all()

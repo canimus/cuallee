@@ -48,6 +48,7 @@ def test_compute():
     assert hasattr(compute, "has_max")
     assert hasattr(compute, "has_mean")
     assert hasattr(compute, "has_std")
+    assert hasattr(compute, "has_sum")
     assert hasattr(compute, "is_between")
     assert hasattr(compute, "is_contained_in")
     assert hasattr(compute, "has_percentile")
@@ -68,6 +69,7 @@ def test_compute():
     assert hasattr(compute, "is_on_sunday")
     assert hasattr(compute, "is_on_schedule")
     assert hasattr(compute, "is_daily")
+    assert hasattr(compute, "has_workflow")
 
 
 def test_field_type_filter(snowpark):

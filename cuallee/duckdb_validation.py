@@ -134,6 +134,7 @@ class Compute:
         )
 
     def is_daily(self, rule: Rule) -> str:
+        """Returns the number or violations and matches on a daily schedule"""
         if rule.value is None:
             day_mask = tuple([1, 2, 3, 4, 5])
         else:

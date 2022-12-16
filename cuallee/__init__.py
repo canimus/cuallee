@@ -552,6 +552,8 @@ class Check:
             dataframe, duckdb_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
+        
+        
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe

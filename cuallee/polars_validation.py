@@ -8,8 +8,7 @@ from toolz import first, compose  # type: ignore
 from numbers import Number
 from cuallee import utils as cuallee_utils
 from itertools import repeat
-from operator import methodcaller, itemgetter
-from functools import partialmethod
+from operator
 
 
 class Compute:
@@ -17,7 +16,7 @@ class Compute:
     @staticmethod
     def _result(series: pl.Series) -> int:
         """It retrieves the sum result of the polar predicate"""
-        return compose(itemgetter(0))(series)
+        return compose(operator.itemgetter(0))(series)
 
     def is_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate not null"""
@@ -27,13 +26,13 @@ class Compute:
         return Compute._result(dataframe.select([pl.col(c).is_not_null().cast(pl.Int8).sum() for c in rule.column]).sum(axis=1) / len(rule.column))
 
     def is_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].nunique()
+        return Compute._result(dataframe.select(pl.col(rule.column).is_unique().cast(pl.Int8)).sum())
 
     def are_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].nunique().sum() / len(rule.column)
+        return Compute._result(dataframe.select([pl.col(c).is_unique().cast(pl.Int8).sum() for c in rule.column]).sum(axis=1) / len(rule.column))
 
     def is_greater_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].gt(rule.value).sum()
+        return Compute._result(dataframe.select(operator.gt(pl.col(rule.column), rule.value).cast(pl.Int8)).sum())
 
     def is_greater_or_equal_than(
         self, rule: Rule, dataframe: pl.DataFrame

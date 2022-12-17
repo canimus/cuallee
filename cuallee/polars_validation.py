@@ -1,18 +1,18 @@
-from typing import Dict, Union, List
-from cuallee import Check, Rule
-import polars as pl  # type: ignore
-import operator
-import numpy as np
 import re
-from toolz import first, compose  # type: ignore
-from numbers import Number
-from cuallee import utils as cuallee_utils
+import operator
 from itertools import repeat
-from operator
+from numbers import Number
+from typing import Dict, List, Union
+
+import numpy as np
+import polars as pl  # type: ignore
+from toolz import compose, first  # type: ignore
+
+from cuallee import Check, Rule
+from cuallee import utils as cuallee_utils
 
 
 class Compute:
-
     @staticmethod
     def _result(series: pl.Series) -> int:
         """It retrieves the sum result of the polar predicate"""
@@ -20,43 +20,74 @@ class Compute:
 
     def is_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate not null"""
-        return Compute._result(dataframe.select(pl.col(rule.column).is_not_null().cast(pl.Int8)).sum().to_series())
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).is_not_null().cast(pl.Int8))
+            .sum()
+            .to_series()
+        )
 
     def are_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return Compute._result(dataframe.select([pl.col(c).is_not_null().cast(pl.Int8).sum() for c in rule.column]).sum(axis=1) / len(rule.column))
+        return Compute._result(
+            dataframe.select(
+                [pl.col(c).is_not_null().cast(pl.Int8).sum() for c in rule.column]
+            ).sum(axis=1)
+            / len(rule.column)
+        )
 
     def is_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return Compute._result(dataframe.select(pl.col(rule.column).is_unique().cast(pl.Int8)).sum())
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).is_unique().cast(pl.Int8)).sum()
+        )
 
     def are_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return Compute._result(dataframe.select([pl.col(c).is_unique().cast(pl.Int8).sum() for c in rule.column]).sum(axis=1) / len(rule.column))
+        return Compute._result(
+            dataframe.select(
+                [pl.col(c).is_unique().cast(pl.Int8).sum() for c in rule.column]
+            ).sum(axis=1)
+            / len(rule.column)
+        )
 
     def is_greater_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return Compute._result(dataframe.select(operator.gt(pl.col(rule.column), rule.value).cast(pl.Int8)).sum())
+        return Compute._result(
+            dataframe.select(
+                operator.gt(pl.col(rule.column), rule.value).cast(pl.Int8)
+            ).sum()
+        )
 
     def is_greater_or_equal_than(
         self, rule: Rule, dataframe: pl.DataFrame
     ) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].ge(rule.value).sum()
+        return Compute._result(
+            dataframe.select(
+                operator.ge(pl.col(rule.column), rule.value).cast(pl.Int8)
+            ).sum()
+        )
 
     def is_less_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].lt(rule.value).sum()
+        return Compute._result(
+            dataframe.select(
+                operator.lt(pl.col(rule.column), rule.value).cast(pl.Int8)
+            ).sum()
+        )
 
     def is_less_or_equal_than(
         self, rule: Rule, dataframe: pl.DataFrame
     ) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].le(rule.value).sum()
+        return Compute._result(
+            dataframe.select(
+                operator.le(pl.col(rule.column), rule.value).cast(pl.Int8)
+            ).sum()
+        )
 
     def is_equal_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].eq(rule.value).sum()
+        return Compute._result(
+            dataframe.select(
+                operator.eq(pl.col(rule.column), rule.value).cast(pl.Int8)
+            ).sum()
+        )
 
     def has_pattern(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return (
-            dataframe.loc[:, rule.column]
-            .str.match(re.compile(rule.value))  # type: ignore
-            .astype(int)
-            .sum()
-        )
+        return dataframe.select(pl.col(rule.column).str.count_match(r"^"))
 
     def has_min(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].min() == rule.value
@@ -81,22 +112,21 @@ class Compute:
 
     def has_percentile(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            np.percentile(dataframe.loc[:, rule.column].values,
-                          rule.settings["percentile"] * 100)  # type: ignore
+            np.percentile(
+                dataframe.loc[:, rule.column].values, rule.settings["percentile"] * 100
+            )  # type: ignore
             == rule.value  # type: ignore
         )
 
     def has_max_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmax(),
-                          rule.column[0]]
+            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmax(), rule.column[0]]
             == rule.value
         )
 
     def has_min_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmin(),
-                          rule.column[0]]
+            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmin(), rule.column[0]]
             == rule.value
         )
 
@@ -133,14 +163,12 @@ class Compute:
 
     def is_on_weekday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.dayofweek.between(
-                0, 4).astype(int).sum()
+            dataframe.loc[:, rule.column].dt.dayofweek.between(0, 4).astype(int).sum()
         )
 
     def is_on_weekend(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.dayofweek.between(
-                5, 6).astype(int).sum()
+            dataframe.loc[:, rule.column].dt.dayofweek.between(5, 6).astype(int).sum()
         )
 
     def is_on_monday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
@@ -166,8 +194,7 @@ class Compute:
 
     def is_on_schedule(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.hour.between(
-                *rule.value).astype(int).sum()
+            dataframe.loc[:, rule.column].dt.hour.between(*rule.value).astype(int).sum()
         )
 
     def is_daily(self, rule: Rule, dataframe: pl.DataFrame) -> complex:
@@ -177,12 +204,10 @@ class Compute:
             day_mask = rule.value
 
         lower, upper = (
-            dataframe.loc[:, rule.column].agg(
-                [np.min, np.max]).dt.strftime("%Y-%m-%d")
+            dataframe.loc[:, rule.column].agg([np.min, np.max]).dt.strftime("%Y-%m-%d")
         )
         sequence = (
-            pd.date_range(start=lower, end=upper,
-                          freq="D").rename("ts").to_frame()
+            pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
         )
         sequence = (
             sequence[sequence.ts.dt.dayofweek.isin(day_mask)]
@@ -192,8 +217,7 @@ class Compute:
         )
 
         delivery = (
-            dataframe[dataframe[rule.column].dt.dayofweek.isin(
-                day_mask)][rule.column]
+            dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][rule.column]
             .dt.date.astype(np.datetime64)
             .values
         )
@@ -228,8 +252,7 @@ class Compute:
             dataframe[CUALLEE_GRAPH] = list(repeat(rule.value, len(dataframe)))
 
             return (
-                dataframe.apply(
-                    lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1)
+                dataframe.apply(lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1)
                 .astype("int")
                 .sum()
             )
@@ -292,8 +315,7 @@ def validate_data_types(rules: List[Rule], dataframe: pl.DataFrame):
 def summary(check: Check, dataframe: pl.DataFrame):
     compute = Compute()
     unified_results = {
-        rule.key: [operator.methodcaller(
-            rule.method, rule, dataframe)(compute)]
+        rule.key: [operator.methodcaller(rule.method, rule, dataframe)(compute)]
         for rule in check.rules
     }
 

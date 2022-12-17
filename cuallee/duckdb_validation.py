@@ -129,9 +129,7 @@ class Compute:
         return f"SUM(CAST(EXTRACT(dow from {rule.column}) = 0 AS INTEGER))"
 
     def is_on_schedule(self, rule: Rule) -> str:
-        return (
-            f"SUM(CAST(EXTRACT(hour from {rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]} AS INTEGER))"
-        )
+        return f"SUM(CAST(EXTRACT(hour from {rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]} AS INTEGER))"
 
     def is_daily(self, rule: Rule) -> str:
         """Returns the number or violations and matches on a daily schedule"""
@@ -154,11 +152,13 @@ class Compute:
         )
 
     def is_inside_interquartile_range(self, rule: Rule) -> str:
-        template = Template("""
+        template = Template(
+            """
             (select SUM(CAST(A.$id BETWEEN B.q[1] AND B.q[2] AS INTEGER)) as r from $table A,(
             select QUANTILE_CONT($id, [0.25, 0.75]) as q from $table) B)
-        """.strip())
-        return template.substitute({"id" : rule.column, "table" : self.table_name})
+        """.strip()
+        )
+        return template.substitute({"id": rule.column, "table": self.table_name})
 
     def has_workflow(self, rule: Rule) -> str:
 

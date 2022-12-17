@@ -559,12 +559,11 @@ class Check:
             dataframe, duckdb_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
-        
+
         elif "polars_dataframe" in globals() and isinstance(
             dataframe, polars_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.polars_validation")
-        
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe

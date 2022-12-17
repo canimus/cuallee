@@ -12,13 +12,11 @@ from operator import methodcaller, itemgetter
 from functools import partialmethod
 
 
-
 class Compute:
 
     @staticmethod
-    def _result(series : pl.Series) -> int:
+    def _result(series: pl.Series) -> int:
         """It retrieves the sum result of the polar predicate"""
-        column_name = series.name
         return compose(itemgetter(0))(series)
 
     def is_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
@@ -84,19 +82,22 @@ class Compute:
 
     def has_percentile(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            np.percentile(dataframe.loc[:, rule.column].values, rule.settings["percentile"] * 100)  # type: ignore
+            np.percentile(dataframe.loc[:, rule.column].values,
+                          rule.settings["percentile"] * 100)  # type: ignore
             == rule.value  # type: ignore
         )
 
     def has_max_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmax(), rule.column[0]]
+            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmax(),
+                          rule.column[0]]
             == rule.value
         )
 
     def has_min_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmin(), rule.column[0]]
+            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmin(),
+                          rule.column[0]]
             == rule.value
         )
 
@@ -133,12 +134,14 @@ class Compute:
 
     def is_on_weekday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.dayofweek.between(0, 4).astype(int).sum()
+            dataframe.loc[:, rule.column].dt.dayofweek.between(
+                0, 4).astype(int).sum()
         )
 
     def is_on_weekend(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.dayofweek.between(5, 6).astype(int).sum()
+            dataframe.loc[:, rule.column].dt.dayofweek.between(
+                5, 6).astype(int).sum()
         )
 
     def is_on_monday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
@@ -164,7 +167,8 @@ class Compute:
 
     def is_on_schedule(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.hour.between(*rule.value).astype(int).sum()
+            dataframe.loc[:, rule.column].dt.hour.between(
+                *rule.value).astype(int).sum()
         )
 
     def is_daily(self, rule: Rule, dataframe: pl.DataFrame) -> complex:
@@ -174,10 +178,12 @@ class Compute:
             day_mask = rule.value
 
         lower, upper = (
-            dataframe.loc[:, rule.column].agg([np.min, np.max]).dt.strftime("%Y-%m-%d")
+            dataframe.loc[:, rule.column].agg(
+                [np.min, np.max]).dt.strftime("%Y-%m-%d")
         )
         sequence = (
-            pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
+            pd.date_range(start=lower, end=upper,
+                          freq="D").rename("ts").to_frame()
         )
         sequence = (
             sequence[sequence.ts.dt.dayofweek.isin(day_mask)]
@@ -187,7 +193,8 @@ class Compute:
         )
 
         delivery = (
-            dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][rule.column]
+            dataframe[dataframe[rule.column].dt.dayofweek.isin(
+                day_mask)][rule.column]
             .dt.date.astype(np.datetime64)
             .values
         )
@@ -222,7 +229,8 @@ class Compute:
             dataframe[CUALLEE_GRAPH] = list(repeat(rule.value, len(dataframe)))
 
             return (
-                dataframe.apply(lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1)
+                dataframe.apply(
+                    lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1)
                 .astype("int")
                 .sum()
             )
@@ -285,10 +293,11 @@ def validate_data_types(rules: List[Rule], dataframe: pl.DataFrame):
 def summary(check: Check, dataframe: pl.DataFrame):
     compute = Compute()
     unified_results = {
-        rule.key: [operator.methodcaller(rule.method, rule, dataframe)(compute)]
+        rule.key: [operator.methodcaller(
+            rule.method, rule, dataframe)(compute)]
         for rule in check.rules
     }
-    
+
     def _calculate_violations(result, nrows):
 
         if isinstance(result, (bool, np.bool_)):

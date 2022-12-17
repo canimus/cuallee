@@ -4,20 +4,29 @@ import polars as pl  # type: ignore
 import operator
 import numpy as np
 import re
-from toolz import first  # type: ignore
+from toolz import first, compose  # type: ignore
 from numbers import Number
 from cuallee import utils as cuallee_utils
 from itertools import repeat
+from operator import methodcaller, itemgetter
+from functools import partialmethod
+
 
 
 class Compute:
+
+    @staticmethod
+    def _result(series : pl.Series) -> int:
+        """It retrieves the sum result of the polar predicate"""
+        column_name = series.name
+        return compose(itemgetter(0))(series)
+
     def is_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return first(dataframe.select(pl.col(rule.column).is_not_null().cast(pl.Int8).sum()).to_dict()[rule.column])
+        """Validate not null"""
+        return Compute._result(dataframe.select(pl.col(rule.column).is_not_null().cast(pl.Int8)).sum().to_series())
 
     def are_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].notnull().astype(int).sum().sum() / len(
-            rule.column
-        )
+        return Compute._result(dataframe.select([pl.col(c).is_not_null().cast(pl.Int8).sum() for c in rule.column]).sum(axis=1) / len(rule.column))
 
     def is_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].nunique()
@@ -328,7 +337,7 @@ def summary(check: Check, dataframe: pl.DataFrame):
             "timestamp": check.date.strftime("%Y-%m-%d %H:%M:%S"),
             "check": check.name,
             "level": check.level.name,
-            "column": rule.column,
+            "column": str(rule.column),
             "rule": rule.method,
             "value": rule.value,
             "rows": rows,

@@ -37,7 +37,7 @@ duckdb = [
   "duckdb>=0.6.1"
 ]
 polars = [
-  "polars>=0.14.29"
+  "polars>=0.15.7"
 ]
 test = [
   "pytest",

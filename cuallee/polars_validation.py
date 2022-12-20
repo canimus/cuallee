@@ -87,10 +87,10 @@ class Compute:
         )
 
     def has_pattern(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.select(pl.col(rule.column).str.count_match(r"^"))
+        return Compute._result(dataframe.select(operator.gt(pl.col(rule.column).str.count_match(rule.value), 0).cast(pl.Int8)).sum().to_series())
 
     def has_min(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].min() == rule.value
+        return Compute._result(dataframe.select(pl.col(rule.column).min() == rule.value).to_series())
 
     def has_max(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].max() == rule.value
@@ -131,13 +131,8 @@ class Compute:
         )
 
     def has_correlation(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return (
-            dataframe.loc[:, (rule.column[0], rule.column[1])]
-            .corr()
-            .fillna(0)
-            .iloc[0, 1]
-            == rule.value
-        )
+        col_a, col_b = rule.column
+        return Compute._result(dataframe.select(pl.col(col_a), pl.col(col_b)).pearson_corr().fill_nan(0).fill_null(0).select(pl.col(col_b)).head(1).to_series())
 
     def satisfies(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return dataframe.eval(rule.value).astype(int).sum()

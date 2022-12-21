@@ -155,23 +155,26 @@ class Compute:
         )
 
     def has_percentile(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Percentile range verification for column"""
         return (
             np.percentile(
-                dataframe.loc[:, rule.column].values, rule.settings["percentile"] * 100
+                dataframe.select(pl.col(rule.column)).to_numpy(), rule.settings["percentile"] * 100
             )  # type: ignore
             == rule.value  # type: ignore
         )
 
     def has_max_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return (
-            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmax(), rule.column[0]]
-            == rule.value
+        """Adjacent column maximum value verifiation on threshold"""
+        base, target = rule.column
+        return Compute._result(
+            dataframe.filter(pl.col(base) == pl.col(base).max()).select(pl.col(target) == rule.value).to_series()
         )
 
     def has_min_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return (
-            dataframe.loc[dataframe.loc[:, rule.column[1]].idxmin(), rule.column[0]]
-            == rule.value
+        """Adjacent column minimum value verifiation on threshold"""
+        base, target = rule.column
+        return Compute._result(
+            dataframe.filter(pl.col(base) == pl.col(base).min()).select(pl.col(target) == rule.value).to_series()
         )
 
     def has_correlation(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:

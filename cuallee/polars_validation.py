@@ -27,6 +27,7 @@ class Compute:
         )
 
     def are_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate absence of null in group of columns"""
         return Compute._result(
             dataframe.select(
                 [pl.col(c).is_not_null().cast(pl.Int8).sum() for c in rule.column]
@@ -35,11 +36,13 @@ class Compute:
         )
 
     def is_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate absence of duplicates"""
         return Compute._result(
             dataframe.select(pl.col(rule.column).is_unique().cast(pl.Int8)).sum()
         )
 
     def are_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate absence of duplicate in group of columns"""
         return Compute._result(
             dataframe.select(
                 [pl.col(c).is_unique().cast(pl.Int8).sum() for c in rule.column]
@@ -48,6 +51,7 @@ class Compute:
         )
 
     def is_greater_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate column values greater than threshold"""
         return Compute._result(
             dataframe.select(
                 operator.gt(pl.col(rule.column), rule.value).cast(pl.Int8)
@@ -57,6 +61,7 @@ class Compute:
     def is_greater_or_equal_than(
         self, rule: Rule, dataframe: pl.DataFrame
     ) -> Union[bool, int]:
+        """Validates column values greater or equal than threshold"""
         return Compute._result(
             dataframe.select(
                 operator.ge(pl.col(rule.column), rule.value).cast(pl.Int8)
@@ -64,6 +69,7 @@ class Compute:
         )
 
     def is_less_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validates column values less than threshold"""
         return Compute._result(
             dataframe.select(
                 operator.lt(pl.col(rule.column), rule.value).cast(pl.Int8)
@@ -73,6 +79,7 @@ class Compute:
     def is_less_or_equal_than(
         self, rule: Rule, dataframe: pl.DataFrame
     ) -> Union[bool, int]:
+        """Validates column values less or equal than threshold"""
         return Compute._result(
             dataframe.select(
                 operator.le(pl.col(rule.column), rule.value).cast(pl.Int8)
@@ -80,6 +87,7 @@ class Compute:
         )
 
     def is_equal_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validates column equality with threshold"""
         return Compute._result(
             dataframe.select(
                 operator.eq(pl.col(rule.column), rule.value).cast(pl.Int8)
@@ -87,10 +95,20 @@ class Compute:
         )
 
     def has_pattern(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return Compute._result(dataframe.select(operator.gt(pl.col(rule.column).str.count_match(rule.value), 0).cast(pl.Int8)).sum().to_series())
+        return Compute._result(
+            dataframe.select(
+                operator.gt(pl.col(rule.column).str.count_match(rule.value), 0).cast(
+                    pl.Int8
+                )
+            )
+            .sum()
+            .to_series()
+        )
 
     def has_min(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return Compute._result(dataframe.select(pl.col(rule.column).min() == rule.value).to_series())
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).min() == rule.value).to_series()
+        )
 
     def has_max(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].max() == rule.value
@@ -132,7 +150,15 @@ class Compute:
 
     def has_correlation(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         col_a, col_b = rule.column
-        return Compute._result(dataframe.select(pl.col(col_a), pl.col(col_b)).pearson_corr().fill_nan(0).fill_null(0).select(pl.col(col_b)).head(1).to_series())
+        return Compute._result(
+            dataframe.select(pl.col(col_a), pl.col(col_b))
+            .pearson_corr()
+            .fill_nan(0)
+            .fill_null(0)
+            .select(pl.col(col_b))
+            .head(1)
+            .to_series()
+        )
 
     def satisfies(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return dataframe.eval(rule.value).astype(int).sum()

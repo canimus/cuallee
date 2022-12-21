@@ -95,6 +95,7 @@ class Compute:
         )
 
     def has_pattern(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Conformance on column values to regular expression threshold"""
         return Compute._result(
             dataframe.select(
                 operator.gt(pl.col(rule.column).str.count_match(rule.value), 0).cast(
@@ -106,27 +107,52 @@ class Compute:
         )
 
     def has_min(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate minimum value on column"""
         return Compute._result(
             dataframe.select(pl.col(rule.column).min() == rule.value).to_series()
         )
 
     def has_max(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].max() == rule.value
+        """Validate maximum value on column"""
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).max() == rule.value).to_series()
+        )
 
     def has_std(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].std() == rule.value
+        """Validate standard deviation on column"""
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).std() == rule.value).to_series()
+        )
 
     def has_mean(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].mean() == rule.value
+        """Validate mean value on column"""
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).mean() == rule.value).to_series()
+        )
 
     def has_sum(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].sum() == rule.value
+        """Validate sum value on column"""
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).sum() == rule.value).to_series()
+        )
 
     def is_between(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].between(*rule.value).astype(int).sum()
+        """Validate value inclusion on threshold boundaries"""
+        low, high = rule.value
+        return Compute._result(
+            dataframe.select(
+                pl.col(rule.column).is_between(low, high, include_bounds=True).cast(pl.Int8)
+            ).sum()
+        )
+
 
     def is_contained_in(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].isin(rule.value).astype(int).sum()
+        """Validate set inclusion"""
+        return Compute._result(
+            dataframe.select(
+                pl.col(rule.column).is_in(rule.value).cast(pl.Int8)
+            ).sum()
+        )
 
     def has_percentile(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (

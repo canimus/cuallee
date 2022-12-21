@@ -13,6 +13,11 @@ try:
 except:
     print("No snowflake available")
 
+try:
+    from google.cloud import bigquery
+except:
+    print("No BigQuery Client available")
+
 
 @pytest.fixture(scope="session")
 def spark():
@@ -75,3 +80,15 @@ def db() -> duckdb.DuckDBPyConnection:
         logger.error("Unable to init duckdb")
     finally:
         conn.close()
+
+
+@pytest.fixture(scope="session")
+def bq_client():
+    credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+    try:
+        client = bigquery.Client(credentials=credentials)
+        return client
+    except:
+        pass
+    #finally:
+        #client.stop()

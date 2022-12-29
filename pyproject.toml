@@ -20,7 +20,7 @@ classifiers = [
 dependencies = [
     "colorama >= 0.4.6",
     "toolz >= 0.12.0",
-    "pygments >= 2.13.0"
+    "pygments >= 2.13.0",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +38,10 @@ duckdb = [
 ]
 polars = [
   "polars>=0.14.29"
+]
+iso = [
+  "python-dotenv >= 0.21.0",
+  "lxml >= 4.9.1"
 ]
 test = [
   "pytest",

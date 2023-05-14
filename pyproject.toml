@@ -35,6 +35,9 @@ snowpark = [
 pandas = [
   "pandas>=2.0.1"
 ]
+bigquery =[
+  "google-cloud-bigquery>=3.10.0"
+]
 duckdb = [
   "duckdb>=0.7.1"
 ]

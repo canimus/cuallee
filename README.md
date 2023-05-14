@@ -290,5 +290,5 @@ Free for commercial use, modification, distribution, patent use, private use.
 Just preserve the copyright and license.
 
 
-> Made with ❤️ in Utrecht 🇳🇱
+> Made with ❤️ in Utrecht 🇳🇱<br/>
 > Maintained over ⌛ from Ljubljana in 🇸🇮

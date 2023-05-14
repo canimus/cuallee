@@ -13,6 +13,7 @@ clean: # Remove workspace files
 	@rm -rf __blobstorage__
 	@rm -rf .mypy_cache
 	@rm -rf .coverage
+	@rm -rf .DS_Store
 
 	@rm -rf spark-warehouse
 	@python -c "print('Cleaning: 👌')"

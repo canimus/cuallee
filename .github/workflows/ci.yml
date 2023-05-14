@@ -17,7 +17,7 @@ jobs:
       run: |
         pip install '.[test,snowpark,pyspark,pandas,duckdb]'
         coverage run -m pytest test/unit
-	      coverage xml -o coverage.xml
+        coverage xml -o coverage.xml
       env:
         SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
         SF_USER: ${{ secrets.SF_USER }}

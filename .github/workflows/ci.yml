@@ -16,8 +16,7 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install '.[test,snowpark,pyspark,pandas,duckdb]'
-        coverage run -m pytest test/unit
-        coverage xml -o coverage.xml
+        pytest --cov=./cuallee --cov-report=xml test/unit
       env:
         SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
         SF_USER: ${{ secrets.SF_USER }}
@@ -30,7 +29,7 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        directory: .
+        directory: ./coverage/reports/
         env_vars: OS,PYTHON
         fail_ci_if_error: true
         files: ./coverage.xml

@@ -216,8 +216,8 @@ A new module has been incorporated in `cuallee==0.4.0` which allows the verifica
 
 Check | Description | DataType
  ------- | ----------- | ----
-`is_4217` | currency compliant `ccy` | _string_
-`is_3166` | country compliant `country` | _string_
+`iso_4217` | currency compliant `ccy` | _string_
+`iso_3166` | country compliant `country` | _string_
 
 ```python
 df = spark.createDataFrame([[1, "USD"], [2, "MXN"], [3, "CAD"], [4, "EUR"], [5, "CHF"]], ["id", "ccy"])

@@ -23,10 +23,10 @@ def test_negative(snowpark):
 @pytest.mark.parametrize(
     "data_type, rule_value",
     [
-        [[[0], [2], [4]], int(3)],
-        [[[0], [2], [4]], float(3.0)],
-        [[[float(0.0)], [float(2.0)], [float(4.0)]], int(3)],
-        [[[float(0.0)], [float(2.0)], [float(4.0)]], float(3.0)],
+        [[[0], [2], [4]], int(2)],
+        [[[0], [2], [4]], float(2.0)],
+        [[[float(0.0)], [float(2.0)], [float(4.0)]], int(2)],
+        [[[float(0.0)], [float(2.0)], [float(4.0)]], float(2.0)],
     ],
     ids=["value_int", "value_float", "data_int", "data_float"],
 )

@@ -170,17 +170,16 @@ class Compute:
         sequence = (
             pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
         )
-        sequence = (
+        sequence = list(
             sequence[sequence.ts.dt.dayofweek.isin(day_mask)]
             .reset_index(drop=True)
             .ts.unique()
-            .astype(np.datetime64)
+            .astype("datetime64[ms]")
         )
 
-        delivery = (
+        delivery = list(
             dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][rule.column]
-            .dt.date.astype(np.datetime64)
-            .values
+            .dt.date.astype("datetime64[ms]")
         )
 
         # No difference between sequence of daily as a complex number

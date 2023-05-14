@@ -17,7 +17,6 @@ class Currency:
 @lru_cache
 def _load_currencies(by_field : str):
     """Internal helper method to load all currencies from default environment location"""
-    print("Downloading...")
     DEFAULT_ENDPOINT = "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml"
     response = requests.get(os.getenv("ISO_4217_ENDPOINT", DEFAULT_ENDPOINT))
     xml = etree.fromstring(response.text.encode("utf-8"))
@@ -28,6 +27,8 @@ def _load_currencies(by_field : str):
     return set(filter(None, (map(_get_ccy, xml.xpath("//CcyNtry")))))
 
 class ISO():
+    # These options mean what is the format expected to validate your currency field
+    # which could be either the currency name or the code
     CCY_CODE = "currency"
     CCY_NUMBER = "currency_number"
 

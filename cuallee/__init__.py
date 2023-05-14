@@ -143,7 +143,7 @@ class Check:
         *,
         execution_date: datetime = datetime.today(),
         table_name: str = None,
-        currency_field: str = None
+        currency_field: str = ISO.CCY_CODE
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
@@ -160,7 +160,7 @@ class Check:
         self.rows = -1
         self.config: Dict[str, str] = {}
         self.table_name = table_name
-        self.iso = ISO(self)
+        self.iso = ISO(self, currency_field=currency_field)
 
     def __repr__(self):
         standard = f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"

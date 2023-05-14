@@ -140,8 +140,10 @@ class Check:
         self,
         level: Union[CheckLevel, int],
         name: str,
+        *,
         execution_date: datetime = datetime.today(),
         table_name: str = None,
+        currency_field: str = None
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}

@@ -212,11 +212,24 @@ Check | Description | DataType
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
 
 ## ISO Standard
+A new module has been incorporated in `cuallee==0.4.0` which allows the verification of International Standard Organization columns in data frames. Simply access the `check.iso` interface to add the set of checks as shown below.
 
 Check | Description | DataType
  ------- | ----------- | ----
 `is_4217` | currency compliant `ccy` | _string_
 `is_3166` | country compliant `country` | _string_
+
+```python
+df = spark.createDataFrame([[1, "USD"], [2, "MXN"], [3, "CAD"], [4, "EUR"], [5, "CHF"]], ["id", "ccy"])
+check = Check(CheckLevel.WARNING, "ISO Compliant")
+check.iso.iso_4217("ccy")
+check.validate(df).show()
++---+-------------------+-------------+-------+------+---------------+--------------------+----+----------+---------+--------------+------+
+| id|          timestamp|        check|  level|column|           rule|               value|rows|violations|pass_rate|pass_threshold|status|
++---+-------------------+-------------+-------+------+---------------+--------------------+----+----------+---------+--------------+------+
+|  1|2023-05-14 18:28:02|ISO Compliant|WARNING|   ccy|is_contained_in|{'BHD', 'CRC', 'M...|   5|       0.0|      1.0|           1.0|  PASS|
++---+-------------------+-------------+-------+------+---------------+--------------------+----+----------+---------+--------------+------+
+```
 
 
 ## Snowflake Connection

@@ -12,6 +12,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.table_name = "df"
     assert check.validate(db).status.str.match("PASS").all()
 
+
 def test_parameters(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_workflow("X", "Y", "Z", [("x", "y"), ("y", "z"), ("z", None)])
     check.is_complete("X")

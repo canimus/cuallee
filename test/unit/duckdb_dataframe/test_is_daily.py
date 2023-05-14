@@ -33,16 +33,15 @@ def test_violations(check: Check, db: duckdb.DuckDBPyConnection):
 def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_daily("id")
     df = pd.DataFrame(
-        {"id": [datetime.today() + timedelta(days=i) for i in range(1, 10, 2)]}
+        {"id": [datetime.fromisoformat("2022-01-01") + timedelta(days=i) for i in range(1, 10, 2)]}
     )
     check.table_name = "df"
     assert check.validate(db).status.str.match("FAIL").all()
 
-
 def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_daily("id", pct=0.6)
     df = pd.DataFrame(
-        {"id": [datetime.today() + timedelta(days=i) for i in range(1, 10, 2)]}
+        {"id": [datetime.fromisoformat("2022-01-01") + timedelta(days=i) for i in range(1, 10, 2)]}
     )
     check.table_name = "df"
     result = check.validate(db)

@@ -18,10 +18,10 @@ When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underne
 
 Provider | API | Versions
  ------- | ----------- | ------
-![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `1.0.0`
-![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.3.x`, `3.2.x`
-![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`|`1.5.x`, `1.4.x`
-![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb`|`0.6.0`
+![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `1.4.0`
+![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.4.0`, `3.3.x`, `3.2.x`
+![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.1`, `1.5.x`, `1.4.x`
+![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.7.1`
 ![polars](logos/polars.svg?raw=true "Polars API")|`polars`|`0.15.x (wip)` 
  
  <sub>Logos are trademarks of their own brands.</sub>

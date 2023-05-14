@@ -257,9 +257,9 @@ Define once, `run everywhere`
 - [x] Snowpark DataFrame
 - [x] Pandas DataFrame
 - [x] DuckDB Tables
+- [x] BigQuery Client
 - Polars DataFrame
-- SQLite Tables
-- MS-SQL Tables
+
 
 Whilst expanding the functionality feels a bit as an overkill because you most likely can connect `spark` via its drivers to whatever `DBMS` of your choice.
 In the desire to make it even more `user-friendly` we are aiming to make `cuallee` portable to all the providers above.

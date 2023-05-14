@@ -210,6 +210,12 @@ Check | Description | DataType
 `satisfies` | An open `SQL expression` builder to construct custom checks | _agnostic_
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
 
+## ISO Standard
+
+Check | Description | DataType
+ ------- | ----------- | ----
+`is_4217` | currency compliant `ccy` | _string_
+`is_3166` | country compliant `country` | _string_
 
 
 ## Snowflake Connection

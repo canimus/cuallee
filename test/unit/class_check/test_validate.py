@@ -94,3 +94,14 @@ def test_column_name_validation_pandas():
             df
         )
         assert "Column(s): ide not in dataframe" == str(e)
+
+
+
+
+# __ BIGQUERY TESTS __
+def test_validate_bigquery(bq_client):
+    df = 'cuallee-bigquery.test2_dataset.test2_table'
+    rs = (
+        Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id").validate(df)
+    )
+    assert isinstance(rs, str)

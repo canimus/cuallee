@@ -6,9 +6,9 @@ from cuallee import Check, CheckLevel
 
 
 def test_positive():
-    df = 'cuallee-bigquery.test_dataset.test_table'
+    df = 'bigquery-public-data.chicago_taxi_trips.taxi_trips'
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_complete("id")
+    check.is_complete("taxi_id")
     rs = check.validate(df)
     assert rs.status.str.match('PASS').all()
     assert rs.violations.all() == 0

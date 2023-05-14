@@ -15,11 +15,7 @@ jobs:
         python-version: 3.8
     - name: Generate coverage report
       run: |
-        pip install pytest
-        pip install pytest-cov
-        pip install -r requirements.txt
-        pip install snowflake-snowpark-python==0.12.0
-        pip install -e .
+        pip install '.[test,snowpark,pyspark,pandas,duckdb]'
         pytest --cov=./cuallee --cov-report=xml
       env:
         SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}

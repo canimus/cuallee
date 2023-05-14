@@ -3,7 +3,7 @@ import operator
 import pandas as pd
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
-
+from google.cloud import bigquery
 from cuallee import Check, ComputeEngine, Rule
 
 class ComputeMethod(enum.Enum):
@@ -123,25 +123,27 @@ def compute(rules: Dict[str, Rule]) -> Dict:
     return {k: operator.methodcaller(v.method, v)(Compute()) for k, v in rules.items()}
 
 
-def summary(check: Check, dataframe: str):
+def summary(check: Check, dataframe: bigquery.client.Client):
     """Compute all rules in this check from table loaded in BigQuery"""
-    from google.cloud import bigquery
+    
 
     # Check that user is connected to BigQuery
-    try: 
-        client = bigquery.Client()
-    except:
-        print('You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step.')
+    # try: 
+    #     client = bigquery.Client()
+    # except:
+    #     print('You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step.')
+
+    data_table = check.table_name
 
     # Compute the expression
     computed_expressions = compute(check._rule)
 
     expression_string = _get_expressions(computed_expressions)
-    query = _build_query(expression_string, dataframe)
-    query_result = _compute_query_method(client, query)[0]
+    query = _build_query(expression_string, data_table)
+    query_result = _compute_query_method(dataframe, query)[0]
 
     # Compute the total number of rows
-    rows = _compute_row(client, dataframe)[0]['count']
+    rows = _compute_row(dataframe, data_table)[0]['count']
 
     # Results
     computation_basis = [

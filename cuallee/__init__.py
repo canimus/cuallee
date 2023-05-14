@@ -48,7 +48,8 @@ except:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " DuckDB")
 
 try:
-    from google.cloud import bigquery as bigquery
+    from google.cloud import bigquery
+    bigquery_dataframe = bigquery.Client()
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " BigQuery")
 except:
@@ -562,7 +563,7 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
 
         # TODO: BigQuery source (pandas DataFrame/ json / file / uri)
-        elif "bigquery" in globals() and isinstance(dataframe, str):
+        elif "bigquery_dataframe" in globals() and isinstance(dataframe, bigquery.client.Client):
              self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
 
         assert self.compute_engine.validate_data_types(

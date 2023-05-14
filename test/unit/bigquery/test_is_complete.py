@@ -6,8 +6,8 @@ from cuallee import Check, CheckLevel
 
 
 def test_positive():
-    df = bigquery.Client()
-    check = Check(CheckLevel.WARNING, "pytest", table_name='bigquery-public-data.chicago_taxi_trips.taxi_trips')
+    df = bigquery.dataset.Table('bigquery-public-data.chicago_taxi_trips.taxi_trips')
+    check = Check(CheckLevel.WARNING, "pytest")
     check.is_complete("taxi_id")
     rs = check.validate(df)
     assert rs.status.str.match('PASS').all()

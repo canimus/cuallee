@@ -41,7 +41,6 @@ polars = [
   "polars>=0.14.29"
 ]
 iso = [
-  "python-dotenv >= 0.21.0",
   "lxml >= 4.9.1"
 ]
 test = [

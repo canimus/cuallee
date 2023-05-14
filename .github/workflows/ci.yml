@@ -16,7 +16,8 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install '.[test,snowpark,pyspark,pandas,duckdb]'
-        pytest --cov=./cuallee --cov-report=xml test/unit
+        coverage run -m pytest test/unit
+        coverage xml -o coverage.xml
       env:
         SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
         SF_USER: ${{ secrets.SF_USER }}

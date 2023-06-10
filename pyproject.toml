@@ -41,7 +41,7 @@ duckdb = [
   "duckdb>=0.7.1"
 ]
 polars = [
-  "polars>=0.14.29"
+  "polars>=0.15.7"
 ]
 iso = [
   "lxml >= 4.9.1"

@@ -27,7 +27,7 @@ except:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
-    from polars import DataFrame as polars_dataframe  # type: ignore
+    from polars.dataframe.frame import DataFrame as polars_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Polars")
 except:

@@ -431,5 +431,5 @@ def summary(check: Check, dataframe: pl.DataFrame):
         }
         for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
     ]
-    pl.cfg.Config.set_tbl_cols(12)
+    pl.Config.set_tbl_cols(12)
     return pl.DataFrame(computation_basis)

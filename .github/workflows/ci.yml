@@ -15,12 +15,9 @@ jobs:
         python-version: 3.8
     - name: Generate coverage report
       run: |
-        pip install pytest
-        pip install pytest-cov
-        pip install -r requirements.txt
-        pip install snowflake-snowpark-python==0.12.0
-        pip install -e .
-        pytest --cov=./cuallee --cov-report=xml
+        pip install '.[test,snowpark,pyspark,pandas,duckdb]'
+        coverage run -m pytest test/unit
+        coverage xml -o coverage.xml
       env:
         SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
         SF_USER: ${{ secrets.SF_USER }}
@@ -36,7 +33,7 @@ jobs:
         directory: .
         env_vars: OS,PYTHON
         fail_ci_if_error: true
-        files: ./coverage.xml
+        files: coverage.xml
         flags: unittests
         name: codecov-umbrella
         verbose: true

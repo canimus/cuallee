@@ -18,10 +18,11 @@ When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underne
 
 Provider | API | Versions
  ------- | ----------- | ------
-![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `1.0.0`
-![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.3.x`, `3.2.x`
-![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")|`pandas`|`1.5.x`, `1.4.x`
-![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb`|`0.6.0`
+![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `1.4.0`
+![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.4.0`, `3.3.x`, `3.2.x`
+![bigquery](logos/bigquery.png?raw=true "BigQuery Client API")| `bigquery` | `3.4.1`
+![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.1`, `1.5.x`, `1.4.x`
+![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.7.1`
 ![polars](logos/polars.svg?raw=true "Polars API")|`polars`|`0.15.x (wip)` 
  
  <sub>Logos are trademarks of their own brands.</sub>
@@ -210,6 +211,25 @@ Check | Description | DataType
 `satisfies` | An open `SQL expression` builder to construct custom checks | _agnostic_
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
 
+## ISO Standard
+A new module has been incorporated in `cuallee==0.4.0` which allows the verification of International Standard Organization columns in data frames. Simply access the `check.iso` interface to add the set of checks as shown below.
+
+Check | Description | DataType
+ ------- | ----------- | ----
+`iso_4217` | currency compliant `ccy` | _string_
+`iso_3166` | country compliant `country` | _string_
+
+```python
+df = spark.createDataFrame([[1, "USD"], [2, "MXN"], [3, "CAD"], [4, "EUR"], [5, "CHF"]], ["id", "ccy"])
+check = Check(CheckLevel.WARNING, "ISO Compliant")
+check.iso.iso_4217("ccy")
+check.validate(df).show()
++---+-------------------+-------------+-------+------+---------------+--------------------+----+----------+---------+--------------+------+
+| id|          timestamp|        check|  level|column|           rule|               value|rows|violations|pass_rate|pass_threshold|status|
++---+-------------------+-------------+-------+------+---------------+--------------------+----+----------+---------+--------------+------+
+|  1|2023-05-14 18:28:02|ISO Compliant|WARNING|   ccy|is_contained_in|{'BHD', 'CRC', 'M...|   5|       0.0|      1.0|           1.0|  PASS|
++---+-------------------+-------------+-------+------+---------------+--------------------+----+----------+---------+--------------+------+
+```
 
 
 ## Snowflake Connection
@@ -251,9 +271,9 @@ Define once, `run everywhere`
 - [x] Snowpark DataFrame
 - [x] Pandas DataFrame
 - [x] DuckDB Tables
+- [x] BigQuery Client
 - Polars DataFrame
-- SQLite Tables
-- MS-SQL Tables
+
 
 Whilst expanding the functionality feels a bit as an overkill because you most likely can connect `spark` via its drivers to whatever `DBMS` of your choice.
 In the desire to make it even more `user-friendly` we are aiming to make `cuallee` portable to all the providers above.
@@ -270,4 +290,5 @@ Free for commercial use, modification, distribution, patent use, private use.
 Just preserve the copyright and license.
 
 
-> Made with ❤️ in Utrecht 🇳🇱
+> Made with ❤️ in Utrecht 🇳🇱<br/>
+> Maintained over ⌛ from Ljubljana in 🇸🇮

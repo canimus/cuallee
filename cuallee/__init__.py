@@ -9,6 +9,7 @@ from datetime import datetime
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from numbers import Number
+from .iso.checks import ISO
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
@@ -146,6 +147,7 @@ class Check:
         self,
         level: Union[CheckLevel, int],
         name: str,
+        *,
         execution_date: datetime = datetime.today(),
         table_name: str = None,
     ):
@@ -164,6 +166,7 @@ class Check:
         self.rows = -1
         self.config: Dict[str, str] = {}
         self.table_name = table_name
+        self.iso = ISO(self)
 
     def __repr__(self):
         standard = f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"

@@ -19,7 +19,7 @@ clean: # Remove workspace files
 
 cov: # Run test and coverage
 	coverage run -m pytest test/unit
-	coverage xml -o temp/coverage.xml
+	coverage xml -o coverage.xml
 
 flake: # Lint code
 	@flake8 --ignore=E501,W503,E731,E722 --max-cognitive-complexity=30 cuallee
@@ -43,4 +43,7 @@ twine: # Upload to python index
 	@twine upload dist/*
 
 testers: # Generate all test functions on folder/
-	@for i in `ls -1 test/unit/pyspark_dataframe/*.py`; do f=`basename $$i`; touch "$$folder/$$f"; done
+	@mkdir -p "$(folder)"
+	@echo "Created: $(folder)"
+	@for i in `ls -1 test/unit/pyspark_dataframe/*.py | cut -d"/" -f4`; do touch "$(folder)/$$i"; done
+	@python -c "print('To Test: 🏃')"

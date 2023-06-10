@@ -1,6 +1,7 @@
 import pytest
 import pandas as pd
 from pyspark.sql import DataFrame
+from google.cloud import bigquery
 from cuallee import Check, CheckLevel
 
 
@@ -94,3 +95,14 @@ def test_column_name_validation_pandas():
             df
         )
         assert "Column(s): ide not in dataframe" == str(e)
+
+
+
+
+# __ BIGQUERY TESTS __
+def test_validate_bigquery(bq_client):
+    df = bigquery.dataset.Table('bigquery-public-data.chicago_taxi_trips.taxi_trips')
+    rs = (
+        Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("taxi_id").validate(df)
+    )
+    assert isinstance(rs, pd.DataFrame)

@@ -15,7 +15,7 @@ jobs:
         python-version: 3.8
     - name: Generate coverage report
       run: |
-        pip install '.[test,snowpark,pyspark,pandas,duckdb,polars]'
+        pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars]'
         coverage run -m pytest test/unit
         coverage xml -o coverage.xml
       env:

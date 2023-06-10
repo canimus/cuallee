@@ -55,6 +55,13 @@ try:
 except:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " DuckDB")
 
+try:
+    from google.cloud import bigquery
+
+    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " BigQuery")
+except:
+    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " BigQuery")
+
 
 logger.debug(Style.RESET_ALL)
 
@@ -553,6 +560,7 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.pandas_validation")
 
+        # When dataframe is Snowpark DataFrame API
         elif "snowpark_dataframe" in globals() and isinstance(
             dataframe, snowpark_dataframe
         ):
@@ -562,6 +570,10 @@ class Check:
             dataframe, duckdb_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
+
+        # TODO: BigQuery source (pandas DataFrame/ json / file / uri)
+        elif "bigquery" in globals() and isinstance(dataframe, bigquery.table.Table):
+            self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
 
         elif "polars_dataframe" in globals() and isinstance(
             dataframe, polars_dataframe

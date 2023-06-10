@@ -266,13 +266,20 @@ check.validate(conn)
 
 `100%` data frame agnostic implementation of data quality checks.
 Define once, `run everywhere`
-- [x] PySpark 3.3.0
-- [x] PySpark 3.2.x 
-- [x] Snowpark DataFrame
-- [x] Pandas DataFrame
-- [x] DuckDB Tables
-- [x] BigQuery Client
-- Polars DataFrame
+- ~~[x] PySpark 3.4.0~~
+- ~~[x] PySpark 3.3.0~~
+- ~~[x] PySpark 3.2.x~~
+- ~~[x] Snowpark DataFrame~~
+- ~~[x] Pandas DataFrame~~
+- ~~[x] DuckDB Tables~~
+- ~~[x] BigQuery Client~~
+- ~~[x] Polars DataFrame~~
+- [ ] Metadata check
+- [ ] OpenMetadata Integration
+- [ ] Dagster Integration
+- [ ] PDF Report
+- [ ] Help us in a discussion?
+
 
 
 Whilst expanding the functionality feels a bit as an overkill because you most likely can connect `spark` via its drivers to whatever `DBMS` of your choice.

@@ -27,6 +27,13 @@ except:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
+    from polars.dataframe.frame import DataFrame as polars_dataframe  # type: ignore
+
+    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Polars")
+except:
+    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Polars")
+
+try:
     from pyspark.sql import DataFrame as pyspark_dataframe
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
@@ -567,6 +574,11 @@ class Check:
         # TODO: BigQuery source (pandas DataFrame/ json / file / uri)
         elif "bigquery" in globals() and isinstance(dataframe, bigquery.table.Table):
             self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
+
+        elif "polars_dataframe" in globals() and isinstance(
+            dataframe, polars_dataframe
+        ):
+            self.compute_engine = importlib.import_module("cuallee.polars_validation")
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe

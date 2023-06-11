@@ -20,7 +20,6 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars]'
-        echo "$GOOGLE_APPLICATION_CREDENTIALS" > creds.json
         coverage run -m pytest test/unit
         coverage xml -o coverage.xml
       env:

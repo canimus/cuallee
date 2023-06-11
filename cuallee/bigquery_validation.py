@@ -41,7 +41,7 @@ class Compute(ComputeEngine):
         predicate = [f"{c} IS NOT NULL" for c in rule.column]
         self.compute_instruction = ComputeInstruction(
             predicate,
-            "("+f"+".join([self._sum_predicate_to_integer(p) for p in predicate]+f")/{len(rule.column)}",
+            "("+f"+".join([self._sum_predicate_to_integer(p) for p in predicate])+f")/{len(rule.column)}",
             ComputeMethod.SQL,
         )
         return self.compute_instruction

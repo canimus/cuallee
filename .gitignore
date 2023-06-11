@@ -28,3 +28,4 @@ build/
 # Testing
 .coverage
 app/
+creds.json

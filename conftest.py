@@ -84,9 +84,11 @@ def db() -> duckdb.DuckDBPyConnection:
 
 @pytest.fixture(scope="session")
 def bq_client():
-    credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+    #credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
     try:
-        client = bigquery.Client(credentials=credentials)
+        #client = bigquery.Client(credentials=credentials)
+        # inferred from environment
+        client = bigquery.Client()
         return client
     except:
         pass

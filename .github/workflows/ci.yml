@@ -26,6 +26,7 @@ jobs:
         SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
         SF_DATABASE: ${{ secrets.SF_DATABASE }}
         SF_SCHEMA: ${{ secrets.SF_SCHEMA }}
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

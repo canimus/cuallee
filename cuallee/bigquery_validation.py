@@ -36,9 +36,16 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
-    # def is_complete(self, rule: Rule) -> str:
-    #     """Verify the absence of null values in a column"""
-    #     return f"SUM(CAST({rule.column} IS NOT NULL AS INTEGER))"
+    def are_complete(self, rule: Rule):
+        """Verify the absence of null values in a column"""
+        predicate = [f"{c} IS NOT NULL" for c in rule.column]
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            "("+f"+".join([self._sum_predicate_to_integer(p) for p in predicate]+f")/{len(rule.column)}",
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
+
 
 def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
     """Get the expression for all the rules in check in one string"""

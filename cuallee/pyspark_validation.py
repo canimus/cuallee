@@ -88,7 +88,7 @@ class Compute(ComputeEngine):
         predicate = None  # F.count_distinct(F.col(rule.column))
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.approx_count_distinct(F.col(f"`{rule.column}`")),
+            F.count_distinct(F.col(f"`{rule.column}`")),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction

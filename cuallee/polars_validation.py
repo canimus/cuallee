@@ -370,6 +370,8 @@ def summary(check: Check, dataframe: pl.DataFrame):
     }
 
     def _calculate_violations(result, nrows):
+        if isinstance(result, pl.DataFrame):
+            result = first(result.row(0))
 
         if isinstance(result, (bool, np.bool_)):
             if result:
@@ -383,6 +385,8 @@ def summary(check: Check, dataframe: pl.DataFrame):
                 return nrows - result
 
     def _calculate_pass_rate(result, nrows):
+        if isinstance(result, pl.DataFrame):
+            result = first(result.row(0))
 
         if isinstance(result, (bool, np.bool_)):
             if result:

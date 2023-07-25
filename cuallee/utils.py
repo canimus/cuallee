@@ -38,7 +38,7 @@ def get_string_rules(rules: List[Rule]) -> List[Rule]:
     return list(filter(lambda x: x.data_type.name == CheckDataType.STRING.name, rules))
 
 
-def get_rule_colums(rules: List[Rule]) -> List[str]:
+def get_rule_columns(rules: List[Rule]) -> List[str]:
     """Based on a rule list it returns a flatten set of unique columns"""
     return get_column_set(list(map(lambda x: x.column, rules)))  # type: ignore
 
@@ -48,6 +48,13 @@ def match_data_types(on_rule: List[str], on_dataframe: List[str]) -> Set[str]:
     return set(on_rule).difference(on_dataframe)
 
 
-def match_columns(on_rule: List[Rule], on_dataframe: List[str]) -> Set[str]:
+def match_columns(on_rule: List[Rule], on_dataframe: List[str], case_sensitive: bool = True) -> Set[str]:
     """Confirms all columns in check exists in dataframe"""
-    return set(get_rule_colums(on_rule)).difference(on_dataframe)
+    rule_columns = set(get_rule_columns(on_rule))
+    if case_sensitive:
+        return rule_columns.difference(on_dataframe)
+    else:
+        rule_columns = {r.casefold(): r for r in rule_columns}
+        dataframe_columns = {c.casefold(): c for c in on_dataframe}
+        return set([rule_columns[i] for i in rule_columns.keys() if i not in dataframe_columns.keys()])
+    

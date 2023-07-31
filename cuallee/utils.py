@@ -50,11 +50,11 @@ def match_data_types(on_rule: List[str], on_dataframe: List[str]) -> Set[str]:
 
 def match_columns(on_rule: List[Rule], on_dataframe: List[str], case_sensitive: bool = True) -> Set[str]:
     """Confirms all columns in check exists in dataframe"""
+    dataframe_columns = on_dataframe
     rule_columns = set(get_rule_columns(on_rule))
-    if case_sensitive:
-        return rule_columns.difference(on_dataframe)
-    else:
-        rule_columns = {r.casefold(): r for r in rule_columns}
-        dataframe_columns = {c.casefold(): c for c in on_dataframe}
-        return set([rule_columns[i] for i in rule_columns.keys() if i not in dataframe_columns.keys()])
+    if not case_sensitive:
+       rule_columns = map(str.casefold, rule_columns)
+       dataframe_columns = map(str.casefold, on_dataframe)
+    
+    return set(rule_columns).difference(dataframe_columns)
     

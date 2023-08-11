@@ -738,7 +738,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
 
     # Compute the expression
     computed_expressions = compute(check._rule)
-    if int(spark.version.replace(".", "")) < 330:
+    if int(spark.version.replace(".", "")[:3]) < 330:
         computed_expressions = _replace_observe_compute(computed_expressions)
 
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)

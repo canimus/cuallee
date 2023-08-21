@@ -71,15 +71,11 @@ class Compute(ComputeEngine):
 
     def are_complete(self, rule: Rule):
         """Validation for non-null values in a group of columns"""
-        predicate = [F.col(f"`{c}`").isNotNull() for c in rule.column]
+        predicate = (reduce(operator.add, [F.col(f"`{c}`").isNotNull().cast("integer") for c in rule.column]) == len(rule.column)).cast("integer")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            reduce(
-                operator.add,
-                [self._sum_predicate_to_integer(p) for p in predicate],
-            )
-            / len(rule.column),
-            ComputeMethod.OBSERVE,
+            F.sum(predicate),
+            ComputeMethod.SELECT,
         )
         return self.compute_instruction
 

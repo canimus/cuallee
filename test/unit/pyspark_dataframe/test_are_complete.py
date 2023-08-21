@@ -22,7 +22,7 @@ def test_negative(spark):
     assert rs.first().status == "FAIL"
     assert rs.first().violations == 1
     assert rs.first().pass_threshold == 1.0
-    assert rs.first().pass_rate == 7 / 8
+    assert rs.first().pass_rate == 3 / 4
 
 
 @pytest.mark.parametrize(
@@ -41,9 +41,9 @@ def test_coverage(spark):
         [[0, "zero"], [1, None], [2, "deux"], [3, "trois"]], ["id", "desc"]
     )
     check = Check(CheckLevel.WARNING, "pytest")
-    check.are_complete(("id", "desc"), 0.7)
+    check.are_complete(("id", "desc"), 0.75)
     rs = check.validate(df)
     assert rs.first().status == "PASS"
     assert rs.first().violations == 1
-    assert rs.first().pass_threshold == 0.7
-    assert rs.first().pass_rate == 7 / 8
+    assert rs.first().pass_threshold == 0.75
+    assert rs.first().pass_rate == 3 / 4

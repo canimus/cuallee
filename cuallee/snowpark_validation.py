@@ -682,7 +682,7 @@ def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
 
     # NUMERIC
     # =======
-    numeric_columns = cuallee_utils.get_rule_colums(
+    numeric_columns = cuallee_utils.get_rule_columns(
         cuallee_utils.get_numeric_rules(rules)
     )
     numeric_dtypes = numeric_fields(dataframe)
@@ -691,14 +691,14 @@ def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
 
     # DATE
     # =======
-    date_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_date_rules(rules))
+    date_columns = cuallee_utils.get_rule_columns(cuallee_utils.get_date_rules(rules))
     date_dtypes = date_fields(dataframe)
     date_match = cuallee_utils.match_data_types(date_columns, date_dtypes)
     assert not date_match, f"Column(s): {date_match} are not date"
 
     # TIMESTAMP
     # =======
-    timestamp_columns = cuallee_utils.get_rule_colums(
+    timestamp_columns = cuallee_utils.get_rule_columns(
         cuallee_utils.get_timestamp_rules(rules)
     )
     timestamp_dtypes = timestamp_fields(dataframe)
@@ -709,7 +709,7 @@ def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
 
     # STRING
     # =======
-    string_columns = cuallee_utils.get_rule_colums(
+    string_columns = cuallee_utils.get_rule_columns(
         cuallee_utils.get_string_rules(rules)
     )
     string_dtypes = string_fields(dataframe)

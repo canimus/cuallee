@@ -20,7 +20,10 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars]'
-        echo "$GOOGLE_APPLICATION_CREDENTIALS" > creds.json
+        echo "${{ secrets.GOOGLE_KEY }}" > creds.json
+        file creds.json
+        openssl dgst -sha256 creds.json
+        echo "SHA256(temp/key.json)= c3d51311e52f2a56c248648551fa57293d168641eee562a95f361a31a101f823"
         coverage run -m pytest test/unit
         coverage xml -o coverage.xml
       env:
@@ -31,7 +34,7 @@ jobs:
         SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
         SF_DATABASE: ${{ secrets.SF_DATABASE }}
         SF_SCHEMA: ${{ secrets.SF_SCHEMA }}
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        GOOGLE_APPLICATION_CREDENTIALS: creds.json
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

@@ -16,7 +16,7 @@ jobs:
     - name: Authenticate google cloud
       uses: google-github-actions/auth@v0.4.0
       with:
-        credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        credentials_json: ${{ secrets.GOOGLE_KEY }}
     - name: Generate coverage report
       run: |
         pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars]'

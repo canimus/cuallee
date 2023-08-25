@@ -84,9 +84,16 @@ def db() -> duckdb.DuckDBPyConnection:
 
 @pytest.fixture(scope="session")
 def bq_client():
-    #credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+    from google.oauth2 import service_account
+    import os
+    import json
+    with open("key.json", "w") as writer:
+        json.dump(json.loads(os.getenv("GOOGLE_KEY")), writer)
+
+    credentials = service_account.Credentials.from_service_account_file("key.json")
+    
     try:
-        client = bigquery.Client(project="cuallee-bigquery-386709")
+        client = bigquery.Client(project="cuallee-bigquery-386709", credentials=credentials)
         return client
     except:
         pass

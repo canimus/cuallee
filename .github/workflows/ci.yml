@@ -20,10 +20,6 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars]'
-        echo "${{ secrets.GOOGLE_KEY }}" > creds.json
-        file creds.json
-        openssl dgst -sha256 creds.json
-        echo "SHA256(temp/key.json)= c3d51311e52f2a56c248648551fa57293d168641eee562a95f361a31a101f823"
         coverage run -m pytest test/unit
         coverage xml -o coverage.xml
       env:

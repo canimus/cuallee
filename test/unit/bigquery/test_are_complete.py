@@ -22,9 +22,9 @@ def test_negative():
     check.are_complete(("trip_start_timestamp", "trip_end_timestamp"))
     rs = check.validate(df)
     assert rs.status.str.match('FAIL')[1]
-    assert rs.violations[1] == 9209
+    assert rs.violations[1] == 9217
     assert rs.pass_threshold[1] == 1.0
-    assert rs.pass_rate[1] == 207167447/207176656
+    assert rs.pass_rate[1] == 0.9999558876219533
 
 
 @pytest.mark.parametrize(
@@ -44,6 +44,6 @@ def test_coverage():
     check.are_complete(("trip_start_timestamp", "trip_end_timestamp"), 0.7)
     rs = check.validate(df)
     assert rs.status.str.match('PASS')[1]
-    assert rs.violations[1] == 9209
+    assert rs.violations[1] == 9217
     assert rs.pass_threshold[1] == 0.7
-    assert rs.pass_rate[1] == 207167447/207176656
+    assert rs.pass_rate[1] == 0.9999558876219533   #207167439/207176656

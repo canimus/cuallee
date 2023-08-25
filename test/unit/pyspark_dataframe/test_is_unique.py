@@ -10,6 +10,8 @@ def test_positive(spark):
     check.is_unique("id")
     rs = check.validate(df)
     assert rs.first().status == "PASS"
+    assert rs.first().violations == 0.0
+    assert rs.first().pass_rate == 1.0
 
 
 def test_negative(spark):

@@ -26,8 +26,8 @@ def test_negative():
     assert rs.pass_rate[1] == 0.9999117752439066
 
 
-def test_parameters():
-    return "😅 No parameters to be tested!"
+# def test_parameters():
+#     return "😅 No parameters to be tested!"
 
 
 def test_coverage():

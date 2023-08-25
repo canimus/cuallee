@@ -71,15 +71,11 @@ class Compute(ComputeEngine):
 
     def are_complete(self, rule: Rule):
         """Validation for non-null values in a group of columns"""
-        predicate = [F.col(f"`{c}`").isNotNull() for c in rule.column]
+        predicate = (reduce(operator.add, [F.col(f"`{c}`").isNotNull().cast("integer") for c in rule.column]) == len(rule.column)).cast("integer")
         self.compute_instruction = ComputeInstruction(
             predicate,
-            reduce(
-                operator.add,
-                [self._sum_predicate_to_integer(p) for p in predicate],
-            )
-            / len(rule.column),
-            ComputeMethod.OBSERVE,
+            F.sum(predicate),
+            ComputeMethod.SELECT,
         )
         return self.compute_instruction
 
@@ -88,7 +84,7 @@ class Compute(ComputeEngine):
         predicate = None  # F.count_distinct(F.col(rule.column))
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.approx_count_distinct(F.col(f"`{rule.column}`")),
+            F.count_distinct(F.col(f"`{rule.column}`")),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
@@ -677,12 +673,12 @@ def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
 
     # COLUMNS
     # =======
-    rule_match = cuallee_utils.match_columns(rules, dataframe.columns)
+    rule_match = cuallee_utils.match_columns(rules, dataframe.columns, case_sensitive = False)
     assert not rule_match, f"Column(s): {rule_match} are not present in dataframe"
 
     # NUMERIC
     # =======
-    numeric_columns = cuallee_utils.get_rule_colums(
+    numeric_columns = cuallee_utils.get_rule_columns(
         cuallee_utils.get_numeric_rules(rules)
     )
     numeric_dtypes = numeric_fields(dataframe)
@@ -691,14 +687,14 @@ def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
 
     # DATE
     # =======
-    date_columns = cuallee_utils.get_rule_colums(cuallee_utils.get_date_rules(rules))
+    date_columns = cuallee_utils.get_rule_columns(cuallee_utils.get_date_rules(rules))
     date_dtypes = date_fields(dataframe)
     date_match = cuallee_utils.match_data_types(date_columns, date_dtypes)
     assert not date_match, f"Column(s): {date_match} are not date"
 
     # TIMESTAMP
     # =======
-    timestamp_columns = cuallee_utils.get_rule_colums(
+    timestamp_columns = cuallee_utils.get_rule_columns(
         cuallee_utils.get_timestamp_rules(rules)
     )
     timestamp_dtypes = timestamp_fields(dataframe)
@@ -709,7 +705,7 @@ def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
 
     # STRING
     # =======
-    string_columns = cuallee_utils.get_rule_colums(
+    string_columns = cuallee_utils.get_rule_columns(
         cuallee_utils.get_string_rules(rules)
     )
     string_dtypes = string_fields(dataframe)
@@ -738,7 +734,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
 
     # Compute the expression
     computed_expressions = compute(check._rule)
-    if int(spark.version.replace(".", "")) < 330:
+    if int(spark.version.replace(".", "")[:3]) < 330:
         computed_expressions = _replace_observe_compute(computed_expressions)
 
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)

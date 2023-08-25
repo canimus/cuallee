@@ -8,19 +8,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: 'actions/checkout@v3'
     - name: Setup Python
       uses: actions/setup-python@master
       with:
         python-version: 3.8
     - name: Authenticate google cloud
-      uses: google-github-actions/auth@v0.4.0
+      uses: 'google-github-actions/auth@v1'
       with:
-        credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        credentials_json: ${{ secrets.GOOGLE_KEY }}
     - name: Generate coverage report
       run: |
+        pip install --upgrade pip
         pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars]'
-        echo "$GOOGLE_APPLICATION_CREDENTIALS" > creds.json
         coverage run -m pytest test/unit
         coverage xml -o coverage.xml
       env:
@@ -31,7 +31,6 @@ jobs:
         SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
         SF_DATABASE: ${{ secrets.SF_DATABASE }}
         SF_SCHEMA: ${{ secrets.SF_SCHEMA }}
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

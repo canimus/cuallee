@@ -145,7 +145,7 @@ def test_validate_columns(spark):
     df = spark.range(10).withColumn("id2", F.col("id").cast("float"))
     check = (
         Check(CheckLevel.WARNING, "test_validate_column_name")
-        .is_complete("id")
+        .is_complete("ID")
         .is_greater_than("id2", 2)
     )
     rs = PSV.validate_data_types(check.rules, df)

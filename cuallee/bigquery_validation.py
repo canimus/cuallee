@@ -2,16 +2,18 @@ import enum
 import operator
 import pandas as pd
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Union
 from google.cloud import bigquery
 from cuallee import Check, ComputeEngine, Rule
+
 
 class ComputeMethod(enum.Enum):
     SQL = "SQL"
 
+
 @dataclass
 class ComputeInstruction:
-    predicate: str
+    predicate: Union[str, List[str], None]
     expression: str
     compute_method: ComputeMethod
 
@@ -41,7 +43,19 @@ class Compute(ComputeEngine):
         predicate = [f"{c} IS NOT NULL" for c in rule.column]
         self.compute_instruction = ComputeInstruction(
             predicate,
-            "("+f"+".join([self._sum_predicate_to_integer(p) for p in predicate])+f")/{len(rule.column)}",
+            "("
+            + "+".join([self._sum_predicate_to_integer(p) for p in predicate])
+            + f")/{len(rule.column)}",
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
+
+    def is_unique(self, rule: Rule):
+        """Validation for unique values in column"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            f"COUNT(DISTINCT {rule.column})",
             ComputeMethod.SQL,
         )
         return self.compute_instruction
@@ -50,16 +64,15 @@ class Compute(ComputeEngine):
 def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
     """Get the expression for all the rules in check in one string"""
 
-    return f", ".join(
+    return ", ".join(
         [
-            compute_instruction.expression
-            + f" AS KEY{key}"
+            compute_instruction.expression + f" AS KEY{key}"
             for key, compute_instruction in compute_set.items()
         ]
     )
 
 
-def _build_query(expression_string: str, dataframe: str) -> str:
+def _build_query(expression_string: str, dataframe: bigquery.table.Table) -> str:
     """Build query final query"""
 
     return f"SELECT {expression_string} FROM {dataframe}"
@@ -71,10 +84,15 @@ def _compute_query_method(client, query: str) -> Dict:
     return client.query(query).to_arrow().to_pandas().to_dict(orient="records")
 
 
-def _compute_row(client, dataframe: str) -> Dict:
+def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
     """Get the number of rows"""
 
-    return client.query(f'SELECT COUNT(*) AS count FROM {dataframe}').to_arrow().to_pandas().to_dict(orient="records")
+    return (
+        client.query(f"SELECT COUNT(*) AS count FROM {dataframe}")
+        .to_arrow()
+        .to_pandas()
+        .to_dict(orient="records")
+    )
 
 
 def _calculate_violations(result, nrows) -> Union[int, float]:
@@ -106,7 +124,7 @@ def _calculate_pass_rate(result, nrows) -> float:
         elif abs(result) == nrows:
             return 0.5
         else:
-            nrows / abs(result)
+            return nrows / abs(result)
     else:
         return result / nrows
 
@@ -115,9 +133,9 @@ def _evaluate_status(pass_rate, pass_threshold) -> str:
     """Return the status for each rule"""
 
     if pass_rate >= pass_threshold:
-        return f"PASS"
+        return "PASS"
     else:
-        return f"FAIL"
+        return "FAIL"
 
 
 def validate_data_types(rules: List[Rule], dataframe: str) -> bool:
@@ -132,13 +150,14 @@ def compute(rules: Dict[str, Rule]) -> Dict:
 
 def summary(check: Check, dataframe: bigquery.table.Table):
     """Compute all rules in this check from table loaded in BigQuery"""
-    
 
     # Check that user is connected to BigQuery
-    try: 
+    try:
         client = bigquery.Client()
     except:
-        print('You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step.')
+        print(
+            "You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step."
+        )
 
     # Compute the expression
     computed_expressions = compute(check._rule)
@@ -148,7 +167,7 @@ def summary(check: Check, dataframe: bigquery.table.Table):
     query_result = _compute_query_method(client, query)[0]
 
     # Compute the total number of rows
-    rows = _compute_row(client, dataframe)[0]['count']
+    rows = _compute_row(client, dataframe)[0]["count"]
 
     # Results
     computation_basis = [
@@ -165,11 +184,11 @@ def summary(check: Check, dataframe: bigquery.table.Table):
             "pass_rate": _calculate_pass_rate(query_result[f"KEY{hash_key}"], rows),
             "pass_threshold": rule.coverage,
             "status": _evaluate_status(
-                 _calculate_pass_rate(query_result[f"KEY{hash_key}"], rows),
-                 rule.coverage,
-             ),
+                _calculate_pass_rate(query_result[f"KEY{hash_key}"], rows),
+                rule.coverage,
+            ),
         }
         for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
     ]
 
-    return pd.DataFrame(computation_basis).set_index('id')
+    return pd.DataFrame(computation_basis).set_index("id")

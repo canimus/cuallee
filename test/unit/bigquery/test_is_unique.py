@@ -8,7 +8,7 @@ from cuallee import Check, CheckLevel
 def test_positive():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_complete("taxi_id")
+    check.is_unique("unique_key")
     rs = check.validate(df)
     assert rs.status.str.match("PASS")[1]
     assert rs.violations[1] == 0
@@ -18,12 +18,12 @@ def test_positive():
 def test_negative():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_complete("trip_end_timestamp")
+    check.is_unique("taxi_id")
     rs = check.validate(df)
     assert rs.status.str.match("FAIL")[1]
-    assert rs.violations[1] == 18434
+    assert rs.violations[1] == 208933883
     assert rs.pass_threshold[1] == 1.0
-    assert rs.pass_rate[1] == 0.9999117752439066
+    assert rs.pass_rate[1] == 9738 / 208943621
 
 
 # def test_parameters():
@@ -33,9 +33,9 @@ def test_negative():
 def test_coverage():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_complete("trip_end_timestamp", 0.7)
+    check.is_unique("taxi_id", 0.000007)
     rs = check.validate(df)
     assert rs.status.str.match("PASS")[1]
-    assert rs.violations[1] == 18434
-    assert rs.pass_threshold[1] == 0.7
-    assert rs.pass_rate[1] == 0.9999117752439066  # 207158222/207176656
+    assert rs.violations[1] == 208933883
+    assert rs.pass_threshold[1] == 0.000007
+    assert rs.pass_rate[1] == 9738 / 208943621

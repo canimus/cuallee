@@ -60,6 +60,18 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
+    def are_unique(self, rule: Rule):
+        """Validation for unique values in a group of columns"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            "COUNT(DISTINCT CONCAT("
+            + ", '_', ".join([f"{c}" for c in rule.column])
+            + "))",
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
+
 
 def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
     """Get the expression for all the rules in check in one string"""

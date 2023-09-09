@@ -387,7 +387,7 @@ class Check:
     
     def is_today(self, column: str, pct: float = 1.0):
         """Validate that date is today"""
-        return self.is_t_minus_n(column, 0 pct)
+        return self.is_t_minus_n(column, 0, pct)
 
     def has_percentile(
         self, column: str, value: float, percentile: float, precision: int = 10000

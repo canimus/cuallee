@@ -196,6 +196,12 @@ Check | Description | DataType
 `is_inside_interquartile_range` | Verifies column values reside inside limits of interquartile range `Q1 <= col <= Q3` used on anomalies.  | _numeric_
 `is_in_millions` | `col >= 1e6` | _numeric_
 `is_in_billions` | `col >= 1e9` | _numeric_
+`is_t_minus_1` | For date fields confirms 1 day ago `t-1` | _date_
+`is_t_minus_2` | For date fields confirms 2 days ago `t-2` | _date_
+`is_t_minus_3` | For date fields confirms 3 days ago `t-3` | _date_
+`is_t_minus_n` | For date fields confirms n days ago `t-n` | _date_
+`is_today` | For date fields confirms day is current date `t-0` | _date_
+`is_yesterday` | For date fields confirms 1 day ago `t-1` | _date_
 `is_on_weekday` | For date fields confirms day is between `Mon-Fri` | _date_
 `is_on_weekend` | For date fields confirms day is between `Sat-Sun` | _date_
 `is_on_monday` | For date fields confirms day is `Mon` | _date_

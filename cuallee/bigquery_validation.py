@@ -87,7 +87,7 @@ def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
 def _build_query(expression_string: str, dataframe: bigquery.table.Table) -> str:
     """Build query final query"""
 
-    return f"SELECT {expression_string} FROM {dataframe}"
+    return f"SELECT {expression_string} FROM `{str(dataframe)}`"
 
 
 def _compute_query_method(client, query: str) -> Dict:
@@ -100,7 +100,7 @@ def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
     """Get the number of rows"""
 
     return (
-        client.query(f"SELECT COUNT(*) AS count FROM {dataframe}")
+        client.query(f"SELECT COUNT(*) AS count FROM `{str(dataframe)}`")
         .to_arrow()
         .to_pandas()
         .to_dict(orient="records")

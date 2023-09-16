@@ -4,6 +4,7 @@ from cuallee import Check
 import pytest
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_equal_than("id", 1)
     df = pd.DataFrame({"id": np.repeat(1, 10)})

@@ -3,6 +3,7 @@ from cuallee import Check
 import pytest
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_between("id", (0, 9))
     df = pd.DataFrame({"id": range(10)})

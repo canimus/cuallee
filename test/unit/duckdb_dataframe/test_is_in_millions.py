@@ -2,6 +2,7 @@ from cuallee import Check
 import pandas as pd
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_in_millions("id")
     df = pd.DataFrame({"id": [1e6, 1e6 + 1]})

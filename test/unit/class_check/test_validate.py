@@ -97,8 +97,6 @@ def test_column_name_validation_pandas():
         assert "Column(s): ide not in dataframe" == str(e)
 
 
-
-
 # __ BIGQUERY TESTS __
 # def test_validate_bigquery(bq_client):
 #     df = bigquery.dataset.Table('bigquery-public-data.chicago_taxi_trips.taxi_trips')

@@ -4,6 +4,7 @@ from cuallee import Check
 import pytest
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_positive("id")
     df = pd.DataFrame({"id": range(1, 10)})

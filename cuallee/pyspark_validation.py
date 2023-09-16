@@ -71,7 +71,13 @@ class Compute(ComputeEngine):
 
     def are_complete(self, rule: Rule):
         """Validation for non-null values in a group of columns"""
-        predicate = (reduce(operator.add, [F.col(f"`{c}`").isNotNull().cast("integer") for c in rule.column]) == len(rule.column)).cast("integer")
+        predicate = (
+            reduce(
+                operator.add,
+                [F.col(f"`{c}`").isNotNull().cast("integer") for c in rule.column],
+            )
+            == len(rule.column)
+        ).cast("integer")
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate),
@@ -481,7 +487,6 @@ class Compute(ComputeEngine):
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
-
             day_mask = rule.value
             if not day_mask:
                 day_mask = [2, 3, 4, 5, 6]
@@ -673,7 +678,9 @@ def validate_data_types(rules: List[Rule], dataframe: DataFrame) -> bool:
 
     # COLUMNS
     # =======
-    rule_match = cuallee_utils.match_columns(rules, dataframe.columns, case_sensitive = False)
+    rule_match = cuallee_utils.match_columns(
+        rules, dataframe.columns, case_sensitive=False
+    )
     assert not rule_match, f"Column(s): {rule_match} are not present in dataframe"
 
     # NUMERIC

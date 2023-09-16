@@ -363,28 +363,28 @@ class Check:
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
         """Vaidation of column value in set of given values"""
         return self.is_contained_in(column, value, pct)
-    
+
     def is_t_minus_n(self, column: str, value: int, pct: float = 1.0):
         """Validate that date is yesterday"""
         yesterday = datetime.utcnow() - timedelta(days=value)
         return self.is_in(column, tuple([yesterday.strftime("%Y-%m-%d")]), pct)
-    
+
     def is_t_minus_1(self, column: str, pct: float = 1.0):
         """Validate that date is yesterday"""
         return self.is_t_minus_n(column, 1, pct)
-    
+
     def is_t_minus_2(self, column: str, pct: float = 1.0):
         """Validate that date is 2 days ago"""
         return self.is_t_minus_n(column, 2, pct)
-    
+
     def is_t_minus_3(self, column: str, pct: float = 1.0):
         """Validate that date is 3 days ago"""
         return self.is_t_minus_n(column, 3, pct)
-    
+
     def is_yesterday(self, column: str, pct: float = 1.0):
         """Validate that date is yesterday"""
         return self.is_t_minus_1(column, pct)
-    
+
     def is_today(self, column: str, pct: float = 1.0):
         """Validate that date is today"""
         return self.is_t_minus_n(column, 0, pct)

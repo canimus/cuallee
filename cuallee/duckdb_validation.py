@@ -161,7 +161,6 @@ class Compute:
         return template.substitute({"id": rule.column, "table": self.table_name})
 
     def has_workflow(self, rule: Rule) -> str:
-
         template = Template(
             """
         (select sum(A.CUALLEE_RESULT) from (
@@ -196,7 +195,6 @@ def compute(check: Check):
 
 
 def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
-
     unified_columns = ",\n\t".join(
         [
             operator.methodcaller(rule.method, rule)(Compute(check.table_name))
@@ -230,7 +228,6 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
                 return result[1]
 
     def _calculate_pass_rate(result, nrows):
-
         if isinstance(result, (bool, np.bool_)):
             if result:
                 return 1.0
@@ -248,7 +245,6 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
                 return 1.0
 
     def _evaluate_status(pass_rate, pass_threshold):
-
         if pass_rate >= pass_threshold:
             return "PASS"
         else:

@@ -4,6 +4,7 @@ from cuallee import Check
 import pytest
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_mean("id", 4.5)
     df = pd.DataFrame({"id": np.arange(10)})

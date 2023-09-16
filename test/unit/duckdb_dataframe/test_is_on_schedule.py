@@ -4,6 +4,7 @@ import pytest
 from datetime import datetime, timedelta
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_on_schedule("id", (9, 17))
     df = pd.DataFrame(

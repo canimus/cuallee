@@ -141,24 +141,24 @@ class Compute:
         low, high = rule.value
         return Compute._result(
             dataframe.select(
-                pl.col(rule.column).is_between(low, high, include_bounds=True).cast(pl.Int8)
+                pl.col(rule.column)
+                .is_between(low, high, include_bounds=True)
+                .cast(pl.Int8)
             ).sum()
         )
-
 
     def is_contained_in(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate set inclusion"""
         return Compute._result(
-            dataframe.select(
-                pl.col(rule.column).is_in(rule.value).cast(pl.Int8)
-            ).sum()
+            dataframe.select(pl.col(rule.column).is_in(rule.value).cast(pl.Int8)).sum()
         )
 
     def has_percentile(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Percentile range verification for column"""
         return (
             np.percentile(
-                dataframe.select(pl.col(rule.column)).to_numpy(), rule.settings["percentile"] * 100
+                dataframe.select(pl.col(rule.column)).to_numpy(),
+                rule.settings["percentile"] * 100,
             )  # type: ignore
             == rule.value  # type: ignore
         )
@@ -167,14 +167,18 @@ class Compute:
         """Adjacent column maximum value verifiation on threshold"""
         base, target = rule.column
         return Compute._result(
-            dataframe.filter(pl.col(base) == pl.col(base).max()).select(pl.col(target) == rule.value).to_series()
+            dataframe.filter(pl.col(base) == pl.col(base).max())
+            .select(pl.col(target) == rule.value)
+            .to_series()
         )
 
     def has_min_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Adjacent column minimum value verifiation on threshold"""
         base, target = rule.column
         return Compute._result(
-            dataframe.filter(pl.col(base) == pl.col(base).min()).select(pl.col(target) == rule.value).to_series()
+            dataframe.filter(pl.col(base) == pl.col(base).min())
+            .select(pl.col(target) == rule.value)
+            .to_series()
         )
 
     def has_correlation(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
@@ -407,7 +411,6 @@ def summary(check: Check, dataframe: pl.DataFrame):
                 return result / nrows
 
     def _evaluate_status(pass_rate, pass_threshold):
-
         if pass_rate >= pass_threshold:
             return "PASS"
 

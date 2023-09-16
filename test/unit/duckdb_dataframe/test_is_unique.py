@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_unique("id")
     df = pd.DataFrame({"id": [10, 20, 30]})

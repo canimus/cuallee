@@ -493,7 +493,6 @@ class Compute:
         predicate = None
 
         def _execute(dataframe: DataFrame, key: str):
-
             day_mask = rule.value
             if not day_mask:
                 day_mask = [1, 2, 3, 4, 5]

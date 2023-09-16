@@ -178,8 +178,9 @@ class Compute:
         )
 
         delivery = list(
-            dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][rule.column]
-            .dt.date.astype("datetime64[ms]")
+            dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][
+                rule.column
+            ].dt.date.astype("datetime64[ms]")
         )
 
         # No difference between sequence of daily as a complex number
@@ -280,7 +281,6 @@ def summary(check: Check, dataframe: pd.DataFrame):
     }
 
     def _calculate_violations(result, nrows):
-
         if isinstance(result, (bool, np.bool_)):
             if result:
                 return 0
@@ -293,7 +293,6 @@ def summary(check: Check, dataframe: pd.DataFrame):
                 return nrows - result
 
     def _calculate_pass_rate(result, nrows):
-
         if isinstance(result, (bool, np.bool_)):
             if result:
                 return 1.0
@@ -313,7 +312,6 @@ def summary(check: Check, dataframe: pd.DataFrame):
                 return result / nrows
 
     def _evaluate_status(pass_rate, pass_threshold):
-
         if pass_rate >= pass_threshold:
             return "PASS"
 

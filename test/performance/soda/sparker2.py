@@ -17,8 +17,8 @@ scan = Scan()
 scan.set_scan_definition_name("test")
 scan.set_data_source_name("spark_df")
 scan.add_spark_session(spark)
-# Define checks for datasets 
-checks  ="""
+# Define checks for datasets
+checks = """
 checks for my_df:
     - missing_count(VendorID) = 0
     - missing_count(tpep_pickup_datetime) = 0
@@ -77,7 +77,7 @@ checks for my_df:
 """
 # If you defined checks in a file accessible via Spark, you can use the scan.add_sodacl_yaml_file method to retrieve the checks
 scan.add_sodacl_yaml_str(checks)
-# Optionally, add a configuration file with Soda Cloud credentials 
+# Optionally, add a configuration file with Soda Cloud credentials
 # config = """
 # soda_cloud:
 #   api_key_id: xyz

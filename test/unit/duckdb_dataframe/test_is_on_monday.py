@@ -3,6 +3,7 @@ from cuallee import Check
 import pendulum as lu
 import duckdb
 
+
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_on_monday("id")
     df = pd.DataFrame(

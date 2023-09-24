@@ -71,6 +71,16 @@ class Compute(ComputeEngine):
             ComputeMethod.SQL,
         )
         return self.compute_instruction
+    
+    def is_contained_in(self, rule: Rule): 
+        """Validation of column value in set of given values"""
+        predicate = f"{rule.column} IN {rule.value}"
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
 
 
 def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:

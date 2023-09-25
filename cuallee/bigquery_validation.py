@@ -81,6 +81,24 @@ class Compute(ComputeEngine):
             ComputeMethod.SQL,
         )
         return self.compute_instruction
+    
+    def is_daily(self, rule: Rule): 
+        """Validates that there is no missing dates using only week days in the date/timestamp column"""
+
+        predicate = None
+
+        day_mask = rule.value
+        if not day_mask:
+            day_mask = tuple([2, 3, 4, 5, 6])
+
+        script = f'SELECT CASE WHEN numb_rows > 0 THEN CAST(numb_rows*-1 AS STRING) ELSE "true" END AS results FROM (SELECT COUNT (*) AS numb_rows FROM(SELECT full_interval.date, {}.{rule.column} FROM (SELECT date FROM (SELECT date, EXTRACT(DAYOFWEEK FROM date) AS dayofweek FROM UNNEST(GENERATE_DATE_ARRAY("2015-01-01", "2015-10-31")) AS date ORDER BY date) WHERE dayofweek IN (2,3,4)) AS full_interval LEFT OUTER JOIN `{rule.table}` AS test_table ON (full_interval.date=CAST(test_table.{rule.column} AS DATE)) WHERE {rule.column} IS NULL))'
+
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            script,
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
 
 
 def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:

@@ -128,7 +128,9 @@ def _build_query(expression_string: str, dataframe: bigquery.table.Table) -> str
     return f"SELECT {expression_string} FROM `{str(dataframe)}`"
 
 
-def _compute_query_method(client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]) -> Dict:
+def _compute_query_method(
+    client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]
+) -> Dict:
     """Compute rules throught query"""
 
     # Filter expression directed to sql
@@ -142,6 +144,7 @@ def _compute_query_method(client, dataframe: bigquery.table.Table, compute_set: 
         return client.query(query).to_arrow().to_pandas().to_dict(orient="records")[0]
     else:
         return {}
+
 
 def _compute_transform_method(
     client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]
@@ -177,9 +180,9 @@ def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
 def _calculate_violations(result, nrows) -> Union[int, float]:
     """Return the number of violations for each rule"""
 
-    if result=="true":
+    if result == "true":
         return 0
-    elif result=="false":
+    elif result == "false":
         return nrows
     elif int(result) < 0:
         return abs(int(result))
@@ -190,9 +193,9 @@ def _calculate_violations(result, nrows) -> Union[int, float]:
 def _calculate_pass_rate(result, nrows) -> float:
     """Return the pass rate for each rule"""
 
-    if result=="true":
+    if result == "true":
         return 1.0
-    elif result=="false":
+    elif result == "false":
         return 0.0
     elif int(result) < 0:
         if abs(int(result)) < nrows:

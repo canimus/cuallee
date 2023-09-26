@@ -24,7 +24,7 @@ def test_negative():
     assert rs.status.str.match("FAIL")[1]
     assert rs.violations[1] >= 29475
     assert rs.pass_threshold[1] == 1.0
-    #assert rs.pass_rate[1] <= 208914146 / 208943621
+    # assert rs.pass_rate[1] <= 208914146 / 208943621
 
 
 @pytest.mark.parametrize(
@@ -50,4 +50,4 @@ def test_coverage():
     assert rs.status.str.match("PASS")[1]
     assert rs.violations[1] >= 29475
     assert rs.pass_threshold[1] == 0.7
-    #assert rs.pass_rate[1] <= 208914146 / 208943621
+    # assert rs.pass_rate[1] <= 208914146 / 208943621

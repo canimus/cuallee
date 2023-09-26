@@ -3,12 +3,15 @@ import operator
 import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, List, Union
+from string import Template
+from toolz import valfilter
 from google.cloud import bigquery
 from cuallee import Check, ComputeEngine, Rule
 
 
 class ComputeMethod(enum.Enum):
     SQL = "SQL"
+    TRANSFORM = "TRANSFORM"
 
 
 @dataclass
@@ -71,8 +74,8 @@ class Compute(ComputeEngine):
             ComputeMethod.SQL,
         )
         return self.compute_instruction
-    
-    def is_contained_in(self, rule: Rule): 
+
+    def is_contained_in(self, rule: Rule):
         """Validation of column value in set of given values"""
         predicate = f"{rule.column} IN {rule.value}"
         self.compute_instruction = ComputeInstruction(
@@ -81,22 +84,29 @@ class Compute(ComputeEngine):
             ComputeMethod.SQL,
         )
         return self.compute_instruction
-    
-    def is_daily(self, rule: Rule): 
+
+    def is_daily(self, rule: Rule):
         """Validates that there is no missing dates using only week days in the date/timestamp column"""
 
         predicate = None
 
-        day_mask = rule.value
-        if not day_mask:
-            day_mask = tuple([2, 3, 4, 5, 6])
+        def _execute(dataframe: bigquery.table.Table, key: str) -> str:
+            day_mask = rule.value
+            if not day_mask:
+                day_mask = tuple([2, 3, 4, 5, 6])
 
-        script = f'SELECT CASE WHEN numb_rows > 0 THEN CAST(numb_rows*-1 AS STRING) ELSE "true" END AS results FROM (SELECT COUNT (*) AS numb_rows FROM(SELECT full_interval.date, {}.{rule.column} FROM (SELECT date FROM (SELECT date, EXTRACT(DAYOFWEEK FROM date) AS dayofweek FROM UNNEST(GENERATE_DATE_ARRAY("2015-01-01", "2015-10-31")) AS date ORDER BY date) WHERE dayofweek IN (2,3,4)) AS full_interval LEFT OUTER JOIN `{rule.table}` AS test_table ON (full_interval.date=CAST(test_table.{rule.column} AS DATE)) WHERE {rule.column} IS NULL))'
+            script = Template(
+                """SELECT CASE WHEN numb_rows > 0 THEN CAST(numb_rows*-1 AS STRING) ELSE "true" END AS KEY$key FROM (SELECT COUNT (*) AS numb_rows FROM(SELECT full_interval.date FROM (SELECT date FROM (SELECT date, EXTRACT(DAYOFWEEK FROM date) AS dayofweek FROM UNNEST((SELECT GENERATE_DATE_ARRAY(min, max) AS date FROM (SELECT CAST(MIN($column) AS DATE) AS min, CAST(MAX($column) AS DATE)AS max FROM $table))) AS date ORDER BY date) WHERE dayofweek IN $value) AS full_interval LEFT OUTER JOIN $table AS table ON (full_interval.date=CAST(table.$column AS DATE)) WHERE $column IS NULL))""".strip()
+            )
+
+            return script.substitute(
+                table=dataframe, key=key, column=rule.column, value=day_mask
+            )
 
         self.compute_instruction = ComputeInstruction(
             predicate,
-            script,
-            ComputeMethod.SQL,
+            _execute,
+            ComputeMethod.TRANSFORM,
         )
         return self.compute_instruction
 
@@ -104,10 +114,14 @@ class Compute(ComputeEngine):
 def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
     """Get the expression for all the rules in check in one string"""
 
+    # Filter expression directed to sql
+    _sql = lambda x: x.compute_method.name == ComputeMethod.SQL.name
+    sql_set = valfilter(_sql, compute_set)
+
     return ", ".join(
         [
             compute_instruction.expression + f" AS KEY{key}"
-            for key, compute_instruction in compute_set.items()
+            for key, compute_instruction in sql_set.items()
         ]
     )
 
@@ -122,6 +136,26 @@ def _compute_query_method(client, query: str) -> Dict:
     """Compute rules throught query"""
 
     return client.query(query).to_arrow().to_pandas().to_dict(orient="records")
+
+
+def _compute_transform_method(
+    client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]
+) -> Dict:
+    """Compute rules that require to pass the table as variable"""
+
+    # Filter expression directed to transform
+    _transform = lambda x: x.compute_method.name == ComputeMethod.TRANSFORM.name
+    transform_set = valfilter(_transform, compute_set)
+
+    return {
+        f"KEY{k}": operator.itemgetter(f"KEY{k}")(
+            client.query(compute_instruction.expression(dataframe, k))
+            .to_arrow()
+            .to_pandas()
+            .to_dict(orient="records")[0]
+        )
+        for k, compute_instruction in transform_set.items()
+    }
 
 
 def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
@@ -204,7 +238,9 @@ def summary(check: Check, dataframe: bigquery.table.Table):
 
     expression_string = _get_expressions(computed_expressions)
     query = _build_query(expression_string, dataframe)
-    query_result = _compute_query_method(client, query)[0]
+    query_expression = _compute_query_method(client, query)[0]
+    query_transform = _compute_transform_method(client, dataframe, computed_expressions)
+    query_result = {**query_expression, **query_transform}
 
     # Compute the total number of rows
     rows = _compute_row(client, dataframe)[0]["count"]

@@ -114,14 +114,10 @@ class Compute(ComputeEngine):
 def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
     """Get the expression for all the rules in check in one string"""
 
-    # Filter expression directed to sql
-    _sql = lambda x: x.compute_method.name == ComputeMethod.SQL.name
-    sql_set = valfilter(_sql, compute_set)
-
     return ", ".join(
         [
             compute_instruction.expression + f" AS KEY{key}"
-            for key, compute_instruction in sql_set.items()
+            for key, compute_instruction in compute_set.items()
         ]
     )
 
@@ -132,11 +128,20 @@ def _build_query(expression_string: str, dataframe: bigquery.table.Table) -> str
     return f"SELECT {expression_string} FROM `{str(dataframe)}`"
 
 
-def _compute_query_method(client, query: str) -> Dict:
+def _compute_query_method(client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]) -> Dict:
     """Compute rules throught query"""
 
-    return client.query(query).to_arrow().to_pandas().to_dict(orient="records")
+    # Filter expression directed to sql
+    _sql = lambda x: x.compute_method.name == ComputeMethod.SQL.name
+    sql_set = valfilter(_sql, compute_set)
 
+    if sql_set:
+        expression_string = _get_expressions(sql_set)
+        query = _build_query(expression_string, dataframe)
+
+        return client.query(query).to_arrow().to_pandas().to_dict(orient="records")[0]
+    else:
+        return {}
 
 def _compute_transform_method(
     client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]
@@ -172,35 +177,32 @@ def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
 def _calculate_violations(result, nrows) -> Union[int, float]:
     """Return the number of violations for each rule"""
 
-    if isinstance(result, bool):
-        if result:
-            return 0
-        else:
-            return nrows
+    if result=="true":
+        return 0
+    elif result=="false":
+        return nrows
+    elif int(result) < 0:
+        return abs(int(result))
     else:
-        if result < 0:
-            return abs(result)
-        else:
-            return nrows - result
+        return nrows - int(result)
 
 
 def _calculate_pass_rate(result, nrows) -> float:
     """Return the pass rate for each rule"""
 
-    if isinstance(result, bool):
-        if result:
-            return 1.0
-        else:
-            return 0.0
-    elif result < 0:
-        if abs(result) < nrows:
-            return 1 - (abs(result) / nrows)
-        elif abs(result) == nrows:
+    if result=="true":
+        return 1.0
+    elif result=="false":
+        return 0.0
+    elif int(result) < 0:
+        if abs(int(result)) < nrows:
+            return 1 - (abs(int(result)) / nrows)
+        elif abs(int(result)) == nrows:
             return 0.5
         else:
-            return nrows / abs(result)
+            return nrows / abs(int(result))
     else:
-        return result / nrows
+        return int(result) / nrows
 
 
 def _evaluate_status(pass_rate, pass_threshold) -> str:
@@ -236,9 +238,7 @@ def summary(check: Check, dataframe: bigquery.table.Table):
     # Compute the expression
     computed_expressions = compute(check._rule)
 
-    expression_string = _get_expressions(computed_expressions)
-    query = _build_query(expression_string, dataframe)
-    query_expression = _compute_query_method(client, query)[0]
+    query_expression = _compute_query_method(client, dataframe, computed_expressions)
     query_transform = _compute_transform_method(client, dataframe, computed_expressions)
     query_result = {**query_expression, **query_transform}
 

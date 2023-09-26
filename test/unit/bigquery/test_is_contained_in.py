@@ -9,7 +9,22 @@ from cuallee import Check, CheckLevel
 def test_positive():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("payment_type", ("Way2ride","Prcard","Split","Cash","Credit Card","Unknown","Mobile","No Charge","Dispute","Pcard","Prepaid"))
+    check.is_contained_in(
+        "payment_type",
+        (
+            "Way2ride",
+            "Prcard",
+            "Split",
+            "Cash",
+            "Credit Card",
+            "Unknown",
+            "Mobile",
+            "No Charge",
+            "Dispute",
+            "Pcard",
+            "Prepaid",
+        ),
+    )
     rs = check.validate(df)
     assert rs.status.str.match("PASS")[1]
     assert rs.violations[1] == 0
@@ -19,7 +34,7 @@ def test_positive():
 def test_negative():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("payment_type", ("Cash","Credit Card","Prepaid"))
+    check.is_contained_in("payment_type", ("Cash", "Credit Card", "Prepaid"))
     rs = check.validate(df)
     assert rs.status.str.match("FAIL")[1]
     assert rs.violations[1] >= 6649036
@@ -32,11 +47,39 @@ def test_negative():
     [
         [
             "payment_type",
-            tuple(["Way2ride","Prcard","Split","Cash","Credit Card","Unknown","Mobile","No Charge","Dispute","Pcard","Prepaid"]),
+            tuple(
+                [
+                    "Way2ride",
+                    "Prcard",
+                    "Split",
+                    "Cash",
+                    "Credit Card",
+                    "Unknown",
+                    "Mobile",
+                    "No Charge",
+                    "Dispute",
+                    "Pcard",
+                    "Prepaid",
+                ]
+            ),
         ],
         [
             "payment_type",
-            list(["Way2ride","Prcard","Split","Cash","Credit Card","Unknown","Mobile","No Charge","Dispute","Pcard","Prepaid"]),
+            list(
+                [
+                    "Way2ride",
+                    "Prcard",
+                    "Split",
+                    "Cash",
+                    "Credit Card",
+                    "Unknown",
+                    "Mobile",
+                    "No Charge",
+                    "Dispute",
+                    "Pcard",
+                    "Prepaid",
+                ]
+            ),
         ],
         # [
         #     "pickup_community_area",
@@ -94,7 +137,7 @@ def test_parameters(column_name, rule_value):
 def test_coverage():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("payment_type", ("Cash","Credit Card","Prepaid"), 0.7)
+    check.is_contained_in("payment_type", ("Cash", "Credit Card", "Prepaid"), 0.7)
     rs = check.validate(df)
     assert rs.status.str.match("PASS")[1]
     assert rs.violations[1] >= 6649036

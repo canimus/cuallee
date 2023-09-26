@@ -1,14 +1,17 @@
 import enum
 import operator
-import pandas as pd
+import pandas as pd  # type: ignore
 from dataclasses import dataclass
 from typing import Dict, List, Union
+from string import Template
+from toolz import valfilter  # type: ignore
 from google.cloud import bigquery
 from cuallee import Check, ComputeEngine, Rule
 
 
 class ComputeMethod(enum.Enum):
     SQL = "SQL"
+    TRANSFORM = "TRANSFORM"
 
 
 @dataclass
@@ -71,14 +74,39 @@ class Compute(ComputeEngine):
             ComputeMethod.SQL,
         )
         return self.compute_instruction
-    
-    def is_contained_in(self, rule: Rule): 
+
+    def is_contained_in(self, rule: Rule):
         """Validation of column value in set of given values"""
         predicate = f"{rule.column} IN {rule.value}"
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
             ComputeMethod.SQL,
+        )
+        return self.compute_instruction
+
+    def is_daily(self, rule: Rule):
+        """Validates that there is no missing dates using only week days in the date/timestamp column"""
+
+        predicate = None
+
+        def _execute(dataframe: bigquery.table.Table, key: str) -> str:
+            day_mask = rule.value
+            if not day_mask:
+                day_mask = tuple([2, 3, 4, 5, 6])
+
+            script = Template(
+                """SELECT CASE WHEN numb_rows > 0 THEN CAST(numb_rows*-1 AS STRING) ELSE "true" END AS KEY$key FROM (SELECT COUNT (*) AS numb_rows FROM(SELECT full_interval.date FROM (SELECT date FROM (SELECT date, EXTRACT(DAYOFWEEK FROM date) AS dayofweek FROM UNNEST((SELECT GENERATE_DATE_ARRAY(min, max) AS date FROM (SELECT CAST(MIN($column) AS DATE) AS min, CAST(MAX($column) AS DATE)AS max FROM $table))) AS date ORDER BY date) WHERE dayofweek IN $value) AS full_interval LEFT OUTER JOIN $table AS table ON (full_interval.date=CAST(table.$column AS DATE)) WHERE $column IS NULL))""".strip()
+            )
+
+            return script.substitute(
+                table=dataframe, key=key, column=rule.column, value=day_mask
+            )
+
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            _execute,
+            ComputeMethod.TRANSFORM,
         )
         return self.compute_instruction
 
@@ -100,10 +128,42 @@ def _build_query(expression_string: str, dataframe: bigquery.table.Table) -> str
     return f"SELECT {expression_string} FROM `{str(dataframe)}`"
 
 
-def _compute_query_method(client, query: str) -> Dict:
+def _compute_query_method(
+    client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]
+) -> Dict:
     """Compute rules throught query"""
 
-    return client.query(query).to_arrow().to_pandas().to_dict(orient="records")
+    # Filter expression directed to sql
+    _sql = lambda x: x.compute_method.name == ComputeMethod.SQL.name
+    sql_set = valfilter(_sql, compute_set)
+
+    if sql_set:
+        expression_string = _get_expressions(sql_set)
+        query = _build_query(expression_string, dataframe)
+
+        return client.query(query).to_arrow().to_pandas().to_dict(orient="records")[0]
+    else:
+        return {}
+
+
+def _compute_transform_method(
+    client, dataframe: bigquery.table.Table, compute_set: Dict[str, ComputeInstruction]
+) -> Dict:
+    """Compute rules that require to pass the table as variable"""
+
+    # Filter expression directed to transform
+    _transform = lambda x: x.compute_method.name == ComputeMethod.TRANSFORM.name
+    transform_set = valfilter(_transform, compute_set)
+
+    return {
+        f"KEY{k}": operator.itemgetter(f"KEY{k}")(
+            client.query(compute_instruction.expression(dataframe, k))
+            .to_arrow()
+            .to_pandas()
+            .to_dict(orient="records")[0]
+        )
+        for k, compute_instruction in transform_set.items()
+    }
 
 
 def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
@@ -120,35 +180,32 @@ def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
 def _calculate_violations(result, nrows) -> Union[int, float]:
     """Return the number of violations for each rule"""
 
-    if isinstance(result, bool):
-        if result:
-            return 0
-        else:
-            return nrows
+    if result == "true":
+        return 0
+    elif result == "false":
+        return nrows
+    elif int(result) < 0:
+        return abs(int(result))
     else:
-        if result < 0:
-            return abs(result)
-        else:
-            return nrows - result
+        return nrows - int(result)
 
 
 def _calculate_pass_rate(result, nrows) -> float:
     """Return the pass rate for each rule"""
 
-    if isinstance(result, bool):
-        if result:
-            return 1.0
-        else:
-            return 0.0
-    elif result < 0:
-        if abs(result) < nrows:
-            return 1 - (abs(result) / nrows)
-        elif abs(result) == nrows:
+    if result == "true":
+        return 1.0
+    elif result == "false":
+        return 0.0
+    elif int(result) < 0:
+        if abs(int(result)) < nrows:
+            return 1 - (abs(int(result)) / nrows)
+        elif abs(int(result)) == nrows:
             return 0.5
         else:
-            return nrows / abs(result)
+            return nrows / abs(int(result))
     else:
-        return result / nrows
+        return int(result) / nrows
 
 
 def _evaluate_status(pass_rate, pass_threshold) -> str:
@@ -184,9 +241,9 @@ def summary(check: Check, dataframe: bigquery.table.Table):
     # Compute the expression
     computed_expressions = compute(check._rule)
 
-    expression_string = _get_expressions(computed_expressions)
-    query = _build_query(expression_string, dataframe)
-    query_result = _compute_query_method(client, query)[0]
+    query_expression = _compute_query_method(client, dataframe, computed_expressions)
+    query_transform = _compute_transform_method(client, dataframe, computed_expressions)
+    query_result = {**query_expression, **query_transform}
 
     # Compute the total number of rows
     rows = _compute_row(client, dataframe)[0]["count"]

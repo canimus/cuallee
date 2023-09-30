@@ -209,11 +209,11 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
     \t'{check.table_name}'
     """
 
-    print(
-        highlight(
-            textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter()
-        )
-    )
+    # print(
+    #     highlight(
+    #         textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter()
+    #     )
+    # )
 
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):

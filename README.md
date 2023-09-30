@@ -183,6 +183,7 @@ Check | Description | DataType
 `is_in` | Alias of `is_contained_in` | _agnostic_
 `is_between` | `a <= col <= b` | _numeric, date_
 `has_pattern` | Matching a pattern defined as a `regex` | _string_
+`is_legit` | String not null & not empty `^\S$` | _string_
 `has_min` | `min(col) == x` | _numeric_
 `has_max` | `max(col) == x` | _numeric_
 `has_std` | `σ(col) == x` | _numeric_

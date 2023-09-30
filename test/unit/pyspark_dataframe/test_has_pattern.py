@@ -41,6 +41,7 @@ def test_negative(spark):
 def test_parameters():
     return "😅 No parameters to be tested!"
 
+
 def test_legit(spark):
     df = spark.createDataFrame(
         [
@@ -56,6 +57,7 @@ def test_legit(spark):
     rs = check.validate(df)
     assert rs.first().status == "PASS"
 
+
 def test_not_legit(spark):
     df = spark.createDataFrame(
         [
@@ -70,6 +72,7 @@ def test_not_legit(spark):
     check.is_legit("name")
     rs = check.validate(df)
     assert rs.first().status == "FAIL"
+
 
 def test_coverage(spark):
     df = spark.createDataFrame(

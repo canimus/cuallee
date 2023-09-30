@@ -315,6 +315,11 @@ class Check:
         Rule("has_pattern", column, value, CheckDataType.STRING, pct) >> self._rule
         return self
 
+    def is_legit(self, column: str, pct: float = 1.0):
+        """Validation for string type having none space chars. Useful for CSV reading"""
+        Rule("has_pattern", column, "^\S+$", CheckDataType.STRING, pct) >> self._rule
+        return self
+
     def has_min(self, column: str, value: float):
         """Validation of a column’s minimum value"""
         Rule("has_min", column, value, CheckDataType.NUMERIC) >> self._rule

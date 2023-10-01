@@ -18,6 +18,10 @@ class Compute:
         """It retrieves the sum result of the polar predicate"""
         return compose(operator.itemgetter(0))(series)
 
+    @staticmethod
+    def _value(dataframe: pl.DataFrame):
+        return compose(first, first, list, operator.methodcaller("values"), operator.methodcaller("to_dict", as_series=False))(dataframe)
+    
     def is_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate not null"""
         return Compute._result(
@@ -185,16 +189,22 @@ class Compute:
         col_a, col_b = rule.column
         return Compute._result(
             dataframe.select(pl.col(col_a), pl.col(col_b))
-            .pearson_corr()
-            .fill_nan(0)
-            .fill_null(0)
-            .select(pl.col(col_b))
-            .head(1)
+            .corr()
+            .select(pl.col(col_b) == rule.value)
+            .select(pl.all(col_b))
             .to_series()
         )
 
     def satisfies(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.eval(rule.value).astype(int).sum()
+        ctx = pl.SQLContext(cuallee=dataframe)
+        return ctx.execute(
+            '''
+            SELECT ({}) as total
+            FROM cuallee
+            '''.format(rule.value),
+            eager=True,
+        ).cast(pl.Int8).sum()
+        
 
     def has_entropy(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         def entropy(labels):
@@ -213,68 +223,56 @@ class Compute:
 
             return -np.sum(probs * np.log(probs)) / np.log(n_classes)
 
-        return entropy(dataframe.loc[:, rule.column].values) == float(rule.value)
+        return entropy(dataframe.select(pl.col(rule.column)).to_series()) == float(rule.value)
 
     def is_on_weekday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.dayofweek.between(0, 4).astype(int).sum()
+            dataframe.select(pl.col(rule.column).dt.weekday().is_between(1, 5).cast(pl.Int8)).sum()
         )
 
     def is_on_weekend(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.dayofweek.between(5, 6).astype(int).sum()
+            dataframe.select(pl.col(rule.column).dt.weekday().is_between(6, 7).cast(pl.Int8)).sum()
         )
 
     def is_on_monday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.eq(0).astype(int).sum()
+        return dataframe.select(pl.col(rule.column).dt.weekday().eq(1).cast(pl.Int8)).sum()
 
     def is_on_tuesday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.eq(1).astype(int).sum()
+        return dataframe.select(pl.col(rule.column).dt.weekday().eq(2).cast(pl.Int8)).sum()
 
     def is_on_wednesday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.eq(2).astype(int).sum()
+        return dataframe.select(pl.col(rule.column).dt.weekday().eq(3).cast(pl.Int8)).sum()
 
     def is_on_thursday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.eq(3).astype(int).sum()
+        return dataframe.select(pl.col(rule.column).dt.weekday().eq(4).cast(pl.Int8)).sum()
 
     def is_on_friday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.eq(4).astype(int).sum()
+        return dataframe.select(pl.col(rule.column).dt.weekday().eq(5).cast(pl.Int8)).sum()
 
     def is_on_saturday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.eq(5).astype(int).sum()
+        return dataframe.select(pl.col(rule.column).dt.weekday().eq(6).cast(pl.Int8)).sum()
 
     def is_on_sunday(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
-        return dataframe.loc[:, rule.column].dt.dayofweek.eq(6).astype(int).sum()
+        return dataframe.select(pl.col(rule.column).dt.weekday().eq(7).cast(pl.Int8)).sum()
 
     def is_on_schedule(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         return (
-            dataframe.loc[:, rule.column].dt.hour.between(*rule.value).astype(int).sum()
+            dataframe.select(pl.col(rule.column).dt.hour().is_between(*rule.value).cast(pl.Int8)).sum()
         )
 
     def is_daily(self, rule: Rule, dataframe: pl.DataFrame) -> complex:
         if rule.value is None:
-            day_mask = [0, 1, 2, 3, 4]
+            day_mask = [1, 2, 3, 4, 5]
         else:
             day_mask = rule.value
 
-        lower, upper = (
-            dataframe.loc[:, rule.column].agg([np.min, np.max]).dt.strftime("%Y-%m-%d")
-        )
-        sequence = (
-            pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
-        )
-        sequence = (
-            sequence[sequence.ts.dt.dayofweek.isin(day_mask)]
-            .reset_index(drop=True)
-            .ts.unique()
-            .astype(np.datetime64)
-        )
-
-        delivery = (
-            dataframe[dataframe[rule.column].dt.dayofweek.isin(day_mask)][rule.column]
-            .dt.date.astype(np.datetime64)
-            .values
-        )
+        
+        lower = self._value(dataframe.select(pl.col(rule.column)).min())
+        upper = self._value(dataframe.select(pl.col(rule.column)).max())
+        sequence = pl.DataFrame({"ts" : pl.date_range(start=lower, end=upper, interval="1d", eager=True)})
+        sequence = sequence.filter(pl.col("ts").dt.weekday().is_in(day_mask)).to_series().to_list()
+        delivery = dataframe.filter(pl.col(rule.column).dt.weekday().is_in(day_mask)).to_series().to_list()
 
         # No difference between sequence of daily as a complex number
         return complex(len(dataframe), len(set(sequence).difference(delivery)))
@@ -282,8 +280,10 @@ class Compute:
     def is_inside_interquartile_range(
         self, rule: Rule, dataframe: pl.DataFrame
     ) -> Union[bool, complex]:
-        lower, upper = dataframe[rule.column].quantile(rule.value).values
-        return dataframe[rule.column].between(lower, upper).astype(int).sum()
+        min_q, max_q = rule.value
+        lower = self._value(dataframe.select(pl.col(rule.column).quantile(min_q, interpolation="linear")))
+        upper = self._value(dataframe.select(pl.col(rule.column).quantile(max_q, interpolation="linear")))
+        return dataframe.select(pl.col(rule.column).is_between(lower, upper)).cast(pl.Int8).sum()
 
     def has_workflow(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Compliance with adjacency matrix"""

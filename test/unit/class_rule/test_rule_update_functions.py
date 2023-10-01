@@ -1,7 +1,5 @@
 import pyspark.sql.functions as F
-
 from cuallee import Check, CheckLevel
-
 
 def test_add_rule():
     c = Check(CheckLevel.WARNING, "test_add_rule").is_complete("id")
@@ -104,3 +102,4 @@ def test_delete_rule_by_coverage(spark):
 
     c.delete_rule_by_attribute("coverage", 1.0)
     assert len(c._rule) == 0
+

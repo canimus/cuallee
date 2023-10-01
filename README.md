@@ -170,8 +170,10 @@ Check | Description | DataType
  ------- | ----------- | ----
 `is_complete` | Zero `nulls` | _agnostic_
 `is_unique` | Zero `duplicates` | _agnostic_
+`is_primary_key` | Zero `duplicates` | _agnostic_
 `are_complete` | Zero `nulls` on group of columns | _agnostic_
 `are_unique` | Composite primary key check | _agnostic_
+`is_composite_key` | Zero duplicates on multiple columns | _agnostic_
 `is_greater_than` | `col > x` | _numeric_
 `is_positive` | `col > 0` | _numeric_
 `is_negative` | `col < 0` | _numeric_

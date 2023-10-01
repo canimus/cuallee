@@ -142,7 +142,7 @@ class Compute:
         return Compute._result(
             dataframe.select(
                 pl.col(rule.column)
-                .is_between(low, high, include_bounds=True)
+                .is_between(low, high, closed="both")
                 .cast(pl.Int8)
             ).sum()
         )

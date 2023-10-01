@@ -257,11 +257,23 @@ class Check:
         """Validation for unique values in column"""
         Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
+    
+    def is_primary_key(self, column: str, pct: float = 1.0):
+        """Validation for unique values in column"""
+        Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
+        return self
+    
 
     def are_unique(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """Validation for unique values in a group of columns"""
         Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
+    
+    def is_composite_key(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
+        """Validation for unique values in a group of columns"""
+        Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
+        return self
+    
 
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """Validation for numeric greater than value"""

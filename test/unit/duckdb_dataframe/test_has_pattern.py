@@ -11,10 +11,22 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.table_name = "df"
     assert check.validate(db).status.str.match("PASS").all()
 
+def test_is_legit(check: Check, db: duckdb.DuckDBPyConnection):
+    check.is_legit("id")
+    df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
+    check.table_name = "df"
+    assert check.validate(db).status.str.match("PASS").all()
+
 
 def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_pattern("id", r"^H.*")
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Villain"]})
+    check.table_name = "df"
+    assert check.validate(db).status.str.match("FAIL").all()
+
+def test_is_not_legit(check: Check, db: duckdb.DuckDBPyConnection):
+    check.is_legit("id")
+    df = pd.DataFrame({"id": ["Herminio", "Hola", ""]})
     check.table_name = "df"
     assert check.validate(db).status.str.match("FAIL").all()
 

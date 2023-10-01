@@ -9,10 +9,20 @@ def test_positive(check: Check):
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
     assert check.validate(df).status.str.match("PASS").all()
 
+def test_is_legit(check: Check):
+    check.is_legit("id")
+    df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
+    assert check.validate(df).status.str.match("PASS").all()
+
 
 def test_negative(check: Check):
     check.has_pattern("id", r"^H.*")
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Villain"]})
+    assert check.validate(df).status.str.match("FAIL").all()
+
+def test_is_not_legit(check: Check):
+    check.is_legit("id")
+    df = pd.DataFrame({"id": ["Herminio", "Hola", ""]})
     assert check.validate(df).status.str.match("FAIL").all()
 
 

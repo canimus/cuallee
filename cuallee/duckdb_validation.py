@@ -165,7 +165,7 @@ class Compute:
             """
         (select sum(A.CUALLEE_RESULT) from (
             select
-            lead($event) over (partition by $name order by $ord) as CUALLEE_EVENT,
+            lead($event) over (partition by $name order by $ordinal) as CUALLEE_EVENT,
             LIST_VALUE($event, CUALLEE_EVENT) as CUALLEE_EDGE,
             LIST_VALUE$basis as CUALLEE_GRAPH,
             CAST(array_has(CUALLEE_GRAPH, CUALLEE_EDGE) AS INTEGER) as CUALLEE_RESULT
@@ -173,13 +173,13 @@ class Compute:
         ) as A)
         """.strip()
         )
-        name, event, ord = rule.column
+        name, event, ordinal = rule.column
         basis = str(tuple(map(list, rule.value))).replace("None", "NULL")
         return template.substitute(
             {
                 "name": name,
                 "event": event,
-                "ord": ord,
+                "ordinal": ordinal,
                 "basis": basis,
                 "table": self.table_name,
             }

@@ -165,7 +165,7 @@ class Compute:
 
     def has_max_by(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Adjacent column maximum value verifiation on threshold"""
-        base, target = rule.column
+        target, base = rule.column
         return Compute._result(
             dataframe.filter(pl.col(base) == pl.col(base).max())
             .select(pl.col(target) == rule.value)

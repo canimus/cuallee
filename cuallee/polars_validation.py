@@ -290,28 +290,18 @@ class Compute:
 
         def workflow(dataframe):
             group, event, order = rule.column
-            CUALLEE_EVENT = "cuallee_event"
-            CUALLEE_EDGE = "cuallee_edge"
-            CUALLEE_GRAPH = "cuallee_graph"
-            dataframe[CUALLEE_EVENT] = (
-                dataframe.loc[:, rule.column]
-                .sort_values(by=[group, order], ascending=True)
-                .groupby([group])[event]
-                .shift(-1)
-                .replace(np.nan, None)
-            )
-            dataframe[CUALLEE_EDGE] = dataframe[[event, CUALLEE_EVENT]].apply(
-                lambda x: (x[event], x[CUALLEE_EVENT]), axis=1
-            )
-            dataframe[CUALLEE_GRAPH] = list(repeat(rule.value, len(dataframe)))
+            groups = dataframe.partition_by(group)
+            interactions = []
+            _d = compose(list, operator.methodcaller("values"), operator.methodcaller("to_dict", as_series=False))
+            for g in groups:
+                pairs = list(zip(*_d(g.select(pl.col(event), pl.col(event).shift(-1).alias("target")))))
+                if result := set(pairs).difference(rule.value):
+                    for t in result:
+                        interactions.append(t)
 
-            return (
-                dataframe.apply(lambda x: x[CUALLEE_EDGE] in x[CUALLEE_GRAPH], axis=1)
-                .astype("int")
-                .sum()
-            )
+            return len(dataframe) - len(interactions)
 
-        return workflow(dataframe.loc[:, rule.column])
+        return workflow(dataframe.select(*rule.column))
 
 
 def compute(rules: Dict[str, Rule]):

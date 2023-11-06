@@ -31,7 +31,7 @@ pyspark = [
   "pyspark>=3.4.0"
 ]
 snowpark = [
-  "snowflake-snowpark-python==1.4.0",
+  "snowflake-snowpark-python==1.10.0",
   "pyarrow >= 10.0.1"
 ]
 pandas = [

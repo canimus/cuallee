@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.7.0"
+version = "0.7.2"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
@@ -35,8 +35,8 @@ pyspark = [
   "pyspark>=3.4.0"
 ]
 snowpark = [
-  "snowflake-snowpark-python==1.4.0",
-  "pyarrow >= 10.0.1"
+  "snowflake-snowpark-python==1.11.1",
+  "pyarrow >= 14.0.2"
 ]
 pandas = [
   "pandas>=2.0.1"
@@ -59,6 +59,10 @@ test = [
   "pytest-cov",
   "pendulum >= 2.1.2"
 ]
+dagster = [
+  "dagster == 1.5.13"
+]
+
 
 
 

@@ -230,6 +230,14 @@ Check | Description | DataType
 `satisfies` | An open `SQL expression` builder to construct custom checks | _agnostic_
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
 
+
+## Controls
+
+Check | Description | DataType
+ ------- | ----------- | ----
+`completeness` | Zero `nulls` | _agnostic_
+
+
 ## ISO Standard
 A new module has been incorporated in `cuallee==0.4.0` which allows the verification of International Standard Organization columns in data frames. Simply access the `check.iso` interface to add the set of checks as shown below.
 

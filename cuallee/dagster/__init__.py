@@ -1,9 +1,9 @@
 from dagster import asset_check, AssetCheckResult
 from cuallee import Check
 import pandas as pd
+from typing import List
 
-
-def make_dagster_checks(check: Check, asset: str, data: pd.DataFrame):
+def make_dagster_checks(check: Check, asset: str, data: pd.DataFrame) -> List[AssetCheckResult]:
     rules = check.rules
     results = check.validate(data)
     checks = []

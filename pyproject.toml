@@ -59,6 +59,10 @@ test = [
   "pytest-cov",
   "pendulum >= 2.1.2"
 ]
+dagster = [
+  "dagster == 1.5.13"
+]
+
 
 
 

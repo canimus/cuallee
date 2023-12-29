@@ -148,7 +148,7 @@ class ComputeEngine(Protocol):
     def summary(self, check: Any, dataframe: Any) -> Any:
         """Computes all predicates and expressions for check summary"""
 
-        
+
 class Check:
     def __init__(
         self,
@@ -627,12 +627,11 @@ class Check:
         ), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
-    
 
-class Control():
+class Control:
     @staticmethod
     def completeness(dataframe):
         """Control of null values on data frames"""
         check = Check(CheckLevel.WARNING, "Completeness")
-        [check.is_complete(c) for c in dataframe.columns];
+        [check.is_complete(c) for c in dataframe.columns]
         return check.validate(dataframe)

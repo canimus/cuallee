@@ -11,6 +11,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.table_name = "df"
     assert check.validate(db).status.str.match("PASS").all()
 
+
 def test_is_legit(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_legit("id")
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
@@ -23,6 +24,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Villain"]})
     check.table_name = "df"
     assert check.validate(db).status.str.match("FAIL").all()
+
 
 def test_is_not_legit(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_legit("id")

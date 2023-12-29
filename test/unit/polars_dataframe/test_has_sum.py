@@ -16,4 +16,3 @@ def test_negative(check: Check):
     df = pl.DataFrame({"id": np.arange(10)})
     result = check.validate(df).select(pl.col("status")) == "FAIL"
     assert all(result.to_series().to_list())
-

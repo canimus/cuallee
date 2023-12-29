@@ -133,6 +133,7 @@ class Compute:
 
     def is_daily(self, rule: Rule) -> str:
         """Returns the number or violations and matches on a daily schedule"""
+        
         if rule.value is None:
             day_mask = tuple([1, 2, 3, 4, 5])
         else:
@@ -141,9 +142,9 @@ class Compute:
         template = Template(
             """
             distinct(select LIST_VALUE(count(B.$id),SUM(CAST(B.$id IS NULL AS INTEGER))::INTEGER) as r from (
-            select distinct(unnest(range(min($id)::DATE, max($id)::DATE + 1, INTERVAL 1 DAY))) as w, 
+            select distinct(unnest(range(min($id)::TIMESTAMP, cast(date_add(max($id), INTERVAL 1 DAY) as TIMESTAMP), INTERVAL 1 DAY))) as w, 
             extract(dow from w) as y from '$table'
-            ) A LEFT JOIN df B ON A.w = CAST(B.$id AS DATE) where A.y in $value)
+            ) A LEFT JOIN '$table' B ON A.w = B.$id where A.y in $value)
         """.strip()
         )
 

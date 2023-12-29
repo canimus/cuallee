@@ -632,6 +632,7 @@ class Check:
 class Control():
     @staticmethod
     def completeness(dataframe):
+        """Control of null values on data frames"""
         check = Check(CheckLevel.WARNING, "Completeness")
         [check.is_complete(c) for c in dataframe.columns];
         return check.validate(dataframe)

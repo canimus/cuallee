@@ -451,7 +451,7 @@ def summary(check: Check, dataframe: pl.DataFrame):
                     if result.imag > nrows:
                         return nrows / result.imag
                     else:
-                        return result.imag / nrows
+                        return nrows / (nrows + result.imag)
                 else:
                     return 1.0
 

@@ -756,7 +756,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
     )
 
-    # Create SnowparkSession
+    # Create SnowparkSession using account info
     SNOWFLAKE_ENVIRONMENT = {
         "account": "SF_ACCOUNT",
         "user": "SF_USER",

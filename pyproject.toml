@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.6.0"
+version = "0.6.1"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
@@ -27,6 +27,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+dev = [
+  "black==23.9.1",
+  "ruff==0.0.290"
+]
 pyspark = [
   "pyspark>=3.4.0"
 ]

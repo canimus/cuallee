@@ -148,7 +148,7 @@ class ComputeEngine(Protocol):
     def summary(self, check: Any, dataframe: Any) -> Any:
         """Computes all predicates and expressions for check summary"""
 
-
+        
 class Check:
     def __init__(
         self,
@@ -627,27 +627,11 @@ class Check:
         ), "Invalid data types between rules and dataframe"
         return self.compute_engine.summary(self, dataframe)
 
-    # def samples(self, dataframe: Any, rule_index: int = None) -> Any:
-    #     if not rule_index:
-    #         return reduce(
-    #             DataFrame.unionAll,
-    #             [dataframe.filter(predicate) for predicate in self.predicates],
-    #         ).drop_duplicates()
-    #     elif isinstance(rule_index, int):
-    #         return reduce(
-    #             DataFrame.unionAll,
-    #             [
-    #                 dataframe.filter(predicate)
-    #                 for index, predicate in enumerate(self.predicates, 1)
-    #                 if rule_index == index
-    #             ],
-    #         )
-    #     elif isinstance(rule_index, list):
-    #         return reduce(
-    #             DataFrame.unionAll,
-    #             [
-    #                 dataframe.filter(predicate)
-    #                 for index, predicate in enumerate(self.predicates, 1)
-    #                 if index in rule_index
-    #             ],
-    #         ).drop_duplicates()
+    
+
+class Control():
+    @staticmethod
+    def completeness(dataframe):
+        check = Check(CheckLevel.WARNING, "Completeness")
+        [check.is_complete(c) for c in dataframe.columns];
+        return check.validate(dataframe)

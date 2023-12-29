@@ -21,7 +21,7 @@ Provider | API | Versions
 ![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `1.4.0`
 ![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.4.0`, `3.3.x`, `3.2.x`
 ![bigquery](logos/bigquery.png?raw=true "BigQuery Client API")| `bigquery` | `3.4.1`
-![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.1`, `1.5.x`, `1.4.x`
+![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.2`, `1.5.x`, `1.4.x`
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.7.1`, `0.8.0`
 ![polars](logos/polars.svg?raw=true "Polars API")|`polars`| `0.19.6` 
  
@@ -152,6 +152,16 @@ check.validate(df).show(truncate=False)
 +---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
 
  ```
+
+### Controls
+`[2023-12-28]` ✨ __New feature!__ to simplify the entire validation of a dataframe in a particular dimension.
+```python
+import pandas as pd
+from cuallee import Control
+df = pd.DataFrame({"X":[1,2,3], "Y": [10,20,30]})
+# Checks all columns in dataframe for using is_complete check
+Control.completeness(df)
+```
 
 ### `cuallee` __VS__ `pydeequ`
 In the `test` folder there are `docker` containers with the requirements to match the tests. Also a `perftest.py` available at the root folder for interests.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.7.2"
+version = "0.7.3"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
@@ -46,7 +46,7 @@ bigquery =[
   "pyarrow >= 11.0.0"
 ]
 duckdb = [
-  "duckdb==0.8.1"
+  "duckdb==0.9.2"
 ]
 polars = [
   "polars>=0.19.6"

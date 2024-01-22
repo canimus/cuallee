@@ -60,7 +60,7 @@ test = [
   "pendulum >= 2.1.2"
 ]
 dagster = [
-  "dagster == 1.5.13"
+  "dagster == 1.6.1"
 ]
 
 

@@ -1,4 +1,4 @@
-from lxml import etree
+import xml.etree.ElementTree as ET
 import requests
 from dataclasses import dataclass
 from typing import List
@@ -23,10 +23,11 @@ def _load_currencies():
     """External download from ISO website of currencies in XML format"""
     DEFAULT_ENDPOINT_4217 = "https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml"
     response = requests.get(os.getenv("ISO_4217_ENDPOINT", DEFAULT_ENDPOINT_4217))
-    xml = etree.fromstring(response.text.encode("utf-8"))
+    xml = ET.fromstring(response.text.encode("utf-8"))
 
-    def _get_ccy(element: etree._Element) -> Currency:
-        return at("currency")(Currency(*[tag.text for tag in element.getchildren()]))
+    def _get_ccy(element):
+        currency_data = {tag.tag: tag.text for tag in element}
+        return at("currency")(Currency(**currency_data))
 
     return set(filter(None, (map(_get_ccy, xml.xpath("//CcyNtry")))))
 

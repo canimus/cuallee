@@ -36,7 +36,7 @@ def _load_currencies():
 @lru_cache
 def _load_countries():
     """External download from Google shared data of country codes and locations"""
-    return list(get_alpha2_codes().values())
+    return list(get_alpha2_codes().keys())
 
 
 class ISO:

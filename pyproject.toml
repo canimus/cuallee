@@ -29,7 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "black==23.12.1",
-  "ruff==0.1.10"
+  "ruff==0.1.14"
 ]
 pyspark = [
   "pyspark>=3.4.0"

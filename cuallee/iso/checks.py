@@ -7,6 +7,7 @@ from operator import attrgetter as at
 from functools import lru_cache
 import pandas as pd
 from toolz import first
+from i18n_iso_countries import get_alpha2_codes
 
 
 @dataclass
@@ -35,11 +36,7 @@ def _load_currencies():
 @lru_cache
 def _load_countries():
     """External download from Google shared data of country codes and locations"""
-    DEFAULT_ENDPOINT_3166 = (
-        "https://developers.google.com/public-data/docs/canonical/countries_csv"
-    )
-    response = pd.read_html(os.getenv("ISO_3166_ENDPOINT", DEFAULT_ENDPOINT_3166))
-    return first(response)["country"].str.upper().dropna().tolist()
+    return list(get_alpha2_codes().values())
 
 
 class ISO:

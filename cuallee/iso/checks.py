@@ -26,10 +26,10 @@ def _load_currencies():
     xml = ET.fromstring(response.text.encode("utf-8"))
 
     def _get_ccy(element):
-        currency_data = {tag.tag: tag.text for tag in element}
-        return at("currency")(Currency(**currency_data))
+        currency_data = {tag.tag: tag.text.strip() for tag in list(element)}
+        return at("currency")(Currency(*currency_data.values()))
 
-    return set(filter(None, (map(_get_ccy, xml.xpath("//CcyNtry")))))
+    return set(filter(None, (map(_get_ccy, xml.findall("./CcyTbl/CcyNtry")))))
 
 
 @lru_cache

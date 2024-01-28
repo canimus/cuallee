@@ -1,6 +1,8 @@
 # cuallee
 Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
+<img src="logos/cuallee.png" width="300px">
+
 This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, and more.
 It is a replacement written in pure `python` of the `pydeequ` framework.
 

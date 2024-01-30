@@ -1,4 +1,3 @@
-import logging
 import enum
 import operator
 from dataclasses import dataclass
@@ -14,8 +13,6 @@ from toolz import first, valfilter  # type: ignore
 import cuallee.utils as cuallee_utils
 from cuallee import Check, ComputeEngine, Rule
 from colorama import Fore, Style  # type: ignore
-
-logger = logging.getLogger(__name__)
 
 
 class ComputeMethod(enum.Enum):
@@ -749,7 +746,6 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     transform_result = _compute_transform_method(computed_expressions, dataframe)
 
     unified_results = {**observation_result, **select_result, **transform_result}
-    logger.debug(unified_results)
 
     _calculate_violations = lambda result_column: (
         F.when(result_column < 0, F.abs(result_column))
@@ -813,52 +809,4 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         )
     )
 
-    logger.debug(result.collect())
     return result
-
-
-# def _get_rule_status(check: Check, summary_dataframe: DataFrame):
-#     """Update the rule status after computing summary"""
-#     for index, rule in enumerate(check._rule.values(), 1):
-#         rule.status = (
-#             summary_dataframe.filter(F.col("id") == index)
-#             .select("status")
-#             .first()
-#             .status
-#         )
-#     return check
-
-
-# def get_record_sample(
-#     check: Check,
-#     dataframe: DataFrame,
-#     spark: SparkSession,
-#     status: str = "FAIL",
-#     method: Union[tuple[str], str] = None,
-# ) -> DataFrame:
-#     """Give a sample of malformed rows"""
-
-#     # Filters
-#     _sample = (
-#         lambda x: (x.status == "FAIL")
-#         if method is None
-#         else (x.status == "FAIL") & (x.method in method)
-#     )
-
-#     if status == "FAIL":
-
-#         sample_dataframe = spark.createDataFrame([], schema=dataframe.schema)
-
-#         for hash_key in valfilter(_sample, check._rule).keys():
-#             sample_dataframe = sample_dataframe.unionByName(
-#                 dataframe.filter(~check._compute[hash_key].predicate)
-#             )
-
-#         return sample_dataframe.distinct()
-#     else:
-#         sample_dataframe = dataframe
-#         for hash_key in valfilter(_sample, check._rule).keys():
-#             sample_dataframe = sample_dataframe.filter(
-#                 check._compute[hash_key].predicate
-#             )
-#         return sample_dataframe

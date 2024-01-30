@@ -47,6 +47,7 @@ class Compute:
     def has_pattern(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
             dataframe.loc[:, rule.column]
+            .fillna("")
             .str.match(re.compile(rule.value))  # type: ignore
             .astype(int)
             .sum()

@@ -3,7 +3,10 @@ from cuallee import Check
 import pandas as pd
 from typing import List
 
-def make_dagster_checks(check: Check, asset: str, data: pd.DataFrame) -> List[AssetCheckResult]:
+
+def make_dagster_checks(
+    check: Check, asset: str, data: pd.DataFrame
+) -> List[AssetCheckResult]:
     rules = check.rules
     results = check.validate(data)
     checks = []
@@ -14,12 +17,12 @@ def make_dagster_checks(check: Check, asset: str, data: pd.DataFrame) -> List[As
             return AssetCheckResult(
                 passed=(item.status == "PASS"),
                 metadata={
-                    "level" : item.level,
+                    "level": item.level,
                     "rows": int(item.rows),
                     "column": item.column,
                     "value": str(item.value),
                     "violations": int(item.violations),
-                    "pass_rate": item.pass_rate
+                    "pass_rate": item.pass_rate,
                 },
             )
 

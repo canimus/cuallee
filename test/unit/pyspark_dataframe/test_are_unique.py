@@ -11,6 +11,7 @@ def test_positive(spark):
     rs = check.validate(df)
     assert rs.first().status == "PASS"
 
+
 def test_is_composite_key(spark):
     df = spark.range(10).withColumn("id2", F.col("id") + 10)
     check = Check(CheckLevel.WARNING, "pytest")

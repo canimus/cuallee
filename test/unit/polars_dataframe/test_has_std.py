@@ -6,7 +6,7 @@ import numpy as np
 def test_positive(check: Check):
     check.has_std("id", 3.0276503540974917)
     df = pl.DataFrame({"id": np.arange(10)})
-    
+
     result = check.validate(df).select(pl.col("status")) == "PASS"
     assert all(result.to_series().to_list())
 

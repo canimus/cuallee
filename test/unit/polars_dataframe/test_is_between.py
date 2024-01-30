@@ -23,8 +23,10 @@ def test_negative(check: Check):
     [
         [(0, 9), range(10)],
         [
-            (date(2022,1,1), date(2022,1,4)),
-            pl.date_range(start=date(2022,1,1), end=date(2022,1,4), interval="1d", eager=True),
+            (date(2022, 1, 1), date(2022, 1, 4)),
+            pl.date_range(
+                start=date(2022, 1, 1), end=date(2022, 1, 4), interval="1d", eager=True
+            ),
         ],
     ],
     ids=("numeric", "date"),
@@ -32,7 +34,7 @@ def test_negative(check: Check):
 def test_parameters(check: Check, rule_value, rule_data):
     check.is_between("id", rule_value)
     df = pl.DataFrame({"id": rule_data})
-    
+
     result = check.validate(df).select(pl.col("status")) == "PASS"
     assert all(result.to_series().to_list())
 

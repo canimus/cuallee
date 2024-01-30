@@ -13,6 +13,7 @@ def test_positive(spark):
     assert rs.first().violations == 0.0
     assert rs.first().pass_rate == 1.0
 
+
 def test_is_primary_key(spark):
     df = spark.range(10)
     check = Check(CheckLevel.WARNING, "pytest")
@@ -21,6 +22,7 @@ def test_is_primary_key(spark):
     assert rs.first().status == "PASS"
     assert rs.first().violations == 0.0
     assert rs.first().pass_rate == 1.0
+
 
 def test_negative(spark):
     df = spark.createDataFrame([[0], [2], [2], [3]], ["id"])

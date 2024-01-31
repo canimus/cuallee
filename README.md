@@ -1,7 +1,18 @@
 # cuallee
-Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
-<img src="logos/cuallee.png" width="300px">
+[![PyPI version](https://badge.fury.io/py/cuallee.svg)](https://badge.fury.io/py/cuallee)
+[![ci](https://github.com/canimus/cuallee/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/canimus/cuallee/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/canimus/cuallee/branch/main/graph/badge.svg?token=D7SOV620MS)](https://codecov.io/gh/canimus/cuallee)
+[![](https://img.shields.io/pypi/dm/cuallee.svg?style=popout-square)](https://pypi.org/project/cuallee/)
+[![License](https://img.shields.io/github/license/canimus/cuallee.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
+[![LoC](https://tokei.rs/b1/github/canimus/cuallee?category=lines)](https://github.com/canimus/cuallee)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+<div align="center">
+    <img src="logos/cuallee.png" width="200px" style="padding: 30px" align="right"/>
+</div>
+
+Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
 This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, and more.
 It is a replacement written in pure `python` of the `pydeequ` framework.
@@ -29,13 +40,7 @@ Provider | API | Versions
  
  <sub>Logos are trademarks of their own brands.</sub>
 
-## Stats
-[![PyPI version](https://badge.fury.io/py/cuallee.svg)](https://badge.fury.io/py/cuallee)
-[![ci](https://github.com/canimus/cuallee/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/canimus/cuallee/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/canimus/cuallee/branch/main/graph/badge.svg?token=D7SOV620MS)](https://codecov.io/gh/canimus/cuallee)
-[![](https://img.shields.io/pypi/dm/cuallee.svg?style=popout-square)](https://pypi.org/project/cuallee/)
-[![License](https://img.shields.io/github/license/canimus/cuallee.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ## Install
 ```bash
 pip install cuallee

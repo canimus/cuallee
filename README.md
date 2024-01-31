@@ -9,7 +9,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 <div align="center">
-    <img src="logos/cuallee.png" width="200px" style="padding: 30px" align="right"/>
+    <img src="logos/cuallee.png" width="250px" style="padding: 50px" align="right"/>
 </div>
 
 Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_

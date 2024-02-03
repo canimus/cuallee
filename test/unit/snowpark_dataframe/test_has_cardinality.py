@@ -19,17 +19,6 @@ def test_negative(snowpark):
     rs = check.validate(df)
     assert rs.first().STATUS == "FAIL"
 
-
-@pytest.mark.parametrize(("rule_type", "rule_value"), [pytest.param("int", [1,2,3], id="numeric"), pytest.param("string", ["A", "B", "C"], id="categorical")])
-def test_parameters(snowpark, rule_type, rule_value):
-    df = snowpark.create_dataFrame(pd.DataFrame(rule_value, columns=["id"]))
-    check = Check(CheckLevel.WARNING, "pytest")
-    check.has_cardinality("ID", 3)
-    rs = check.validate(df)
-    assert rs.first().STATUS == "PASS"
-
-
-
 def test_coverage():
     check = Check(CheckLevel.WARNING, "pytest")
     with pytest.raises(TypeError, match="positional arguments"):

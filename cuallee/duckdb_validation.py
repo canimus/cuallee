@@ -77,6 +77,9 @@ class Compute:
     def has_sum(self, rule: Rule) -> str:
         return f"SUM({rule.column}) = {rule.value}"
 
+    def has_cardinality(self, rule: Rule) -> str:
+        return f"COUNT(DISTINCT({rule.column})) = {rule.value}"
+
     def is_between(self, rule: Rule) -> str:
         return f"SUM(CAST({rule.column} BETWEEN '{rule.value[0]}' AND '{rule.value[1]}' AS INTEGER))"
 

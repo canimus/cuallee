@@ -214,6 +214,16 @@ class Compute(ComputeEngine):
             ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
+    
+    def has_cardinality(self, rule: Rule):
+        """Validation of a column’s different values"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._stats_fn_rule(rule.column, rule.value, F.count_distinct),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
 
     def is_between(self, rule: Rule):
         """Validation of a column between a range"""

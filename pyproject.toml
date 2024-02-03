@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.7.6"
+version = "0.7.7"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }

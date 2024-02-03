@@ -489,6 +489,11 @@ class Check:
         Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
+    def has_cardinality(self, column: str, value: int):
+        """Validate cardinality in column"""
+        Rule("has_cardinality", column, value, CheckDataType.AGNOSTIC) >> self._rule
+        return self
+
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
         """Validation for entropy calculation on continuous values"""
         (

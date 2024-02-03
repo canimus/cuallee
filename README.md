@@ -209,6 +209,7 @@ Check | Description | DataType
 `has_mean` | `μ(col) == x` | _numeric_
 `has_sum` | `Σ(col) == x` | _numeric_
 `has_percentile` | `%(col) == x` | _numeric_
+`has_cardinality` | `count(distinct(col)) == x` | _agnostic_
 `has_max_by` | A utilitary predicate for `max(col_a) == x for max(col_b)`  | _agnostic_
 `has_min_by` | A utilitary predicate for `min(col_a) == x for min(col_b)`  | _agnostic_
 `has_correlation` | Finds correlation between `0..1` on `corr(col_a, col_b)` | _numeric_

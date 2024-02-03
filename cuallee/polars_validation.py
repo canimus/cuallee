@@ -145,6 +145,12 @@ class Compute:
         return Compute._result(
             dataframe.select(pl.col(rule.column).sum() == rule.value).to_series()
         )
+    
+    def has_cardinality(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate sum value on column"""
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).n_unique() == rule.value).to_series()
+        )
 
     def is_between(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate value inclusion on threshold boundaries"""

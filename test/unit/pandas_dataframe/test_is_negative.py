@@ -6,7 +6,7 @@ import pytest
 
 def test_positive(check: Check):
     check.is_negative("id")
-    df = pd.DataFrame({"id": range(1, 10)}).apply(lambda x: x*-1)
+    df = pd.DataFrame({"id": range(1, 10)}).apply(lambda x: x * -1)
     assert check.validate(df).status.str.match("PASS").all()
 
 

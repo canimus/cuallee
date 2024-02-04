@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.7.8"
+version = "0.8.0"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
@@ -58,6 +58,9 @@ test = [
 ]
 dagster = [
   "dagster == 1.6.3"
+]
+cloud = [
+  "msgpack == 1.0.7"
 ]
 
 

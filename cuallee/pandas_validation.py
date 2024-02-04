@@ -67,7 +67,7 @@ class Compute:
 
     def has_sum(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].sum() == rule.value
-    
+
     def has_cardinality(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].nunique() == rule.value
 

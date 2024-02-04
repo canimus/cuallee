@@ -216,7 +216,7 @@ class Compute:
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
-    
+
     def has_cardinality(self, rule: Rule):
         """Validation of a column’s distinct values"""
         predicate = None

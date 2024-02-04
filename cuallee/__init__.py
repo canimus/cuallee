@@ -15,9 +15,6 @@ from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
 import numpy as np
 
-from .cloud import publish
-import os
-
 logger = logging.getLogger("cuallee")
 
 # Verify Libraries Available
@@ -68,6 +65,7 @@ except:
 
 logger.debug(Style.RESET_ALL)
 
+
 class CheckLevel(enum.Enum):
     WARNING = 0
     ERROR = 1
@@ -98,6 +96,8 @@ class Rule:
     options: Union[List[Tuple], None] = None
     status: Union[str, None] = None
     violations: int = 0
+    pass_rate: float = 0.0
+    ordinal: int = 0
 
     @property
     def settings(self) -> dict:
@@ -137,6 +137,44 @@ class Rule:
     def __rshift__(self, rule_dict: Dict[str, Any]) -> Dict[str, Any]:
         rule_dict[self.key] = self
         return rule_dict
+
+    def evaluate_violations(self, result: Any, rows: int):
+        """Calculates the row violations on the rule"""
+        if isinstance(result, str):
+            if result == "false":
+                self.violations = rows
+            elif result == "true":
+                self.violations = 0
+        elif isinstance(result, Number):
+            if result < 0:
+                self.violations = abs(result)
+            elif (result > 0) & (result <= rows):
+                self.violations = rows - result
+        elif isinstance(result, bool):
+            if result:
+                self.violations = 0
+            else:
+                self.violations = rows
+
+    def evaluate_pass_rate(self, rows: int):
+        """Percentage of successful rows by this rule"""
+        try:
+            self.pass_rate = 1 - (self.violations / rows)
+        except ZeroDivisionError:
+            self.pass_rate = 1.0
+
+    def evaluate_status(self):
+        """Overall PASS/FAIL status of the rule"""
+        if self.pass_rate >= self.coverage:
+            self.status = "PASS"
+        else:
+            self.status = "FAIL"
+
+    def evaluate(self, result: Any, rows: int):
+        """Generic rule evaluation for checks"""
+        self.evaluate_violations(result, rows)
+        self.evaluate_pass_rate(rows)
+        self.evaluate_status(rows)
 
 
 class ComputeEngine(Protocol):
@@ -626,18 +664,15 @@ class Check:
             dataframe, polars_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.polars_validation")
-        
+
         else:
-            raise Exception("Cuallee is not ready for this data structure. You can log a Feature Request in Github.")
+            raise Exception(
+                "Cuallee is not ready for this data structure. You can log a Feature Request in Github."
+            )
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
-
-        # Cuallee Cloud instruction
-        cuallee_cloud_flag = os.getenv("CUALLEE_CLOUD_TOKEN")
-        if cuallee_cloud_flag:
-            publish([("uno", 1),("dos", 2)])
 
         return self.compute_engine.summary(self, dataframe)
 

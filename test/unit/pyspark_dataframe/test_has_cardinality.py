@@ -21,7 +21,13 @@ def test_negative(spark):
     assert rs.first().status == "FAIL"
 
 
-@pytest.mark.parametrize(("rule_type", "rule_value"), [pytest.param("int", [1,2,3], id="numeric"), pytest.param("string", ["A", "B", "C"], id="categorical")])
+@pytest.mark.parametrize(
+    ("rule_type", "rule_value"),
+    [
+        pytest.param("int", [1, 2, 3], id="numeric"),
+        pytest.param("string", ["A", "B", "C"], id="categorical"),
+    ],
+)
 def test_parameters(spark, rule_type, rule_value):
     df = spark.createDataFrame(pd.DataFrame(rule_value, columns=["id"]))
     check = Check(CheckLevel.WARNING, "pytest")

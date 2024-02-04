@@ -15,6 +15,9 @@ from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
 import numpy as np
 
+from .cloud import publish
+import os
+
 logger = logging.getLogger("cuallee")
 
 # Verify Libraries Available
@@ -65,9 +68,6 @@ except:
 
 logger.debug(Style.RESET_ALL)
 
-logger = logging.getLogger(__name__)
-
-
 class CheckLevel(enum.Enum):
     WARNING = 0
     ERROR = 1
@@ -97,6 +97,7 @@ class Rule:
     coverage: float = 1.0
     options: Union[List[Tuple], None] = None
     status: Union[str, None] = None
+    violations: int = 0
 
     @property
     def settings(self) -> dict:
@@ -618,7 +619,6 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
 
-        # TODO: BigQuery source (pandas DataFrame/ json / file / uri)
         elif "bigquery" in globals() and isinstance(dataframe, bigquery.table.Table):
             self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
 
@@ -626,10 +626,19 @@ class Check:
             dataframe, polars_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.polars_validation")
+        
+        else:
+            raise Exception("Cuallee is not ready for this data structure. You can log a Feature Request in Github.")
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
+
+        # Cuallee Cloud instruction
+        cuallee_cloud_flag = os.getenv("CUALLEE_CLOUD_TOKEN")
+        if cuallee_cloud_flag:
+            publish([("uno", 1),("dos", 2)])
+
         return self.compute_engine.summary(self, dataframe)
 
 

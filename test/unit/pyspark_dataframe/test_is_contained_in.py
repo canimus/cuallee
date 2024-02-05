@@ -23,7 +23,7 @@ def test_negative(spark):
     assert rs.first().status == "FAIL"
     assert rs.first().violations == 2
     assert rs.first().pass_threshold == 1.0
-    assert np.allclose(rs.first().pass_rate,1/3,rtol=0.001) 
+    assert np.allclose(rs.first().pass_rate, 1 / 3, rtol=0.001)
 
 
 @pytest.mark.parametrize(
@@ -95,7 +95,7 @@ def test_coverage(spark):
     assert rs.first().status == "PASS"
     assert rs.first().violations == 1
     assert rs.first().pass_threshold == 0.5
-    assert np.allclose(rs.first().pass_rate,2/3,rtol=0.001) 
+    assert np.allclose(rs.first().pass_rate, 2 / 3, rtol=0.001)
 
 
 def test_value_error():

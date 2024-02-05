@@ -42,4 +42,4 @@ def test_coverage(spark):
     assert rs.first().status == "PASS"
     assert rs.first().violations == 5
     assert rs.first().pass_threshold == 0.4
-    assert np.allclose(rs.first().pass_rate,4/9,rtol=0.001) 
+    assert np.allclose(rs.first().pass_rate, 4 / 9, rtol=0.001)

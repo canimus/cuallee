@@ -140,7 +140,7 @@ class Rule:
 
     def evaluate_violations(self, result: Any, rows: int):
         """Calculates the row violations on the rule"""
-        
+
         if isinstance(result, str):
             if result == "false":
                 self.violations = rows
@@ -160,8 +160,7 @@ class Rule:
                 self.violations = abs(result)
             elif (result > 0) and (result < rows):
                 self.violations = rows - result
-            
-        
+
         else:
             self.violations = 0
 
@@ -169,7 +168,7 @@ class Rule:
         """Percentage of successful rows by this rule"""
         if self.violations <= rows:
             try:
-                self.pass_rate = round(1 - (self.violations / rows),3)
+                self.pass_rate = round(1 - (self.violations / rows), 3)
             except ZeroDivisionError:
                 self.pass_rate = 1.0
         else:
@@ -177,7 +176,6 @@ class Rule:
                 self.pass_rate = rows / self.violations
             except ZeroDivisionError:
                 self.pass_rate = 0.0
-
 
     def evaluate_status(self):
         """Overall PASS/FAIL status of the rule"""

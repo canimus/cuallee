@@ -32,17 +32,20 @@ bibliography: paper.bib
 
 # Summary
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+In an era in which large amount of data are daily generated and collected and in which data have become the driver of business (politic, societal) decisions, it is important to assess the quality of the data used for analysis, decision making and reporting, meaning to which degree they are relialable and trustworthy.
+In this context we developped `cuallee`, a Python package for data quality assessment which is platform agnostic. `cuallee` provides an intuitive and user-friendly API to describe checks for PySpark, Pandas, Snowpark, Polars and DuckDB dataframes.
+Today `cuallee` provides over 50 checks for assessing the quality of the users' data.
+
 
 # Statement of need
+
+$1Data are used for ... and ... and ...
+$2 Why data quality is important... (ref, ref, ref).
+$3Play of cuallee 
+$4 summary of the main chara teristics of cuallee
+$5 Other players (+ references), advantages of cuallee over other sources...
+Not as many integration as other solutions on the market but integration to dagster checks. 
+
 
 `Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
 enables wrapping low-level languages (e.g., C) for speed without losing
@@ -108,5 +111,9 @@ Figure sizes can be customized by adding an optional second parameter:
 
 We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
 Oh, and support from Kathryn Johnston during the genesis of this project.
+
+In addition, many users have contributed features and bug fixes. Of particular note are Remco de Boer, and Samantha Hamilton who made contributions to documentation and code, and documentation respectively. A full list of coding contributors can be found here: https://github.com/mpl-extensions/mpl-interactions/graphs/contributors
+Finally, many users have contributed in ways other than coding. For example by rais- ing issues either with the package or documentation. These users are recognized here:
+https://github.com/mpl-extensions/mpl-interactions#contributors-
 
 # References

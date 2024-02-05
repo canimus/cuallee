@@ -140,28 +140,44 @@ class Rule:
 
     def evaluate_violations(self, result: Any, rows: int):
         """Calculates the row violations on the rule"""
+        
         if isinstance(result, str):
             if result == "false":
                 self.violations = rows
             elif result == "true":
                 self.violations = 0
-        elif isinstance(result, Number):
-            if result < 0:
-                self.violations = abs(result)
-            elif (result > 0) & (result <= rows):
-                self.violations = rows - result
-        elif isinstance(result, bool):
-            if result:
-                self.violations = 0
             else:
+                self.violations = abs(int(result))
+        elif isinstance(result, bool):
+            if result == True:
+                self.violations = 0
+            elif result == False:
                 self.violations = rows
+        elif isinstance(result, int):
+            if result == 0:
+                self.violations = rows
+            elif result < 0:
+                self.violations = abs(result)
+            elif (result > 0) and (result < rows):
+                self.violations = rows - result
+            
+        
+        else:
+            self.violations = 0
 
     def evaluate_pass_rate(self, rows: int):
         """Percentage of successful rows by this rule"""
-        try:
-            self.pass_rate = 1 - (self.violations / rows)
-        except ZeroDivisionError:
-            self.pass_rate = 1.0
+        if self.violations <= rows:
+            try:
+                self.pass_rate = round(1 - (self.violations / rows),3)
+            except ZeroDivisionError:
+                self.pass_rate = 1.0
+        else:
+            try:
+                self.pass_rate = rows / self.violations
+            except ZeroDivisionError:
+                self.pass_rate = 0.0
+
 
     def evaluate_status(self):
         """Overall PASS/FAIL status of the rule"""
@@ -174,7 +190,7 @@ class Rule:
         """Generic rule evaluation for checks"""
         self.evaluate_violations(result, rows)
         self.evaluate_pass_rate(rows)
-        self.evaluate_status(rows)
+        self.evaluate_status()
 
 
 class ComputeEngine(Protocol):

@@ -769,6 +769,8 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     for index, (hash_key, rule) in enumerate(check._rule.items(), 1):
         rule.ordinal = index
         rule.evaluate(unified_results[hash_key], rows)
+        print(unified_results[hash_key])
+        print(rule.__dict__)
 
     # Cuallee Cloud instruction
     cuallee_cloud_flag = os.getenv("CUALLEE_CLOUD_TOKEN")
@@ -792,7 +794,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
                 rule.status,
             )
         ],
-        schema="int id, timestamp string, check string, level string, column string, rule string, value string, rows int, violations int, pass_rate double, pass_threshold double, status string",
+        schema="id int, timestamp string, check string, level string, column string, rule string, value string, rows int, violations int, pass_rate double, pass_threshold double, status string",
     )
 
     # result = (

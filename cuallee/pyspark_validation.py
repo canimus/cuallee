@@ -773,9 +773,9 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         print(rule.__dict__)
 
     # Cuallee Cloud instruction
-    cuallee_cloud_flag = os.getenv("CUALLEE_CLOUD_TOKEN")
-    if cuallee_cloud_flag:
-        publish(check)
+    # cuallee_cloud_flag = os.getenv("CUALLEE_CLOUD_TOKEN")
+    # if cuallee_cloud_flag:
+    #     publish(check)
 
     result = spark.createDataFrame(
         [

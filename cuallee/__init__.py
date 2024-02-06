@@ -5,7 +5,7 @@ import logging
 import operator
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from numbers import Number
@@ -208,7 +208,7 @@ class Check:
         level: Union[CheckLevel, int],
         name: str,
         *,
-        execution_date: datetime = datetime.today(),
+        execution_date: datetime = datetime.now(timezone.utc),
         table_name: str = None,
     ):
         """A container of data quality rules."""

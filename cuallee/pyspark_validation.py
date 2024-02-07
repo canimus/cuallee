@@ -214,7 +214,7 @@ class Compute(ComputeEngine):
             ComputeMethod.OBSERVE,
         )
         return self.compute_instruction
-    
+
     def has_cardinality(self, rule: Rule):
         """Validation of a column’s different values"""
         predicate = None
@@ -238,6 +238,16 @@ class Compute(ComputeEngine):
     def is_contained_in(self, rule: Rule):  # To Do with Predicate
         """Validation of column value in set of given values"""
         predicate = F.col(f"`{rule.column}`").isin(list(rule.value))
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.sum(predicate.cast(T.LongType())),
+            ComputeMethod.OBSERVE,
+        )
+        return self.compute_instruction
+
+    def not_contained_in(self, rule: Rule):
+        """Validation of column value not in set of given values"""
+        predicate = ~F.col(f"`{rule.column}`").isin(list(rule.value))
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),

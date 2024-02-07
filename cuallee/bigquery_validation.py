@@ -73,7 +73,6 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
-
     def are_unique(self, rule: Rule):
         """Validation for unique values in a group of columns"""
         predicate = None
@@ -89,6 +88,16 @@ class Compute(ComputeEngine):
     def is_contained_in(self, rule: Rule):
         """Validation of column value in set of given values"""
         predicate = f"{rule.column} IN {rule.value}"
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
+
+    def not_contained_in(self, rule: Rule):
+        """Validation of column value not in a set of given values"""
+        predicate = f"{rule.column} NOT IN {rule.value}"
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -135,7 +144,7 @@ def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
 
 def _build_query(expression_string: str, dataframe: bigquery.table.Table) -> str:
     """Build query final query"""
-    
+
     return f"SELECT {expression_string} FROM `{str(dataframe)}`"
 
 
@@ -190,7 +199,7 @@ def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
 
 def _calculate_violations(result, nrows) -> Union[int, float]:
     """Return the number of violations for each rule"""
-    
+
     if (result == "true") or (result == True):
         return 0
     elif (result == "false") or (result == False):

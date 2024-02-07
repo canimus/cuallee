@@ -362,6 +362,24 @@ class Check:
         Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
+    def not_contained_in(
+        self,
+        column: str,
+        value: Union[List, Tuple],
+        pct: float = 1.0,
+    ):
+        """Validation of column value not in set of given values"""
+        (
+            Rule("not_contained_in", column, value, CheckDataType.AGNOSTIC, pct)
+            >> self._rule
+        )
+
+        return self
+    
+    def not_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
+        """Vaidation of column value not in set of given values"""
+        return self.not_contained_in(column, value, pct)
+
     def is_contained_in(
         self,
         column: str,

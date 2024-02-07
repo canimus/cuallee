@@ -145,7 +145,7 @@ class Compute:
         return Compute._result(
             dataframe.select(pl.col(rule.column).sum() == rule.value).to_series()
         )
-    
+
     def has_cardinality(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate sum value on column"""
         return Compute._result(
@@ -165,6 +165,14 @@ class Compute:
         """Validate set inclusion"""
         return Compute._result(
             dataframe.select(pl.col(rule.column).is_in(rule.value).cast(pl.Int8)).sum()
+        )
+
+    def not_contained_in(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate absence of values in set"""
+        return Compute._result(
+            dataframe.select(
+                pl.col(rule.column).is_not_in(rule.value).cast(pl.Int8)
+            ).sum()
         )
 
     def has_percentile(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:

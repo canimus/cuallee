@@ -199,6 +199,8 @@ Check | Description | DataType
 `is_equal_than` | `col == x` | _numeric_
 `is_contained_in` | `col in [a, b, c, ...]` | _agnostic_
 `is_in` | Alias of `is_contained_in` | _agnostic_
+`not_contained_in` | `col not in [a, b, c, ...]` | _agnostic_
+`not_in` | Alias of `not_contained_in` | _agnostic_
 `is_between` | `a <= col <= b` | _numeric, date_
 `has_pattern` | Matching a pattern defined as a `regex` | _string_
 `is_legit` | String not null & not empty `^\S$` | _string_

@@ -216,7 +216,7 @@ class Compute:
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
-    
+
     def has_cardinality(self, rule: Rule):
         """Validation of a column’s distinct values"""
         predicate = None
@@ -243,6 +243,18 @@ class Compute:
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
+
+    def not_contained_in(self, rule: Rule):
+        """
+        Validates that each value in the specified column does not exist in the provided set of values.
+        """
+        predicate = ~F.col(rule.column).isin(list(rule.value))
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.sum(predicate.cast(T.IntegerType())),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction

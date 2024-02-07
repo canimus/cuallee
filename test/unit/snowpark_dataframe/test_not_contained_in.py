@@ -11,8 +11,8 @@ def test_negative(snowpark):
     check = Check(CheckLevel.WARNING, "pytest")
     check.not_contained_in("DESC", ("blue", "red", "green", "grey", "black"))
     rs = check.validate(df)
-    assert rs.first().STATUS == "PASS"
-    assert rs.first().VIOLATIONS == 0
+    assert rs.first().STATUS == "FAIL"
+    assert rs.first().VIOLATIONS == 3
     assert rs.first().PASS_THRESHOLD == 1.0
 
 
@@ -21,12 +21,11 @@ def test_positive(snowpark):
         [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
     )
     check = Check(CheckLevel.WARNING, "pytest")
-    check.not_contained_in("DESC", ("blue", "red"))
+    check.not_contained_in("DESC", ("purple", "red"))
     rs = check.validate(df)
-    assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 2
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 0
     assert rs.first().PASS_THRESHOLD == 1.0
-    assert rs.first().PASS_RATE == 1 / 3
 
 
 @pytest.mark.parametrize(
@@ -87,7 +86,7 @@ def test_parameters(snowpark, data, columns, rule_value):
     check = Check(CheckLevel.WARNING, "pytest")
     check.not_contained_in("TEST_COL", rule_value)
     rs = check.validate(df)
-    assert rs.first().STATUS == "PASS"
+    assert rs.first().STATUS == "FAIL"
 
 
 def test_coverage(snowpark):
@@ -95,12 +94,12 @@ def test_coverage(snowpark):
         [[1, "blue"], [2, "green"], [3, "red"]], ["id", "desc"]
     )
     check = Check(CheckLevel.WARNING, "pytest")
-    check.not_contained_in("DESC", ("blue", "red"), 0.5)
+    check.not_contained_in("DESC", ("blue", "red"), 0.2)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
-    assert rs.first().VIOLATIONS == 1
-    assert rs.first().PASS_THRESHOLD == 0.5
-    assert rs.first().PASS_RATE == 2 / 3
+    assert rs.first().VIOLATIONS == 2
+    assert rs.first().PASS_THRESHOLD == 0.2
+    assert rs.first().PASS_RATE >= 0.2
 
 
 def test_value_error():

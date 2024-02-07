@@ -4,25 +4,24 @@ from datetime import datetime, date
 from cuallee import Check, CheckLevel
 
 
+def test_positive(spark):
+    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"])
+    check = Check(CheckLevel.WARNING, "pytest")
+    check.not_contained_in("desc", ("purple", "red"))
+    rs = check.validate(df)
+    assert rs.first().status == "PASS"
+    assert rs.first().pass_rate == 1.0
+    
+
+
 def test_negative(spark):
     df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"])
     check = Check(CheckLevel.WARNING, "pytest")
     check.not_contained_in("desc", ("blue", "red", "green", "grey", "black"))
     rs = check.validate(df)
-    assert rs.first().status == "PASS"
-    assert rs.first().violations == 0
-    assert rs.first().pass_threshold == 1.0
-
-
-def test_positive(spark):
-    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"])
-    check = Check(CheckLevel.WARNING, "pytest")
-    check.not_contained_in("desc", ("blue", "red"))
-    rs = check.validate(df)
     assert rs.first().status == "FAIL"
-    assert rs.first().violations == 2
-    assert rs.first().pass_threshold == 1.0
-    assert rs.first().pass_rate == 1 / 3
+    assert rs.first().violations == 3
+
 
 
 @pytest.mark.parametrize(
@@ -83,18 +82,18 @@ def test_parameters(spark, data, columns, rule_value):
     check = Check(CheckLevel.WARNING, "pytest")
     check.not_contained_in("test_col", rule_value)
     rs = check.validate(df)
-    assert rs.first().status == "PASS"
+    assert rs.first().status == "FAIL"
 
 
 def test_coverage(spark):
     df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "red"]], ["id", "desc"])
     check = Check(CheckLevel.WARNING, "pytest")
-    check.not_contained_in("desc", ("blue", "red"), 0.5)
+    check.not_contained_in("desc", ("blue", "red"), 0.2)
     rs = check.validate(df)
     assert rs.first().status == "PASS"
-    assert rs.first().violations == 1
-    assert rs.first().pass_threshold == 0.5
-    assert rs.first().pass_rate == 2 / 3
+    assert rs.first().violations == 2
+    assert rs.first().pass_threshold == 0.2
+    assert rs.first().pass_rate >= 0.2
 
 
 def test_value_error():

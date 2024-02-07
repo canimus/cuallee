@@ -171,7 +171,7 @@ class Compute:
         """Validate absence of values in set"""
         return Compute._result(
             dataframe.select(
-                pl.col(rule.column).is_not_in(rule.value).cast(pl.Int8)
+                (~pl.col(rule.column).is_in(rule.value)).cast(pl.Int8)
             ).sum()
         )
 

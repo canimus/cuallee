@@ -86,6 +86,10 @@ class Compute:
     def is_contained_in(self, rule: Rule) -> str:
         return f"SUM(CAST({rule.column} IN {rule.value} AS INTEGER))"
 
+    def not_contained_in(self, rule: Rule) -> str:
+        """Validation of column value not in a set of given values"""
+        return f"SUM(CAST({rule.column} NOT IN {rule.value} AS INTEGER))"
+
     def has_percentile(self, rule: Rule) -> str:
         return f"QUANTILE_CONT({rule.column}, {rule.settings['percentile']}) = {rule.value}"
 

@@ -67,7 +67,7 @@ class Compute:
 
     def has_sum(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].sum() == rule.value
-    
+
     def has_cardinality(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].nunique() == rule.value
 
@@ -76,6 +76,11 @@ class Compute:
 
     def is_contained_in(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].isin(rule.value).astype(int).sum()
+
+    def not_contained_in(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
+        return (
+            (dataframe.loc[:, rule.column].isin(rule.value) == False).astype(int).sum()
+        )
 
     def has_percentile(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (

@@ -738,39 +738,9 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     unified_results = {**observation_result, **select_result, **transform_result}
     check.rows = rows
 
-    _calculate_violations = lambda result_column: (
-        F.when(result_column < 0, F.abs(result_column))
-        .when(result_column == "false", F.lit(rows))
-        .when(result_column == "true", F.lit(0))
-        .otherwise(rows - result_column.cast("long"))
-    )
-
-    _calculate_pass_rate = lambda observed_column: (
-        F.when(observed_column == "false", F.lit(0.0))
-        .when(observed_column == "true", F.lit(1.0))
-        .when(
-            (observed_column < 0) & (F.abs(observed_column) > F.lit(rows)),
-            rows / F.abs(observed_column),
-        )  # Calculate as ratio or rows
-        .when(
-            (observed_column < 0) & (F.abs(observed_column) < F.lit(rows)),
-            1 - (F.abs(observed_column) / rows),
-        )  # Calculate as total
-        .when(
-            (observed_column < 0) & (F.abs(observed_column) == F.lit(rows)), F.lit(0.5)
-        )  # Half in, half not
-        .otherwise(observed_column.cast(T.DoubleType()) / rows)  # type: ignore
-    )
-
-    _evaluate_status = lambda pass_rate, pass_threshold: (
-        F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
-    )
-
     for index, (hash_key, rule) in enumerate(check._rule.items(), 1):
         rule.ordinal = index
         rule.evaluate(unified_results[hash_key], rows)
-        print(unified_results[hash_key])
-        print(rule.__dict__)
 
     # Cuallee Cloud instruction
     cuallee_cloud_flag = os.getenv("CUALLEE_CLOUD_TOKEN", False)
@@ -796,39 +766,5 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         ],
         schema="id int, timestamp string, check string, level string, column string, rule string, value string, rows int, violations int, pass_rate double, pass_threshold double, status string",
     )
-
-    # result = (
-    #     spark.createDataFrame(
-    #         [
-    #             Row(  # type: ignore
-    #                 index,
-    #                 rule.method,
-    #                 str(rule.column),
-    #                 str(rule.value),
-    #                 unified_results[hash_key],
-    #                 rule.coverage,
-    #             )
-    #             for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
-    #         ],
-    #         schema="id int, rule string, column string, value string, result string, pass_threshold string",
-    #     )
-    #     .select(
-    #         F.col("id"),
-    #         F.lit(check.date.strftime("%Y-%m-%d %H:%M:%S")).alias("timestamp"),
-    #         F.lit(check.name).alias("check"),
-    #         F.lit(check.level.name).alias("level"),
-    #         F.col("column"),
-    #         F.col("rule"),
-    #         F.col("value"),
-    #         F.lit(rows).alias("rows"),
-    #         _calculate_violations(F.col("result")).alias("violations"),
-    #         _calculate_pass_rate(F.col("result")).alias("pass_rate"),
-    #         F.col("pass_threshold").cast(T.DoubleType()),
-    #     )
-    #     .withColumn(
-    #         "status",
-    #         _evaluate_status(F.col("pass_rate"), F.col("pass_threshold")),
-    #     )
-    # )
 
     return result

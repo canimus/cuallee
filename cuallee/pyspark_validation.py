@@ -232,7 +232,7 @@ class Compute(ComputeEngine):
         predicate = ~F.col(f"`{rule.column}`").isin(list(rule.value))
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.sum(predicate),
+            F.sum(predicate.cast("long")),
             ComputeMethod.OBSERVE,
         )
         return self.compute_instruction

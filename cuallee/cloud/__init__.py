@@ -3,8 +3,8 @@ import msgpack
 from typing import List, Tuple
 import requests
 import logging
-import json
 import msgpack
+import os
 
 logger = logging.getLogger("cuallee")
 
@@ -35,9 +35,9 @@ def publish(check):
     """Send results to Cuallee Cloud"""
     try:
         requests.post(
-            "https://192.168.1.177:5000/msgpack",
+            os.getenv("CUALLEE_CLOUD_HOST"),
             data=msgpack.packb(standardize(check)),
-            headers={"Content-Type": "application/octet-stream"},
+            headers={"Content-Type": "application/octet-stream", "Authorization": f"Bearer {os.getenv('CUALLEE_CLOUD_TOKEN')}"},
             verify=False,
         )
     except:

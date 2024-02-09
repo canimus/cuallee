@@ -13,9 +13,8 @@ from toolz import first, valfilter  # type: ignore
 import cuallee.utils as cuallee_utils
 from cuallee import Check, ComputeEngine, Rule
 from colorama import Fore, Style  # type: ignore
-from .cloud import publish
-import os
 
+import os
 
 class ComputeMethod(enum.Enum):
     OBSERVE = "OBSERVE"
@@ -753,9 +752,14 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         rule.evaluate(unified_results[hash_key], rows)
 
     # Cuallee Cloud instruction
+        
     cuallee_cloud_flag = os.getenv("CUALLEE_CLOUD_TOKEN", False)
-    if cuallee_cloud_flag:
-        publish(check)
+    try:
+        if cuallee_cloud_flag:
+            from .cloud import publish
+            publish(check)
+    except ModuleNotFoundError:
+        pass
 
     result = spark.createDataFrame(
         [

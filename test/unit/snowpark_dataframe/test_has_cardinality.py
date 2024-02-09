@@ -19,6 +19,7 @@ def test_negative(snowpark):
     rs = check.validate(df)
     assert rs.first().STATUS == "FAIL"
 
+
 def test_coverage():
     check = Check(CheckLevel.WARNING, "pytest")
     with pytest.raises(TypeError, match="positional arguments"):

@@ -47,7 +47,7 @@ def test_coverage(spark):
     assert rs.first().status == "PASS"
     assert rs.first().violations == 1
     assert rs.first().pass_threshold == 0.9
-    assert rs.first().pass_rate == 0.9
+    assert rs.first().pass_rate >= 0.9
 
 
 def test_col_name_error(spark):

@@ -32,9 +32,7 @@ def test_compute():
     assert callable(PSV.Compute)
     compute = PSV.Compute()
     assert hasattr(compute, "compute_instruction")
-    assert hasattr(compute, "_sum_predicate_to_integer")
-    assert hasattr(compute, "_single_value_rule")
-    assert hasattr(compute, "_stats_fn_rule")
+
     assert hasattr(compute, "is_complete")
     assert hasattr(compute, "are_complete")
     assert hasattr(compute, "is_unique")

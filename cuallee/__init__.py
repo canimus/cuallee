@@ -5,7 +5,7 @@ import logging
 import operator
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from numbers import Number
@@ -65,8 +65,6 @@ except:
 
 logger.debug(Style.RESET_ALL)
 
-logger = logging.getLogger(__name__)
-
 
 class CheckLevel(enum.Enum):
     WARNING = 0
@@ -97,6 +95,9 @@ class Rule:
     coverage: float = 1.0
     options: Union[List[Tuple], None] = None
     status: Union[str, None] = None
+    violations: int = 0
+    pass_rate: float = 0.0
+    ordinal: int = 0
 
     @property
     def settings(self) -> dict:
@@ -137,6 +138,58 @@ class Rule:
         rule_dict[self.key] = self
         return rule_dict
 
+    def evaluate_violations(self, result: Any, rows: int):
+        """Calculates the row violations on the rule"""
+
+        if isinstance(result, str):
+            if result == "false":
+                self.violations = rows
+            elif result == "true":
+                self.violations = 0
+            else:
+                self.violations = abs(int(result))
+        elif isinstance(result, bool):
+            if result == True:
+                self.violations = 0
+            elif result == False:
+                self.violations = rows
+        elif isinstance(result, int):
+            if result == 0:
+                self.violations = rows
+            elif result < 0:
+                self.violations = abs(result)
+            elif (result > 0) and (result < rows):
+                self.violations = rows - result
+
+        else:
+            self.violations = 0
+
+    def evaluate_pass_rate(self, rows: int):
+        """Percentage of successful rows by this rule"""
+        if self.violations <= rows:
+            try:
+                self.pass_rate = round(1 - (self.violations / rows), 3)
+            except ZeroDivisionError:
+                self.pass_rate = 1.0
+        else:
+            try:
+                self.pass_rate = rows / self.violations
+            except ZeroDivisionError:
+                self.pass_rate = 0.0
+
+    def evaluate_status(self):
+        """Overall PASS/FAIL status of the rule"""
+        if self.pass_rate >= self.coverage:
+            self.status = "PASS"
+        else:
+            self.status = "FAIL"
+
+    def evaluate(self, result: Any, rows: int):
+        """Generic rule evaluation for checks"""
+        self.evaluate_violations(result, rows)
+        self.evaluate_pass_rate(rows)
+        self.evaluate_status()
+
 
 class ComputeEngine(Protocol):
     def compute(self, rules: Dict[str, Rule]) -> bool:
@@ -155,7 +208,7 @@ class Check:
         level: Union[CheckLevel, int],
         name: str,
         *,
-        execution_date: datetime = datetime.today(),
+        execution_date: datetime = datetime.now(timezone.utc),
         table_name: str = None,
     ):
         """A container of data quality rules."""
@@ -636,7 +689,6 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
 
-        # TODO: BigQuery source (pandas DataFrame/ json / file / uri)
         elif "bigquery" in globals() and isinstance(dataframe, bigquery.table.Table):
             self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
 
@@ -645,9 +697,15 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.polars_validation")
 
+        else:
+            raise Exception(
+                "Cuallee is not ready for this data structure. You can log a Feature Request in Github."
+            )
+
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
+
         return self.compute_engine.summary(self, dataframe)
 
 

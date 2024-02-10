@@ -126,4 +126,3 @@ def test_coverage():
     assert rs.status.str.match("PASS")[1]
     assert rs.violations[1] == 0
     assert rs.pass_threshold[1] == 0.7
-    

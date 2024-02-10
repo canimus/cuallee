@@ -1,9 +1,14 @@
 import os
 import msgpack
 import requests
+from requests.exceptions import ConnectionError
 import logging
 
 logger = logging.getLogger("cuallee")
+CUALLEE_CLOUD_HEADERS = {
+    "Content-Type": "application/octet-stream",
+    "Authorization": f"Bearer {os.getenv('CUALLEE_CLOUD_TOKEN')}",
+}
 
 
 def standardize(check):
@@ -28,15 +33,19 @@ def standardize(check):
     }
 
 
+def compress(check):
+    return msgpack.packb(standardize(check))
+
+
 def publish(check):
     """Send results to Cuallee Cloud"""
     try:
         requests.post(
             os.getenv("CUALLEE_CLOUD_HOST"),
-            data=msgpack.packb(standardize(check)),
-            headers={"Content-Type": "application/octet-stream", "Authorization": f"Bearer {os.getenv('CUALLEE_CLOUD_TOKEN')}"},
+            data=compress(check),
+            headers=CUALLEE_CLOUD_HEADERS,
             verify=False,
         )
-    except (ModuleNotFoundError,KeyError) as error:
+    except (ModuleNotFoundError, KeyError, ConnectionError) as error:
         logger.debug(f"Unable to send check to cuallee cloud: {str(error)}")
         pass

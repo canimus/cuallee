@@ -8,7 +8,9 @@ from toolz import valfilter  # type: ignore
 from google.cloud import bigquery
 from cuallee import Check, ComputeEngine, Rule
 import logging
+
 logger = logging.getLogger("cuallee")
+
 
 class ComputeMethod(enum.Enum):
     SQL = "SQL"
@@ -87,7 +89,7 @@ class Compute(ComputeEngine):
 
     def is_contained_in(self, rule: Rule):
         """Validation of column value in set of given values"""
-        
+
         predicate = f"{rule.column} IN {rule.value}"
         self.compute_instruction = ComputeInstruction(
             predicate,

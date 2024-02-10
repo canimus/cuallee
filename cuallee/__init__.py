@@ -279,7 +279,7 @@ class Check:
             values = [values]
 
         _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
-        
+
         [
             self._remove_rule_generic(key)
             for key in valfilter(_filter, self._rule).keys()
@@ -427,7 +427,7 @@ class Check:
         )
 
         return self
-    
+
     def not_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
         """Vaidation of column value not in set of given values"""
         return self.not_contained_in(column, value, pct)

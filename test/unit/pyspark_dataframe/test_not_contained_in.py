@@ -11,7 +11,6 @@ def test_positive(spark):
     rs = check.validate(df)
     assert rs.first().status == "PASS"
     assert rs.first().pass_rate == 1.0
-    
 
 
 def test_negative(spark):
@@ -21,7 +20,6 @@ def test_negative(spark):
     rs = check.validate(df)
     assert rs.first().status == "FAIL"
     assert rs.first().violations == 3
-
 
 
 @pytest.mark.parametrize(

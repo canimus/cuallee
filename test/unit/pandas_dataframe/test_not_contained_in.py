@@ -11,7 +11,7 @@ def test_negative(check: Check):
 
 def test_positive(check: Check):
     check.not_contained_in("id", [0, 1, 2, 3])
-    df = pd.DataFrame({"id": range(10,20)})
+    df = pd.DataFrame({"id": range(10, 20)})
     assert check.validate(df).status.str.match("PASS").all()
 
 

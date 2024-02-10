@@ -2,7 +2,7 @@ import enum
 import operator
 from dataclasses import dataclass
 from functools import reduce
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T

@@ -4,16 +4,14 @@ import importlib
 import logging
 import operator
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
-from numbers import Number
 from .iso.checks import ISO
 
 from colorama import Fore, Style  # type: ignore
 from toolz import valfilter  # type: ignore
-import numpy as np
 
 logger = logging.getLogger("cuallee")
 
@@ -23,14 +21,14 @@ try:
     from pandas import DataFrame as pandas_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
-except:
+except ModuleNotFoundError:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
     from polars.dataframe.frame import DataFrame as polars_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Polars")
-except:
+except ModuleNotFoundError:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Polars")
 
 try:
@@ -38,28 +36,28 @@ try:
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
 
-except:
+except ModuleNotFoundError:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
-except:
+except ModuleNotFoundError:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
 
 try:
     from duckdb import DuckDBPyConnection as duckdb_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " DuckDB")
-except:
+except ModuleNotFoundError:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " DuckDB")
 
 try:
     from google.cloud import bigquery
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " BigQuery")
-except:
+except ModuleNotFoundError:
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " BigQuery")
 
 
@@ -149,9 +147,9 @@ class Rule:
             else:
                 self.violations = abs(int(result))
         elif isinstance(result, bool):
-            if result == True:
+            if result is True:
                 self.violations = 0
-            elif result == False:
+            elif result is False:
                 self.violations = rows
         elif isinstance(result, int):
             if result == 0:
@@ -281,6 +279,7 @@ class Check:
             values = [values]
 
         _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
+        
         [
             self._remove_rule_generic(key)
             for key in valfilter(_filter, self._rule).keys()

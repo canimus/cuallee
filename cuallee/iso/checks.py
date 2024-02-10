@@ -1,12 +1,9 @@
 import xml.etree.ElementTree as ET
 import requests
 from dataclasses import dataclass
-from typing import List
 import os
 from operator import attrgetter as at
 from functools import lru_cache
-import pandas as pd
-from toolz import first
 from i18n_iso_countries import get_alpha2_codes
 
 

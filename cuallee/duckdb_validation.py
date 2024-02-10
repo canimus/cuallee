@@ -1,14 +1,10 @@
 import operator
-import textwrap
 from functools import reduce
 from numbers import Number
 
 import duckdb as dk
 import numpy as np
 import pandas as pd  # type: ignore
-from pygments import highlight  # type: ignore
-from pygments.formatters import TerminalTrueColorFormatter  # type: ignore
-from pygments.lexers import SqlLexer  # type: ignore
 from toolz import first  # type: ignore
 from string import Template
 
@@ -26,7 +22,7 @@ class Compute:
     def are_complete(self, rule: Rule) -> str:
         """Verify the abscence of null values on groups of columns"""
         return (
-            f"SUM( "
+            "SUM( "
             + " + ".join(
                 [f"(CAST({column} IS NOT NULL AS INTEGER))" for column in rule.column]
             )

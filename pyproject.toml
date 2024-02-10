@@ -63,6 +63,9 @@ cloud = [
   "msgpack == 1.0.7"
 ]
 
+[tool.ruff.lint]
+# Skip unused variable rules (`F841`).
+ignore = ["E731"]
 
 
 [project.urls]

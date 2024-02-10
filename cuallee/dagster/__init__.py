@@ -7,7 +7,6 @@ from typing import List
 def make_dagster_checks(
     check: Check, asset: str, data: pd.DataFrame
 ) -> List[AssetCheckResult]:
-    rules = check.rules
     results = check.validate(data)
     checks = []
     for item in results.itertuples():

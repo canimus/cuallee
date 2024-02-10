@@ -1,10 +1,7 @@
 import os
 import msgpack
-from typing import List, Tuple
 import requests
 import logging
-import msgpack
-import os
 
 logger = logging.getLogger("cuallee")
 
@@ -40,6 +37,6 @@ def publish(check):
             headers={"Content-Type": "application/octet-stream", "Authorization": f"Bearer {os.getenv('CUALLEE_CLOUD_TOKEN')}"},
             verify=False,
         )
-    except:
-        logger.debug("Unable to send check to cuallee cloud")
+    except (ModuleNotFoundError,KeyError) as error:
+        logger.debug(f"Unable to send check to cuallee cloud: {str(error)}")
         pass

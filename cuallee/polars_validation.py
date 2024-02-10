@@ -1,6 +1,4 @@
-import re
 import operator
-from itertools import repeat
 from numbers import Number
 from typing import Dict, List, Union
 
@@ -9,7 +7,6 @@ import polars as pl  # type: ignore
 from toolz import compose, first  # type: ignore
 
 from cuallee import Check, Rule
-from cuallee import utils as cuallee_utils
 
 
 class Compute:

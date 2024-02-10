@@ -66,7 +66,6 @@ class Compute(ComputeEngine):
 
     def has_cardinality(self, rule: Rule):
         """Validation of number of distinct values in column"""
-        predicate = None
         self.compute_instruction = ComputeInstruction(
             None,
             f"COUNT(DISTINCT({rule.column}))={rule.value}",
@@ -203,9 +202,9 @@ def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
 def _calculate_violations(result, nrows) -> Union[int, float]:
     """Return the number of violations for each rule"""
 
-    if (result == "true") or (result == True):
+    if (result == "true") or (result is True):
         return 0
-    elif (result == "false") or (result == False):
+    elif (result == "false") or (result is False):
         return nrows
     elif int(result) < 0:
         return abs(int(result))
@@ -216,9 +215,9 @@ def _calculate_violations(result, nrows) -> Union[int, float]:
 def _calculate_pass_rate(result, nrows) -> float:
     """Return the pass rate for each rule"""
 
-    if (result == "true") or (result == True):
+    if (result == "true") or (result is True):
         return 1.0
-    elif (result == "false") or (result == False):
+    elif (result == "false") or (result is False):
         return 0.0
     elif int(result) < 0:
         if abs(int(result)) < nrows:
@@ -256,9 +255,9 @@ def summary(check: Check, dataframe: bigquery.table.Table):
     # Check that user is connected to BigQuery
     try:
         client = bigquery.Client()
-    except:
+    except Exception as error:
         print(
-            "You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step."
+            f"You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step. {str(error)}"
         )
 
     # Compute the expression

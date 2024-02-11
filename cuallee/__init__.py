@@ -208,6 +208,7 @@ class Check:
         *,
         execution_date: datetime = datetime.now(timezone.utc),
         table_name: str = None,
+        session: Any = None
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
@@ -225,6 +226,7 @@ class Check:
         self.config: Dict[str, str] = {}
         self.table_name = table_name
         self.iso = ISO(self)
+        self.session = session
 
     def __repr__(self):
         standard = f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
@@ -710,8 +712,8 @@ class Check:
 
 class Control:
     @staticmethod
-    def completeness(dataframe):
+    def completeness(dataframe, **kwargs):
         """Control of null values on data frames"""
-        check = Check(CheckLevel.WARNING, "Completeness")
+        check = Check(CheckLevel.WARNING, name="Completeness", **kwargs)
         [check.is_complete(c) for c in dataframe.columns]
         return check.validate(dataframe)

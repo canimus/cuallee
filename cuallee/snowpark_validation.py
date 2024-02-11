@@ -17,7 +17,8 @@ from typing import (
     List,
 )
 from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
+from snowflake.snowpark import DataFrame, Column, Session, Row
+from snowflake.snowpark.session import Session as SnowSession
 from toolz import valfilter, first  # type: ignore
 from functools import reduce
 
@@ -779,8 +780,15 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     )
 
     if sessions := valfilter(lambda x: isinstance(x, Session), globals()):
-        # Obtain the first spark session available in the globals
         snowpark = first(sessions.values())
+    elif sessions := valfilter(lambda x: isinstance(x, Session), locals()):
+        snowpark = first(sessions.values())
+    if sessions := valfilter(lambda x: isinstance(x, SnowSession), globals()):
+        snowpark = first(sessions.values())
+    elif sessions := valfilter(lambda x: isinstance(x, SnowSession), locals()):
+        snowpark = first(sessions.values())
+    elif check.session:
+        snowpark = check.session
     else:
         
         # Create SnowparkSession using account info

@@ -18,7 +18,7 @@ from typing import (
 )
 from dataclasses import dataclass
 from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
-from toolz import valfilter  # type: ignore
+from toolz import valfilter, first  # type: ignore
 from functools import reduce
 
 from cuallee import Check, Rule
@@ -778,25 +778,31 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
     )
 
-    # Create SnowparkSession using account info
-    SNOWFLAKE_ENVIRONMENT = {
-        "account": "SF_ACCOUNT",
-        "user": "SF_USER",
-        "password": "SF_PASSWORD",
-        "role": "SF_ROLE",
-        "warehouse": "SF_WAREHOUSE",
-        "database": "SF_DATABASE",
-        "schema": "SF_SCHEMA",
-    }
+    if sessions := valfilter(lambda x: isinstance(x, Session), globals()):
+        # Obtain the first spark session available in the globals
+        snowpark = first(sessions.values())
+    else:
+        
+        # Create SnowparkSession using account info
+        SNOWFLAKE_ENVIRONMENT = {
+            "account": "SF_ACCOUNT",
+            "user": "SF_USER",
+            "password": "SF_PASSWORD",
+            "role": "SF_ROLE",
+            "warehouse": "SF_WAREHOUSE",
+            "database": "SF_DATABASE",
+            "schema": "SF_SCHEMA",
+        }
 
-    if not check.config:
-        check.config = _get_snowflake_configurations(SNOWFLAKE_ENVIRONMENT)
+        if not check.config:
+            check.config = _get_snowflake_configurations(SNOWFLAKE_ENVIRONMENT)
 
-    assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(
-        check.config.keys()
-    ), "SnowFlake Environment variables not available in check configuration"
+        assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(
+            check.config.keys()
+        ), "SnowFlake Environment variables not available in check configuration"
 
-    snowpark = Session.builder.configs(check.config).create()
+        snowpark = Session.builder.configs(check.config).create()
+
 
     computation_basis = snowpark.createDataFrame(
         [

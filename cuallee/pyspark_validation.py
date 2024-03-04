@@ -778,7 +778,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
                 float(rule.pass_rate),
                 float(rule.coverage),
                 rule.status,
-            )
+            ) for rule in check.rules
         ],
         schema="id int, timestamp string, check string, level string, column string, rule string, value string, rows int, violations int, pass_rate double, pass_threshold double, status string",
     )

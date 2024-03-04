@@ -59,7 +59,7 @@ dagster = [
   "dagster == 1.6.4"
 ]
 cloud = [
-  "msgpack == 1.0.7"
+  "msgpack == 1.0.8"
 ]
 
 [tool.ruff.lint]

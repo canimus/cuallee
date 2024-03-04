@@ -245,6 +245,8 @@ Check | Description | DataType
 Check | Description | DataType
  ------- | ----------- | ----
 `completeness` | Zero `nulls` | _agnostic_
+`percentage_fill` | `% rows` not empty | _agnostic_
+`percentage_empty` | `% rows` empty | _agnostic_
 
 
 ## ISO Standard

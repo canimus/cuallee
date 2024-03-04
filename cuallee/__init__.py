@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from .iso.checks import ISO
 
 from colorama import Fore, Style  # type: ignore
-from toolz import valfilter  # type: ignore
+from toolz import compose, valfilter  # type: ignore
 
 logger = logging.getLogger("cuallee")
 
@@ -717,3 +717,20 @@ class Control:
         check = Check(CheckLevel.WARNING, name="Completeness", **kwargs)
         [check.is_complete(c) for c in dataframe.columns]
         return check.validate(dataframe)
+
+    @staticmethod
+    def percentage_fill(dataframe, **kwargs):
+        """Control the percentage of values filled"""
+        from toolz.curried import map as map_curried
+        compute = compose(
+            map_curried(operator.attrgetter("pass_rate")),
+            operator.methodcaller("collect"),
+            operator.methodcaller("select", "pass_rate")
+            )
+        result = list(compute(Control.completeness(dataframe, **kwargs)))
+        return sum(result) / len(result)
+
+    @staticmethod
+    def percentage_empty(dataframe, **kwargs):
+        """Control the percentage of values empty"""
+        return 1 - Control.percentage_fill(dataframe, **kwargs)

@@ -14,21 +14,21 @@ from colorama import Fore, Style  # type: ignore
 from toolz import compose, valfilter  # type: ignore
 
 logger = logging.getLogger("cuallee")
-
+__version__ = "0.8.7"
 # Verify Libraries Available
 # ==========================
 try:
     from pandas import DataFrame as pandas_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
 
 try:
     from polars.dataframe.frame import DataFrame as polars_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Polars")
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Polars")
 
 try:
@@ -36,28 +36,28 @@ try:
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
 
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
 
 try:
     from duckdb import DuckDBPyConnection as duckdb_dataframe  # type: ignore
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " DuckDB")
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " DuckDB")
 
 try:
     from google.cloud import bigquery
 
     logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " BigQuery")
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " BigQuery")
 
 

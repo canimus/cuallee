@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
-from .iso.checks import ISO
 from toolz import compose, valfilter  # type: ignore
 
 logger = logging.getLogger("cuallee")
@@ -209,6 +208,7 @@ class Check:
         self.config: Dict[str, str] = {}
         self.table_name = table_name
         try:
+            from .iso.checks import ISO
             self.iso = ISO(self)
         except (ModuleNotFoundError, ImportError):
             logger.error("ISO module requires requests")

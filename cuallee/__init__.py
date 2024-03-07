@@ -9,8 +9,6 @@ from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from .iso.checks import ISO
-
-from colorama import Fore, Style  # type: ignore
 from toolz import compose, valfilter  # type: ignore
 
 logger = logging.getLogger("cuallee")
@@ -19,49 +17,34 @@ __version__ = "0.8.7"
 # ==========================
 try:
     from pandas import DataFrame as pandas_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
 except (ModuleNotFoundError, ImportError):
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
+    logger.debug("KO: Pandas")
 
 try:
     from polars.dataframe.frame import DataFrame as polars_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Polars")
 except (ModuleNotFoundError, ImportError):
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Polars")
+    logger.debug("KO: Polars")
 
 try:
     from pyspark.sql import DataFrame as pyspark_dataframe
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
-
 except (ModuleNotFoundError, ImportError):
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
+    logger.debug("KO: PySpark")
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
 except (ModuleNotFoundError, ImportError):
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
+    logger.debug("KO: Snowpark")
 
 try:
     from duckdb import DuckDBPyConnection as duckdb_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " DuckDB")
 except (ModuleNotFoundError, ImportError):
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " DuckDB")
+    logger.debug("KO: DuckDB")
 
 try:
     from google.cloud import bigquery
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " BigQuery")
 except (ModuleNotFoundError, ImportError):
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " BigQuery")
+    logger.debug("KO: BigQuery")
 
-
-logger.debug(Style.RESET_ALL)
 
 
 class CheckLevel(enum.Enum):

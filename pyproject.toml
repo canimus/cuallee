@@ -5,10 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cuallee"
 version = "0.8.7"
-authors = [
-  { name="Herminio Vazquez", email="canimus@gmail.com"},
-  { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
-]
+authors = ["Herminio Vazquez <canimus@gmail.com>", "Virginie Grosboillot <vestalisvirginis@gmail.com>"]
+license = "Apache-2.0"
 description = "Python library for data validation on DataFrame APIs including Snowflake/Snowpark, Apache/PySpark and Pandas/DataFrame."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -19,8 +17,6 @@ classifiers = [
 ]
 dependencies = [
     "toolz >= 0.12.0",
-    "requests >= 2.28.2",
-    "pandas>=1.5.3",
 ]
 
 [project.optional-dependencies]
@@ -57,7 +53,8 @@ dagster = [
   "dagster == 1.6.8"
 ]
 cloud = [
-  "msgpack == 1.0.8"
+  "msgpack == 1.0.8",
+  "requests >= 2.28"
 ]
 
 [tool.ruff.lint]

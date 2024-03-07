@@ -5,8 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cuallee"
 version = "0.8.8"
-authors = ["Herminio Vazquez <canimus@gmail.com>", "Virginie Grosboillot <vestalisvirginis@gmail.com>"]
-license = "Apache-2.0"
+authors = [
+  { name="Herminio Vazquez", email="canimus@gmail.com"},
+  { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
+]
+license = {file = "LICENSE"}
 description = "Python library for data validation on DataFrame APIs including Snowflake/Snowpark, Apache/PySpark and Pandas/DataFrame."
 readme = "README.md"
 requires-python = ">=3.8"

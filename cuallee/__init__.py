@@ -12,7 +12,7 @@ from .iso.checks import ISO
 from toolz import compose, valfilter  # type: ignore
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.8.7"
+__version__ = "0.8.8"
 # Verify Libraries Available
 # ==========================
 try:
@@ -208,7 +208,10 @@ class Check:
         self.rows = -1
         self.config: Dict[str, str] = {}
         self.table_name = table_name
-        self.iso = ISO(self)
+        try:
+            self.iso = ISO(self)
+        except (ModuleNotFoundError, ImportError):
+            logger.error("ISO module requires requests")
         self.session = session
 
     def __repr__(self):

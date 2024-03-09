@@ -1,7 +1,7 @@
 ---
 title: 'Cuallee: A Python package for data quality across multiple DataFrame APIs'
 tags:
-  - Python
+  - python
   - data quality
   - data checks
   - data unit test

@@ -43,7 +43,7 @@ unit: # Run unit test
 twine: # Upload to python index
 	@twine upload dist/*
 
-paper: # produce pdf
+joss: # produce pdf
 	@docker run --rm --volume $$PWD/paper:/data --user $$(id -u):$$(id -g) --env JOURNAL=joss openjournals/inara
 
 testers: # Generate all test functions on folder/

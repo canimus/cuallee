@@ -141,6 +141,328 @@ a Creative Commons Attribution 4.0 International License (CC BY
   <title>Checks</title>
   <p>(<xref alt="Binney &amp; Tremaine, 2008" rid="ref-BinneyU003A2008" ref-type="bibr">Binney
   &amp; Tremaine, 2008</xref>) is the reference for the checks</p>
+  <table-wrap>
+    <table>
+      <colgroup>
+        <col width="32%" />
+        <col width="50%" />
+        <col width="18%" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Description</th>
+          <th>DataType</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><monospace>is_complete</monospace></td>
+          <td>Zero <monospace>nulls</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_unique</monospace></td>
+          <td>Zero <monospace>duplicates</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_primary_key</monospace></td>
+          <td>Zero <monospace>duplicates</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>are_complete</monospace></td>
+          <td>Zero <monospace>nulls</monospace> on group of columns</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>are_unique</monospace></td>
+          <td>Composite primary key check</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_composite_key</monospace></td>
+          <td>Zero duplicates on multiple columns</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_greater_than</monospace></td>
+          <td><monospace>col &gt; x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_positive</monospace></td>
+          <td><monospace>col &gt; 0</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_negative</monospace></td>
+          <td><monospace>col &lt; 0</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_greater_or_equal_than</monospace></td>
+          <td><monospace>col &gt;= x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_less_than</monospace></td>
+          <td><monospace>col &lt; x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_less_or_equal_than</monospace></td>
+          <td><monospace>col &lt;= x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_equal_than</monospace></td>
+          <td><monospace>col == x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_contained_in</monospace></td>
+          <td><monospace>col in [a, b, c, ...]</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_in</monospace></td>
+          <td>Alias of <monospace>is_contained_in</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>not_contained_in</monospace></td>
+          <td><monospace>col not in [a, b, c, ...]</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>not_in</monospace></td>
+          <td>Alias of <monospace>not_contained_in</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_between</monospace></td>
+          <td><monospace>a &lt;= col &lt;= b</monospace></td>
+          <td><italic>numeric, date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_pattern</monospace></td>
+          <td>Matching a pattern defined as a
+          <monospace>regex</monospace></td>
+          <td><italic>string</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_legit</monospace></td>
+          <td>String not null &amp; not empty
+          <monospace>^\S$</monospace></td>
+          <td><italic>string</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_min</monospace></td>
+          <td><monospace>min(col) == x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_max</monospace></td>
+          <td><monospace>max(col) == x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_std</monospace></td>
+          <td><monospace>σ(col) == x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_mean</monospace></td>
+          <td><monospace>μ(col) == x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_sum</monospace></td>
+          <td><monospace>Σ(col) == x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_percentile</monospace></td>
+          <td><monospace>%(col) == x</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_cardinality</monospace></td>
+          <td><monospace>count(distinct(col)) == x</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_max_by</monospace></td>
+          <td>A utilitary predicate for
+          <monospace>max(col_a) == x for max(col_b)</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_min_by</monospace></td>
+          <td>A utilitary predicate for
+          <monospace>min(col_a) == x for min(col_b)</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_correlation</monospace></td>
+          <td>Finds correlation between <monospace>0..1</monospace> on
+          <monospace>corr(col_a, col_b)</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_entropy</monospace></td>
+          <td>Calculates the entropy of a column
+          <monospace>entropy(col) == x</monospace> for classification
+          problems</td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_inside_interquartile_range</monospace></td>
+          <td>Verifies column values reside inside limits of
+          interquartile range
+          <monospace>Q1 &lt;= col &lt;= Q3</monospace> used on
+          anomalies.</td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_in_millions</monospace></td>
+          <td><monospace>col &gt;= 1e6</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_in_billions</monospace></td>
+          <td><monospace>col &gt;= 1e9</monospace></td>
+          <td><italic>numeric</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_t_minus_1</monospace></td>
+          <td>For date fields confirms 1 day ago
+          <monospace>t-1</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_t_minus_2</monospace></td>
+          <td>For date fields confirms 2 days ago
+          <monospace>t-2</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_t_minus_3</monospace></td>
+          <td>For date fields confirms 3 days ago
+          <monospace>t-3</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_t_minus_n</monospace></td>
+          <td>For date fields confirms n days ago
+          <monospace>t-n</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_today</monospace></td>
+          <td>For date fields confirms day is current date
+          <monospace>t-0</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_yesterday</monospace></td>
+          <td>For date fields confirms 1 day ago
+          <monospace>t-1</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_weekday</monospace></td>
+          <td>For date fields confirms day is between
+          <monospace>Mon-Fri</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_weekend</monospace></td>
+          <td>For date fields confirms day is between
+          <monospace>Sat-Sun</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_monday</monospace></td>
+          <td>For date fields confirms day is
+          <monospace>Mon</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_tuesday</monospace></td>
+          <td>For date fields confirms day is
+          <monospace>Tue</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_wednesday</monospace></td>
+          <td>For date fields confirms day is
+          <monospace>Wed</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_thursday</monospace></td>
+          <td>For date fields confirms day is
+          <monospace>Thu</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_friday</monospace></td>
+          <td>For date fields confirms day is
+          <monospace>Fri</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_saturday</monospace></td>
+          <td>For date fields confirms day is
+          <monospace>Sat</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_sunday</monospace></td>
+          <td>For date fields confirms day is
+          <monospace>Sun</monospace></td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_on_schedule</monospace></td>
+          <td>For date fields confirms time windows
+          i.e. <monospace>9:00 - 17:00</monospace></td>
+          <td><italic>timestamp</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>is_daily</monospace></td>
+          <td>Can verify daily continuity on date fields by default.
+          <monospace>[2,3,4,5,6]</monospace> which represents
+          <monospace>Mon-Fri</monospace> in PySpark. However new
+          schedules can be used for custom date continuity</td>
+          <td><italic>date</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>has_workflow</monospace></td>
+          <td>Adjacency matrix validation on
+          <monospace>3-column</monospace> graph, based on
+          <monospace>group</monospace>, <monospace>event</monospace>,
+          <monospace>order</monospace> columns.</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>satisfies</monospace></td>
+          <td>An open <monospace>SQL expression</monospace> builder to
+          construct custom checks</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>validate</monospace></td>
+          <td>The ultimate transformation of a check with a
+          <monospace>dataframe</monospace> input for validation</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
 </sec>
 <sec id="controls">
   <title>Controls</title>

@@ -79,7 +79,7 @@ class Compute:
 
     def not_contained_in(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return (
-            (dataframe.loc[:, rule.column].isin(rule.value) is False).astype(int).sum()
+            (dataframe.loc[:, rule.column].isin(rule.value).eq(False)).astype(int).sum()
         )
 
     def has_percentile(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:

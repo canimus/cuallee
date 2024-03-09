@@ -17,8 +17,9 @@ from typing import (
     List,
 )
 from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session, Row  # type: ignore
-from toolz import valfilter  # type: ignore
+from snowflake.snowpark import DataFrame, Column, Session, Row
+from snowflake.snowpark.session import Session as SnowSession
+from toolz import valfilter, first  # type: ignore
 from functools import reduce
 
 from cuallee import Check, Rule
@@ -216,7 +217,7 @@ class Compute:
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
-    
+
     def has_cardinality(self, rule: Rule):
         """Validation of a column’s distinct values"""
         predicate = None
@@ -243,6 +244,18 @@ class Compute:
         self.compute_instruction = ComputeInstruction(
             predicate,
             F.sum(predicate.cast(T.LongType())),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
+
+    def not_contained_in(self, rule: Rule):
+        """
+        Validates that each value in the specified column does not exist in the provided set of values.
+        """
+        predicate = ~F.col(rule.column).isin(list(rule.value))
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.sum(predicate.cast(T.IntegerType())),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
@@ -766,25 +779,38 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         F.when(pass_rate >= pass_threshold, F.lit("PASS")).otherwise(F.lit("FAIL"))
     )
 
-    # Create SnowparkSession using account info
-    SNOWFLAKE_ENVIRONMENT = {
-        "account": "SF_ACCOUNT",
-        "user": "SF_USER",
-        "password": "SF_PASSWORD",
-        "role": "SF_ROLE",
-        "warehouse": "SF_WAREHOUSE",
-        "database": "SF_DATABASE",
-        "schema": "SF_SCHEMA",
-    }
+    if sessions := valfilter(lambda x: isinstance(x, Session), globals()):
+        snowpark = first(sessions.values())
+    elif sessions := valfilter(lambda x: isinstance(x, Session), locals()):
+        snowpark = first(sessions.values())
+    if sessions := valfilter(lambda x: isinstance(x, SnowSession), globals()):
+        snowpark = first(sessions.values())
+    elif sessions := valfilter(lambda x: isinstance(x, SnowSession), locals()):
+        snowpark = first(sessions.values())
+    elif check.session:
+        snowpark = check.session
+    else:
+        
+        # Create SnowparkSession using account info
+        SNOWFLAKE_ENVIRONMENT = {
+            "account": "SF_ACCOUNT",
+            "user": "SF_USER",
+            "password": "SF_PASSWORD",
+            "role": "SF_ROLE",
+            "warehouse": "SF_WAREHOUSE",
+            "database": "SF_DATABASE",
+            "schema": "SF_SCHEMA",
+        }
 
-    if not check.config:
-        check.config = _get_snowflake_configurations(SNOWFLAKE_ENVIRONMENT)
+        if not check.config:
+            check.config = _get_snowflake_configurations(SNOWFLAKE_ENVIRONMENT)
 
-    assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(
-        check.config.keys()
-    ), "SnowFlake Environment variables not available in check configuration"
+        assert set(SNOWFLAKE_ENVIRONMENT.keys()).issuperset(
+            check.config.keys()
+        ), "SnowFlake Environment variables not available in check configuration"
 
-    snowpark = Session.builder.configs(check.config).create()
+        snowpark = Session.builder.configs(check.config).create()
+
 
     computation_basis = snowpark.createDataFrame(
         [

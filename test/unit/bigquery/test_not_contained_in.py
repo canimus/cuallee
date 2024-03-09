@@ -9,22 +9,7 @@ from cuallee import Check, CheckLevel
 def test_positive():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in(
-        "payment_type",
-        (
-            "Way2ride",
-            "Prcard",
-            "Split",
-            "Cash",
-            "Credit Card",
-            "Unknown",
-            "Mobile",
-            "No Charge",
-            "Dispute",
-            "Pcard",
-            "Prepaid",
-        ),
-    )
+    check.not_contained_in("payment_type", ["Dinero"])
     rs = check.validate(df)
     assert rs.status.str.match("PASS")[1]
     assert rs.violations[1] == 0
@@ -34,10 +19,10 @@ def test_positive():
 def test_negative():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("payment_type", ("Cash", "Credit Card", "Prepaid"))
+    check.not_contained_in("payment_type", ("Cash", "Credit Card", "Prepaid"))
     rs = check.validate(df)
     assert rs.status.str.match("FAIL")[1]
-    assert rs.violations[1] >= 648794
+    assert rs.violations[1] >= 6649036
     assert rs.pass_threshold[1] == 1.0
     assert rs.pass_rate[1] <= 1
 
@@ -127,19 +112,17 @@ def test_negative():
 def test_parameters(column_name, rule_value):
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in(column_name, rule_value)
+    check.not_contained_in(column_name, rule_value)
     rs = check.validate(df)
-    assert rs.status.str.match("PASS")[1]
-    assert rs.violations[1] == 0
-    assert rs.pass_rate[1] == 1.0
+    assert rs.status.str.match("FAIL")[1]
+    assert rs.pass_rate[1] <= 1.0
 
 
 def test_coverage():
     df = bigquery.dataset.Table("bigquery-public-data.chicago_taxi_trips.taxi_trips")
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("payment_type", ("Cash", "Credit Card", "Prepaid"), 0.7)
+    check.not_contained_in("payment_type", ("Dinero", "Metalico"), 0.7)
     rs = check.validate(df)
     assert rs.status.str.match("PASS")[1]
-    assert rs.violations[1] >= 648794
+    assert rs.violations[1] == 0
     assert rs.pass_threshold[1] == 0.7
-    assert rs.pass_rate[1] <= 1

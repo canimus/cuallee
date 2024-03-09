@@ -7,6 +7,9 @@ from string import Template
 from toolz import valfilter  # type: ignore
 from google.cloud import bigquery
 from cuallee import Check, ComputeEngine, Rule
+import logging
+
+logger = logging.getLogger("cuallee")
 
 
 class ComputeMethod(enum.Enum):
@@ -29,7 +32,7 @@ class Compute(ComputeEngine):
         self.compute_instruction: Union[ComputeInstruction, None] = None
 
     def _sum_predicate_to_integer(self, predicate) -> str:
-        return f"SUM(CAST({predicate} AS INTEGER))"
+        return f"SUM(CAST({predicate} AS INTEGER))".replace(",)", ")")
 
     def is_complete(self, rule: Rule):
         """Verify the absence of null values in a column"""
@@ -65,14 +68,12 @@ class Compute(ComputeEngine):
 
     def has_cardinality(self, rule: Rule):
         """Validation of number of distinct values in column"""
-        predicate = None
         self.compute_instruction = ComputeInstruction(
             None,
             f"COUNT(DISTINCT({rule.column}))={rule.value}",
             ComputeMethod.SQL,
         )
         return self.compute_instruction
-
 
     def are_unique(self, rule: Rule):
         """Validation for unique values in a group of columns"""
@@ -88,7 +89,18 @@ class Compute(ComputeEngine):
 
     def is_contained_in(self, rule: Rule):
         """Validation of column value in set of given values"""
+
         predicate = f"{rule.column} IN {rule.value}"
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
+
+    def not_contained_in(self, rule: Rule):
+        """Validation of column value not in a set of given values"""
+        predicate = f"{rule.column} NOT IN {rule.value}"
         self.compute_instruction = ComputeInstruction(
             predicate,
             self._sum_predicate_to_integer(predicate),
@@ -135,7 +147,7 @@ def _get_expressions(compute_set: Dict[str, ComputeInstruction]) -> str:
 
 def _build_query(expression_string: str, dataframe: bigquery.table.Table) -> str:
     """Build query final query"""
-    
+
     return f"SELECT {expression_string} FROM `{str(dataframe)}`"
 
 
@@ -151,6 +163,7 @@ def _compute_query_method(
     if sql_set:
         expression_string = _get_expressions(sql_set)
         query = _build_query(expression_string, dataframe)
+        logger.error(query)
 
         return client.query(query).to_arrow().to_pandas().to_dict(orient="records")[0]
     else:
@@ -190,10 +203,10 @@ def _compute_row(client, dataframe: bigquery.table.Table) -> Dict:
 
 def _calculate_violations(result, nrows) -> Union[int, float]:
     """Return the number of violations for each rule"""
-    
-    if (result == "true") or (result == True):
+
+    if (result == "true") or (result is True):
         return 0
-    elif (result == "false") or (result == False):
+    elif (result == "false") or (result is False):
         return nrows
     elif int(result) < 0:
         return abs(int(result))
@@ -204,9 +217,9 @@ def _calculate_violations(result, nrows) -> Union[int, float]:
 def _calculate_pass_rate(result, nrows) -> float:
     """Return the pass rate for each rule"""
 
-    if (result == "true") or (result == True):
+    if (result == "true") or (result is True):
         return 1.0
-    elif (result == "false") or (result == False):
+    elif (result == "false") or (result is False):
         return 0.0
     elif int(result) < 0:
         if abs(int(result)) < nrows:
@@ -244,9 +257,9 @@ def summary(check: Check, dataframe: bigquery.table.Table):
     # Check that user is connected to BigQuery
     try:
         client = bigquery.Client()
-    except:
+    except Exception as error:
         print(
-            "You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step."
+            f"You are not connected to the BigQuery cloud. Please verify the steps followed during the Authenticate API requests step. {str(error)}"
         )
 
     # Compute the expression

@@ -1,6 +1,4 @@
-import re
 import operator
-from itertools import repeat
 from numbers import Number
 from typing import Dict, List, Union
 
@@ -9,7 +7,6 @@ import polars as pl  # type: ignore
 from toolz import compose, first  # type: ignore
 
 from cuallee import Check, Rule
-from cuallee import utils as cuallee_utils
 
 
 class Compute:
@@ -145,7 +142,7 @@ class Compute:
         return Compute._result(
             dataframe.select(pl.col(rule.column).sum() == rule.value).to_series()
         )
-    
+
     def has_cardinality(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate sum value on column"""
         return Compute._result(
@@ -165,6 +162,14 @@ class Compute:
         """Validate set inclusion"""
         return Compute._result(
             dataframe.select(pl.col(rule.column).is_in(rule.value).cast(pl.Int8)).sum()
+        )
+
+    def not_contained_in(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate absence of values in set"""
+        return Compute._result(
+            dataframe.select(
+                (~pl.col(rule.column).is_in(rule.value)).cast(pl.Int8)
+            ).sum()
         )
 
     def has_percentile(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:

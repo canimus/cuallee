@@ -4,68 +4,46 @@ import importlib
 import logging
 import operator
 from collections import Counter
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
-from numbers import Number
-from .iso.checks import ISO
-
-from colorama import Fore, Style  # type: ignore
-from toolz import valfilter  # type: ignore
-import numpy as np
+from toolz import compose, valfilter  # type: ignore
 
 logger = logging.getLogger("cuallee")
-
+__version__ = "0.8.8"
 # Verify Libraries Available
 # ==========================
 try:
     from pandas import DataFrame as pandas_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Pandas")
-except:
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Pandas")
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: Pandas")
 
 try:
     from polars.dataframe.frame import DataFrame as polars_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Polars")
-except:
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Polars")
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: Polars")
 
 try:
     from pyspark.sql import DataFrame as pyspark_dataframe
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " PySpark")
-
-except:
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " PySpark")
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: PySpark")
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " Snowpark")
-except:
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " Snowpark")
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: Snowpark")
 
 try:
     from duckdb import DuckDBPyConnection as duckdb_dataframe  # type: ignore
-
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " DuckDB")
-except:
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " DuckDB")
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: DuckDB")
 
 try:
     from google.cloud import bigquery
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: BigQuery")
 
-    logger.debug(Fore.GREEN + "[OK]" + Fore.WHITE + " BigQuery")
-except:
-    logger.debug(Fore.RED + "[KO]" + Fore.WHITE + " BigQuery")
-
-
-logger.debug(Style.RESET_ALL)
-
-logger = logging.getLogger(__name__)
 
 
 class CheckLevel(enum.Enum):
@@ -97,6 +75,9 @@ class Rule:
     coverage: float = 1.0
     options: Union[List[Tuple], None] = None
     status: Union[str, None] = None
+    violations: int = 0
+    pass_rate: float = 0.0
+    ordinal: int = 0
 
     @property
     def settings(self) -> dict:
@@ -137,6 +118,58 @@ class Rule:
         rule_dict[self.key] = self
         return rule_dict
 
+    def evaluate_violations(self, result: Any, rows: int):
+        """Calculates the row violations on the rule"""
+
+        if isinstance(result, str):
+            if result == "false":
+                self.violations = rows
+            elif result == "true":
+                self.violations = 0
+            else:
+                self.violations = abs(int(result))
+        elif isinstance(result, bool):
+            if result is True:
+                self.violations = 0
+            elif result is False:
+                self.violations = rows
+        elif isinstance(result, int):
+            if result == 0:
+                self.violations = rows
+            elif result < 0:
+                self.violations = abs(result)
+            elif (result > 0) and (result < rows):
+                self.violations = rows - result
+
+        else:
+            self.violations = 0
+
+    def evaluate_pass_rate(self, rows: int):
+        """Percentage of successful rows by this rule"""
+        if self.violations <= rows:
+            try:
+                self.pass_rate = round(1 - (self.violations / rows), 3)
+            except ZeroDivisionError:
+                self.pass_rate = 1.0
+        else:
+            try:
+                self.pass_rate = rows / self.violations
+            except ZeroDivisionError:
+                self.pass_rate = 0.0
+
+    def evaluate_status(self):
+        """Overall PASS/FAIL status of the rule"""
+        if self.pass_rate >= self.coverage:
+            self.status = "PASS"
+        else:
+            self.status = "FAIL"
+
+    def evaluate(self, result: Any, rows: int):
+        """Generic rule evaluation for checks"""
+        self.evaluate_violations(result, rows)
+        self.evaluate_pass_rate(rows)
+        self.evaluate_status()
+
 
 class ComputeEngine(Protocol):
     def compute(self, rules: Dict[str, Rule]) -> bool:
@@ -155,8 +188,9 @@ class Check:
         level: Union[CheckLevel, int],
         name: str,
         *,
-        execution_date: datetime = datetime.today(),
+        execution_date: datetime = datetime.now(timezone.utc),
         table_name: str = None,
+        session: Any = None
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
@@ -173,7 +207,12 @@ class Check:
         self.rows = -1
         self.config: Dict[str, str] = {}
         self.table_name = table_name
-        self.iso = ISO(self)
+        try:
+            from .iso.checks import ISO
+            self.iso = ISO(self)
+        except (ModuleNotFoundError, ImportError):
+            logger.error("ISO module requires requests")
+        self.session = session
 
     def __repr__(self):
         standard = f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
@@ -228,6 +267,7 @@ class Check:
             values = [values]
 
         _filter = lambda x: operator.attrgetter(rule_attribute)(x) in values
+
         [
             self._remove_rule_generic(key)
             for key in valfilter(_filter, self._rule).keys()
@@ -361,6 +401,24 @@ class Check:
         """Validation of a column between a range"""
         Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
+
+    def not_contained_in(
+        self,
+        column: str,
+        value: Union[List, Tuple],
+        pct: float = 1.0,
+    ):
+        """Validation of column value not in set of given values"""
+        (
+            Rule("not_contained_in", column, value, CheckDataType.AGNOSTIC, pct)
+            >> self._rule
+        )
+
+        return self
+
+    def not_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
+        """Vaidation of column value not in set of given values"""
+        return self.not_contained_in(column, value, pct)
 
     def is_contained_in(
         self,
@@ -618,7 +676,6 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
 
-        # TODO: BigQuery source (pandas DataFrame/ json / file / uri)
         elif "bigquery" in globals() and isinstance(dataframe, bigquery.table.Table):
             self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
 
@@ -627,16 +684,39 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.polars_validation")
 
+        else:
+            raise Exception(
+                "Cuallee is not ready for this data structure. You can log a Feature Request in Github."
+            )
+
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
+
         return self.compute_engine.summary(self, dataframe)
 
 
 class Control:
     @staticmethod
-    def completeness(dataframe):
+    def completeness(dataframe, **kwargs):
         """Control of null values on data frames"""
-        check = Check(CheckLevel.WARNING, "Completeness")
+        check = Check(CheckLevel.WARNING, name="Completeness", **kwargs)
         [check.is_complete(c) for c in dataframe.columns]
         return check.validate(dataframe)
+
+    @staticmethod
+    def percentage_fill(dataframe, **kwargs):
+        """Control the percentage of values filled"""
+        from toolz.curried import map as map_curried
+        compute = compose(
+            map_curried(operator.attrgetter("pass_rate")),
+            operator.methodcaller("collect"),
+            operator.methodcaller("select", "pass_rate")
+            )
+        result = list(compute(Control.completeness(dataframe, **kwargs)))
+        return sum(result) / len(result)
+
+    @staticmethod
+    def percentage_empty(dataframe, **kwargs):
+        """Control the percentage of values empty"""
+        return 1 - Control.percentage_fill(dataframe, **kwargs)

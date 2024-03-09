@@ -20,7 +20,7 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install --upgrade pip
-        pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars,dagster]'
+        pip install '.[test,iso,snowpark,pyspark,pandas,duckdb,bigquery,polars,dagster,cloud]'
         coverage run -m pytest test/unit
         coverage xml -o coverage.xml
       env:

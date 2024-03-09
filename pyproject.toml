@@ -4,32 +4,28 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.7.7"
+version = "0.8.8"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
 ]
+license = {file = "LICENSE"}
 description = "Python library for data validation on DataFrame APIs including Snowflake/Snowpark, Apache/PySpark and Pandas/DataFrame."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "colorama >= 0.4.6",
     "toolz >= 0.12.0",
-    "pygments >= 2.15.1",
-    "requests >= 2.28.2",
-    "pandas>=1.5.3",
-    "i18n-iso-countries==1.0.0",
+    "requests>=2.28",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "black==24.1.1",
-  "ruff==0.1.14"
+  "black==24.2.0",
+  "ruff==0.3.0"
 ]
 pyspark = [
   "pyspark>=3.4.0"
@@ -46,7 +42,7 @@ bigquery =[
   "pyarrow >= 11.0.0"
 ]
 duckdb = [
-  "duckdb==0.9.2"
+  "duckdb==0.10.0"
 ]
 polars = [
   "polars>=0.19.6"
@@ -57,10 +53,16 @@ test = [
   "pendulum >= 2.1.2"
 ]
 dagster = [
-  "dagster == 1.6.1"
+  "dagster == 1.6.8"
+]
+cloud = [
+  "msgpack == 1.0.8",
+  "requests>=2.28",
 ]
 
-
+[tool.ruff.lint]
+# Skip unused variable rules (`F841`).
+ignore = ["E731"]
 
 
 [project.urls]

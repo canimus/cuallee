@@ -2,28 +2,30 @@ import pytest
 
 from datetime import datetime, date
 from cuallee import Check, CheckLevel
-import numpy as np
 
 
-def test_positive(spark):
-    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"])
+def test_negative(snowpark):
+    df = snowpark.createDataFrame(
+        [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
+    )
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("desc", ("blue", "red", "green", "grey", "black"))
+    check.not_contained_in("DESC", ("blue", "red", "green", "grey", "black"))
     rs = check.validate(df)
-    assert rs.first().status == "PASS"
-    assert rs.first().violations == 0
-    assert rs.first().pass_threshold == 1.0
+    assert rs.first().STATUS == "FAIL"
+    assert rs.first().VIOLATIONS == 3
+    assert rs.first().PASS_THRESHOLD == 1.0
 
 
-def test_negative(spark):
-    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"])
+def test_positive(snowpark):
+    df = snowpark.createDataFrame(
+        [[1, "blue"], [2, "green"], [3, "grey"]], ["id", "desc"]
+    )
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("desc", ("blue", "red"))
+    check.not_contained_in("DESC", ("purple", "red"))
     rs = check.validate(df)
-    assert rs.first().status == "FAIL"
-    assert rs.first().violations == 2
-    assert rs.first().pass_threshold == 1.0
-    assert np.allclose(rs.first().pass_rate, 1 / 3, rtol=0.001)
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 0
+    assert rs.first().PASS_THRESHOLD == 1.0
 
 
 @pytest.mark.parametrize(
@@ -79,26 +81,28 @@ def test_negative(spark):
         "timestamp",
     ),
 )
-def test_parameters(spark, data, columns, rule_value):
-    df = spark.createDataFrame(data, columns)
+def test_parameters(snowpark, data, columns, rule_value):
+    df = snowpark.createDataFrame(data, columns)
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("test_col", rule_value)
+    check.not_contained_in("TEST_COL", rule_value)
     rs = check.validate(df)
-    assert rs.first().status == "PASS"
+    assert rs.first().STATUS == "FAIL"
 
 
-def test_coverage(spark):
-    df = spark.createDataFrame([[1, "blue"], [2, "green"], [3, "red"]], ["id", "desc"])
+def test_coverage(snowpark):
+    df = snowpark.createDataFrame(
+        [[1, "blue"], [2, "green"], [3, "red"]], ["id", "desc"]
+    )
     check = Check(CheckLevel.WARNING, "pytest")
-    check.is_contained_in("desc", ("blue", "red"), 0.5)
+    check.not_contained_in("DESC", ("blue", "red"), 0.2)
     rs = check.validate(df)
-    assert rs.first().status == "PASS"
-    assert rs.first().violations == 1
-    assert rs.first().pass_threshold == 0.5
-    assert np.allclose(rs.first().pass_rate, 2 / 3, rtol=0.001)
+    assert rs.first().STATUS == "PASS"
+    assert rs.first().VIOLATIONS == 2
+    assert rs.first().PASS_THRESHOLD == 0.2
+    assert rs.first().PASS_RATE >= 0.2
 
 
 def test_value_error():
     check = Check(CheckLevel.WARNING, "pytest")
     with pytest.raises(ValueError, match="Data types in rule values are inconsistent"):
-        check.is_contained_in("VALUE", (10, "17"))
+        check.not_contained_in("VALUE", (10, "17"))

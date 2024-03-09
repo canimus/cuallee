@@ -1,13 +1,9 @@
 import xml.etree.ElementTree as ET
 import requests
 from dataclasses import dataclass
-from typing import List
 import os
 from operator import attrgetter as at
 from functools import lru_cache
-import pandas as pd
-from toolz import first
-from i18n_iso_countries import get_alpha2_codes
 
 
 @dataclass
@@ -36,7 +32,10 @@ def _load_currencies():
 @lru_cache
 def _load_countries():
     """External download from Google shared data of country codes and locations"""
-    return list(get_alpha2_codes().keys())
+    DEFAULT_ENDPOINT_3166 = "https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.xml"
+    response = requests.get(os.getenv("ISO_4217_ENDPOINT", DEFAULT_ENDPOINT_3166))
+    xml = ET.fromstring(response.text.encode("utf-8"))
+    return list(map(lambda x: x.attrib["alpha-2"], xml.findall("./country")))
 
 
 class ISO:

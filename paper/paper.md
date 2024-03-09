@@ -49,38 +49,9 @@ A last argument is the need for such a quality tool, is the desire of moving qua
 
 
 # Checks
-
+[@Binney:2008] is the reference for the checks
 
 # Controls
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
-
-# Acknowledgements
-
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
-
-In addition, many users have contributed features and bug fixes. Of particular note are Remco de Boer, and Samantha Hamilton who made contributions to documentation and code, and documentation respectively. A full list of coding contributors can be found here: https://github.com/mpl-extensions/mpl-interactions/graphs/contributors
-Finally, many users have contributed in ways other than coding. For example by rais- ing issues either with the package or documentation. These users are recognized here:
-https://github.com/mpl-extensions/mpl-interactions#contributors-
+This are the controls 
 
 # References

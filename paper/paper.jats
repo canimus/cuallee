@@ -23,7 +23,7 @@ multiple DataFrame APIs</article-title>
 </title-group>
 <contrib-group>
 <contrib contrib-type="author" equal-contrib="yes">
-<contrib-id contrib-id-type="orcid">0000-0003-1937-8006</contrib-id>
+<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0003-1937-8006</contrib-id>
 <name>
 <surname>Vazquez</surname>
 <given-names>Herminio</given-names>
@@ -31,10 +31,10 @@ multiple DataFrame APIs</article-title>
 <xref ref-type="aff" rid="aff-1"/>
 </contrib>
 <contrib contrib-type="author" equal-contrib="yes">
-<contrib-id contrib-id-type="orcid">0000-0002-8249-7182</contrib-id>
+<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-8249-7182</contrib-id>
 <name>
-<surname>Phd.</surname>
-<given-names>Virginie Grosboillot</given-names>
+<surname>Grosboillot</surname>
+<given-names>Virginie</given-names>
 </name>
 <xref ref-type="aff" rid="aff-2"/>
 </contrib>
@@ -72,131 +72,83 @@ a Creative Commons Attribution 4.0 International License (CC BY
 <kwd-group kwd-group-type="author">
 <kwd>Python</kwd>
 <kwd>data quality</kwd>
-<kwd>unit testing</kwd>
+<kwd>data checks</kwd>
+<kwd>data unit test</kwd>
+<kwd>data observability</kwd>
+<kwd>data lake</kwd>
 <kwd>pyspark</kwd>
-<kwd>snowpark</kwd>
-<kwd>pandas</kwd>
-<kwd>polars</kwd>
 <kwd>duckdb</kwd>
+<kwd>pandas</kwd>
+<kwd>snowpark</kwd>
+<kwd>polars</kwd>
 <kwd>big data</kwd>
-<kwd>distributing computing</kwd>
 </kwd-group>
 </article-meta>
 </front>
 <body>
 <sec id="summary">
   <title>Summary</title>
-  <p>The forces on stars, galaxies, and dark matter under external
-  gravitational fields lead to the dynamical evolution of structures in
-  the universe. The orbits of these bodies are therefore key to
-  understanding the formation, history, and future state of galaxies.
-  The field of “galactic dynamics,” which aims to model the gravitating
-  components of galaxies to study their structure and evolution, is now
-  well-established, commonly taught, and frequently used in astronomy.
-  Aside from toy problems and demonstrations, the majority of problems
-  require efficient numerical tools, many of which require the same base
-  code (e.g., for performing numerical orbit integration).</p>
+  <p>In today’s world, where vast amounts of data are generated and
+  collected daily, and where data heavily influence business, political,
+  and societal decisions, it’s crucial to evaluate the quality of the
+  data used for analysis, decision-making, and reporting. This involves
+  understanding how reliable and trustworthy the data are. To address
+  this need, we’ve created <monospace>cuallee</monospace>, a Python
+  package for assessing data quality. <monospace>cuallee</monospace> is
+  designed to be dataframe-agnostic, offering an intuitive and
+  user-friendly API for describing checks across the most popular
+  dataframe implementations such as PySpark, Pandas, Snowpark, Polars,
+  DuckDB and BigQuery. Currently, <monospace>cuallee</monospace> offers
+  over 50 checks to help users evaluate the quality of their data.</p>
 </sec>
 <sec id="statement-of-need">
   <title>Statement of need</title>
-  <p><monospace>Gala</monospace> is an Astropy-affiliated Python package
-  for galactic dynamics. Python enables wrapping low-level languages
-  (e.g., C) for speed without losing flexibility or ease-of-use in the
-  user-interface. The API for <monospace>Gala</monospace> was designed
-  to provide a class-based and user-friendly interface to fast (C or
-  Cython-optimized) implementations of common operations such as
-  gravitational potential and force evaluation, orbit integration,
-  dynamical transformations, and chaos indicators for nonlinear
-  dynamics. <monospace>Gala</monospace> also relies heavily on and
-  interfaces well with the implementations of physical units and
-  astronomical coordinate systems in the <monospace>Astropy</monospace>
-  package
-  (<xref alt="Astropy Collaboration, 2013" rid="ref-astropy" ref-type="bibr">Astropy
-  Collaboration, 2013</xref>) (<monospace>astropy.units</monospace> and
-  <monospace>astropy.coordinates</monospace>).</p>
-  <p><monospace>Gala</monospace> was designed to be used by both
-  astronomical researchers and by students in courses on gravitational
-  dynamics or astronomy. It has already been used in a number of
-  scientific publications
-  (<xref alt="Pearson et al., 2017" rid="ref-PearsonU003A2017" ref-type="bibr">Pearson
-  et al., 2017</xref>) and has also been used in graduate courses on
-  Galactic dynamics to, e.g., provide interactive visualizations of
-  textbook material
-  (<xref alt="Binney &amp; Tremaine, 2008" rid="ref-BinneyU003A2008" ref-type="bibr">Binney
-  &amp; Tremaine, 2008</xref>). The combination of speed, design, and
-  support for Astropy functionality in <monospace>Gala</monospace> will
-  enable exciting scientific explorations of forthcoming data releases
-  from the <italic>Gaia</italic> mission
-  (<xref alt="Gaia Collaboration, 2016" rid="ref-gaia" ref-type="bibr">Gaia
-  Collaboration, 2016</xref>) by students and experts alike.</p>
+  <p>For data engineers and data scientists, maintaining a consistent
+  workflow involves operating in hybrid environments, where they develop
+  locally before transitioning data pipelines and analysis to
+  cloud-based environments. Whilst working in local environments
+  typically allows them to fit data sets in memory, moving workloads to
+  cloud environments involve operating with full scale data that
+  requires a different computing framework, i.e. distributed computing,
+  parallelization, and horizontal scaling.</p>
+  <p>This shift in computing frameworks requires the adoption of testing
+  strategies that can accommodate testing activities in both local and
+  remote environments, without the need to rewrite test scenarios or
+  employ different testing approaches for assessing various quality
+  dimensions of the data.</p>
+  <p>An additional argument is related to the rapid evolution of the
+  data ecosystem. Organizations and data teams are constantly seeking
+  ways to improve, whether through cost-effective solutions or by
+  integrating new capabilities into their data operations. However, this
+  pursuit presents new challenges when migrating workloads from one
+  technology to another. As information technology and data strategies
+  become more resilient against vendor lock-ins, they turn to
+  technologies that enable seamless operation across platforms, avoiding
+  the chaos of fully re-implementing data products. In essence, no data
+  testing strategy needs to be rewritten or reformulated due to platform
+  changes.</p>
+  <p>A last argument is the need for such a quality tool, is the desire
+  of moving quality procedures to the earliest phases of the data
+  product development life-cycle. Whether in industry or academia, the
+  reduction of time allocated for quality activities is unfortunately
+  like a norm, due to the predominant focus on functional aspects.
+  Enabling a declarative, intuitive and flexible programming interface
+  to data quality, allows teams to embed quality into their development,
+  adopting a mindset of building quality in, as opposed to testing
+  quality out.</p>
 </sec>
-<sec id="mathematics">
-  <title>Mathematics</title>
-  <p>Single dollars ($) are required for inline mathematics
-  e.g. <inline-formula><alternatives>
-  <tex-math><![CDATA[f(x) = e^{\pi/x}]]></tex-math>
-  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mi>f</mml:mi><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:msup><mml:mi>e</mml:mi><mml:mrow><mml:mi>π</mml:mi><mml:mi>/</mml:mi><mml:mi>x</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:math></alternatives></inline-formula></p>
-  <p>Double dollars make self-standing equations:</p>
-  <p><disp-formula><tex-math><![CDATA[\Theta(x) = \left\{\begin{array}{l}
-  0\textrm{ if } x < 0\cr
-  1\textrm{ else}
-  \end{array}\right.]]></tex-math></disp-formula></p>
-  <p>You can also use plain LaTeXfor equations
-  <named-content id="eqU003Afourier" content-type="equation"><disp-formula><alternatives>
-  <tex-math><![CDATA[
-  \hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx]]></tex-math>
-  <mml:math display="block" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mover><mml:mi>f</mml:mi><mml:mo accent="true">̂</mml:mo></mml:mover><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>ω</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:msubsup><mml:mo>∫</mml:mo><mml:mrow><mml:mo>−</mml:mo><mml:mi>∞</mml:mi></mml:mrow><mml:mi>∞</mml:mi></mml:msubsup><mml:mi>f</mml:mi><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:msup><mml:mi>e</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>ω</mml:mi><mml:mi>x</mml:mi></mml:mrow></mml:msup><mml:mi>d</mml:mi><mml:mi>x</mml:mi></mml:mrow></mml:math></alternatives></disp-formula></named-content>
-  and refer to
-  <xref alt="Equation 1" rid="eqU003Afourier">Equation 1</xref> from
-  text.</p>
+<sec id="checks">
+  <title>Checks</title>
+  <p>(<xref alt="Binney &amp; Tremaine, 2008" rid="ref-BinneyU003A2008" ref-type="bibr">Binney
+  &amp; Tremaine, 2008</xref>) is the reference for the checks</p>
 </sec>
-<sec id="citations">
-  <title>Citations</title>
-  <p>Citations to entries in paper.bib should be in
-  <ext-link ext-link-type="uri" xlink:href="http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html">rMarkdown</ext-link>
-  format.</p>
-  <p>If you want to cite a software repository URL (e.g. something on
-  GitHub without a preferred citation) then you can do it with the
-  example BibTeX entry below for Smith et al.
-  (<xref alt="2020" rid="ref-fidgit" ref-type="bibr">2020</xref>).</p>
-  <p>For a quick reference, the following citation commands can be used:
-  - <monospace>@author:2001</monospace> -&gt; “Author et al. (2001)” -
-  <monospace>[@author:2001]</monospace> -&gt; “(Author et al., 2001)” -
-  <monospace>[@author1:2001; @author2:2001]</monospace> -&gt; “(Author1
-  et al., 2001; Author2 et al., 2002)”</p>
-</sec>
-<sec id="figures">
-  <title>Figures</title>
-  <p>Figures can be included like this:
-  <inline-graphic mimetype="image" mime-subtype="png" xlink:href="media/figure.png" />
-  and referenced from text using
-  <xref alt="[fig:example]" rid="figU003Aexample">[fig:example]</xref>.</p>
-  <p>Figure sizes can be customized by adding an optional second
-  parameter:
-  <inline-graphic mimetype="image" mime-subtype="png" xlink:href="media/figure.png" /></p>
-</sec>
-<sec id="acknowledgements">
-  <title>Acknowledgements</title>
-  <p>We acknowledge contributions from Brigitta Sipocz, Syrtis Major,
-  and Semyeong Oh, and support from Kathryn Johnston during the genesis
-  of this project.</p>
+<sec id="controls">
+  <title>Controls</title>
+  <p>This are the controls</p>
 </sec>
 </body>
 <back>
 <ref-list>
-  <ref id="ref-PearsonU003A2017">
-    <element-citation publication-type="article-journal">
-      <person-group person-group-type="author">
-        <name><surname>Pearson</surname><given-names>S.</given-names></name>
-        <name><surname>Price-Whelan</surname><given-names>A. M.</given-names></name>
-        <name><surname>Johnston</surname><given-names>K. V.</given-names></name>
-      </person-group>
-      <article-title>Gaps in Globular Cluster Streams: Pal 5 and the Galactic Bar</article-title>
-      <source>ArXiv e-prints</source>
-      <year iso-8601-date="2017-03">2017</year><month>03</month>
-      <uri>http://adsabs.harvard.edu/abs/2017arXiv170304627P</uri>
-    </element-citation>
-  </ref>
   <ref id="ref-BinneyU003A2008">
     <element-citation publication-type="book">
       <person-group person-group-type="author">
@@ -207,46 +159,6 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <publisher-name>Princeton University Press</publisher-name>
       <year iso-8601-date="2008">2008</year>
       <uri>http://adsabs.harvard.edu/abs/2008gady.book.....B</uri>
-    </element-citation>
-  </ref>
-  <ref id="ref-gaia">
-    <element-citation publication-type="article-journal">
-      <person-group person-group-type="author">
-        <string-name>Gaia Collaboration</string-name>
-      </person-group>
-      <article-title>The Gaia mission</article-title>
-      <source>Astronomy and Astrophysics</source>
-      <year iso-8601-date="2016-11">2016</year><month>11</month>
-      <volume>595</volume>
-      <uri>http://adsabs.harvard.edu/abs/2016A%26A...595A...1G</uri>
-      <pub-id pub-id-type="doi">10.1051/0004-6361/201629272</pub-id>
-    </element-citation>
-  </ref>
-  <ref id="ref-astropy">
-    <element-citation publication-type="article-journal">
-      <person-group person-group-type="author">
-        <string-name>Astropy Collaboration</string-name>
-      </person-group>
-      <article-title>Astropy: A community Python package for astronomy</article-title>
-      <source>Astronomy and Astrophysics</source>
-      <year iso-8601-date="2013-10">2013</year><month>10</month>
-      <volume>558</volume>
-      <uri>http://adsabs.harvard.edu/abs/2013A%26A...558A..33A</uri>
-      <pub-id pub-id-type="doi">10.1051/0004-6361/201322068</pub-id>
-    </element-citation>
-  </ref>
-  <ref id="ref-fidgit">
-    <element-citation>
-      <person-group person-group-type="author">
-        <name><surname>Smith</surname><given-names>A. M.</given-names></name>
-        <name><surname>Thaney</surname><given-names>K.</given-names></name>
-        <name><surname>Hahnel</surname><given-names>M.</given-names></name>
-      </person-group>
-      <article-title>Fidgit: An ungodly union of GitHub and figshare</article-title>
-      <source>GitHub repository</source>
-      <publisher-name>GitHub</publisher-name>
-      <year iso-8601-date="2020">2020</year>
-      <uri>https://github.com/arfon/fidgit</uri>
     </element-citation>
   </ref>
 </ref-list>

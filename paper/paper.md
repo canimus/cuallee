@@ -3,14 +3,16 @@ title: 'Cuallee: A Python package for data quality across multiple DataFrame API
 tags:
   - Python
   - data quality
-  - unit testing
+  - data checks
+  - data unit test
+  - data observability
+  - data lake
   - pyspark
-  - snowpark
-  - pandas
-  - polars
   - duckdb
+  - pandas
+  - snowpark
+  - polars
   - big data
-  - distributing computing
 authors:
   - name: Herminio Vazquez
     orcid: 0000-0003-1937-8006

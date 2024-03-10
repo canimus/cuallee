@@ -45,7 +45,7 @@ For data engineers and data scientists, maintaining a consistent workflow involv
 
 An additional argument is related to the rapid evolution of the data ecosystem [@10.1145/3603706]. Organizations and data teams are constantly seeking ways to improve, whether through cost-effective solutions or by integrating new capabilities into their data operations. However, this pursuit presents new challenges when migrating workloads from one technology to another. As information technology and data strategies become more resilient against vendor lock-ins, they turn to technologies that enable seamless operation across platforms, avoiding the chaos of fully re-implementing data products. In essence, with `cuallee` no data testing strategy needs to be rewritten or reformulated due to platform changes.
 
-One last argument in favor of using a quality tool such as `cuallee` is the need to integrate quality procedures into the early stages of data product development. Whether in industry or academia, there's often a tendency to prioritize functional aspects over quality, leading to less time being dedicated to quality activities. By providing a clear, easy-to-use, and adaptable programming interface for data quality, teams can incorporate quality into their development process, promoting a proactive approach of building quality in rather than relying solely on testing to ensure quality.
+One last argument in favor of using a quality tool such as `cuallee` is the need to integrate quality procedures into the early stages of data product development. Whether in industry or academia, there is often a tendency to prioritize functional aspects over quality, leading to less time being dedicated to quality activities. By providing a clear, easy-to-use, and adaptable programming interface for data quality, teams can incorporate quality into their development process, promoting a proactive approach of building quality in rather than relying solely on testing to ensure quality.
 
 
 # Methods
@@ -54,7 +54,7 @@ One last argument in favor of using a quality tool such as `cuallee` is the need
 
 
 # Checks
-In `cuallee`, checks serve as the fundamental concept. These checks are implemented by __rules__, which specify _quality predicates_. These predicates, when aggregated, form the criteria used to evaluate the quality of a dataset. Efforts to establish a universal quality metric [@10.1145/3529190.3529222] typically involve using statistics and combining dimensions to derive a single reference value that encapsulates overall quality attributes. 
+In `cuallee`, checks serve as the fundamental concept. These checks (\autoref{tab:checks}) are implemented by __rules__, which specify _quality predicates_. These predicates, when aggregated, form the criteria used to evaluate the quality of a dataset. Efforts to establish a universal quality metric [@10.1145/3529190.3529222] typically involve using statistics and combining dimensions to derive a single reference value that encapsulates overall quality attributes. 
 
 Check | Description | DataType
  ------- | ----------- | ----
@@ -117,6 +117,7 @@ Check | Description | DataType
 `Control.completeness` | Zero `nulls` all columns| _agnostic_
 `Control.percentage_fill` | `% rows` not empty | _agnostic_
 `Control.percentage_empty` | `% rows` empty | _agnostic_
-Table 1: List and description of the currently available checks
+
+Table: List and description of the currently available []{label="tab:checks"} \label{tab:checks}
 
 # References

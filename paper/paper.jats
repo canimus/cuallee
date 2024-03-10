@@ -18,7 +18,7 @@
 <article-id pub-id-type="publisher-id">0</article-id>
 <article-id pub-id-type="doi">N/A</article-id>
 <title-group>
-<article-title>Cuallee: A Python package for data quality across
+<article-title>cuallee: A python package for data quality checks across
 multiple DataFrame APIs</article-title>
 </title-group>
 <contrib-group>
@@ -74,6 +74,8 @@ a Creative Commons Attribution 4.0 International License (CC BY
 <kwd>data quality</kwd>
 <kwd>data checks</kwd>
 <kwd>data unit test</kwd>
+<kwd>data pipelines</kwd>
+<kwd>data validation</kwd>
 <kwd>data observability</kwd>
 <kwd>data lake</kwd>
 <kwd>pyspark</kwd>
@@ -109,38 +111,53 @@ a Creative Commons Attribution 4.0 International License (CC BY
   cloud-based environments. Whilst working in local environments
   typically allows them to fit data sets in memory, moving workloads to
   cloud environments involve operating with full scale data that
-  requires a different computing framework, i.e. distributed computing,
-  parallelization, and horizontal scaling.</p>
+  requires a different computing framework
+  (<xref alt="Schelter et al., 2018" rid="ref-10.14778U002F3229863.3229867" ref-type="bibr">Schelter
+  et al., 2018</xref>), i.e. distributed computing, parallelization, and
+  horizontal scaling.</p>
   <p>This shift in computing frameworks requires the adoption of testing
   strategies that can accommodate testing activities in both local and
   remote environments, without the need to rewrite test scenarios or
   employ different testing approaches for assessing various quality
-  dimensions of the data.</p>
+  dimensions of the data
+  (<xref alt="Fadlallah et al., 2023b" rid="ref-10.1145U002F3603707" ref-type="bibr">Fadlallah
+  et al., 2023b</xref>).</p>
   <p>An additional argument is related to the rapid evolution of the
-  data ecosystem. Organizations and data teams are constantly seeking
-  ways to improve, whether through cost-effective solutions or by
-  integrating new capabilities into their data operations. However, this
-  pursuit presents new challenges when migrating workloads from one
+  data ecosystem
+  (<xref alt="Fadlallah et al., 2023a" rid="ref-10.1145U002F3603706" ref-type="bibr">Fadlallah
+  et al., 2023a</xref>). Organizations and data teams are constantly
+  seeking ways to improve, whether through cost-effective solutions or
+  by integrating new capabilities into their data operations. However,
+  this pursuit presents new challenges when migrating workloads from one
   technology to another. As information technology and data strategies
   become more resilient against vendor lock-ins, they turn to
   technologies that enable seamless operation across platforms, avoiding
   the chaos of fully re-implementing data products. In essence, no data
   testing strategy needs to be rewritten or reformulated due to platform
   changes.</p>
-  <p>A last argument is the need for such a quality tool, is the desire
-  of moving quality procedures to the earliest phases of the data
-  product development life-cycle. Whether in industry or academia, the
-  reduction of time allocated for quality activities is unfortunately
-  like a norm, due to the predominant focus on functional aspects.
-  Enabling a declarative, intuitive and flexible programming interface
-  to data quality, allows teams to embed quality into their development,
-  adopting a mindset of building quality in, as opposed to testing
-  quality out.</p>
+  <p>One last argument in favor of using a quality tool is the need to
+  integrate quality procedures into the early stages of data product
+  development. Whether in industry or academia, there’s often a tendency
+  to prioritize functional aspects over quality, leading to less time
+  being dedicated to quality activities. By providing a clear,
+  easy-to-use, and adaptable programming interface for data quality,
+  teams can incorporate quality into their development process,
+  promoting a proactive approach of building quality in rather than
+  relying solely on testing to ensure quality.</p>
+</sec>
+<sec id="methods">
+  <title>Methods</title>
+  <p><monospace>cuallee</monospace> employs a heuristic-based approach
+  to define quality rules for each dataset. This prevents the
+  inadvertent duplication of quality predicates, thus reducing the
+  likelihood of human error in defining rules with identical predicates.
+  Several studies have been conducted on the efficiency of these rules,
+  including auto-validation
+  (<xref alt="Tu et al., 2023" rid="ref-10.1145U002F3580305.3599776" ref-type="bibr">Tu
+  et al., 2023</xref>) and auto-definition using profilers.</p>
 </sec>
 <sec id="checks">
   <title>Checks</title>
-  <p>(<xref alt="Binney &amp; Tremaine, 2008" rid="ref-BinneyU003A2008" ref-type="bibr">Binney
-  &amp; Tremaine, 2008</xref>) is the reference for the checks</p>
   <table-wrap>
     <table>
       <colgroup>
@@ -319,7 +336,7 @@ a Creative Commons Attribution 4.0 International License (CC BY
           <td><italic>numeric</italic></td>
         </tr>
         <tr>
-          <td><monospace>is_inside_interquartile_range</monospace></td>
+          <td><monospace>is_inside_iqr</monospace></td>
           <td>Verifies column values reside inside limits of
           interquartile range
           <monospace>Q1 &lt;= col &lt;= Q3</monospace> used on
@@ -467,20 +484,123 @@ a Creative Commons Attribution 4.0 International License (CC BY
 <sec id="controls">
   <title>Controls</title>
   <p>This are the controls</p>
+  <table-wrap>
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Description</th>
+          <th>DataType</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><monospace>completeness</monospace></td>
+          <td>Zero <monospace>nulls</monospace></td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>percentage_fill</monospace></td>
+          <td><monospace>% rows</monospace> not empty</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>percentage_empty</monospace></td>
+          <td><monospace>% rows</monospace> empty</td>
+          <td><italic>agnostic</italic></td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
 </sec>
 </body>
 <back>
 <ref-list>
-  <ref id="ref-BinneyU003A2008">
-    <element-citation publication-type="book">
+  <ref id="ref-10.1145U002F3603707">
+    <element-citation publication-type="article-journal">
       <person-group person-group-type="author">
-        <name><surname>Binney</surname><given-names>J.</given-names></name>
-        <name><surname>Tremaine</surname><given-names>S.</given-names></name>
+        <name><surname>Fadlallah</surname><given-names>Hadi</given-names></name>
+        <name><surname>Kilany</surname><given-names>Rima</given-names></name>
+        <name><surname>Dhayne</surname><given-names>Houssein</given-names></name>
+        <name><surname>El Haddad</surname><given-names>Rami</given-names></name>
+        <name><surname>Haque</surname><given-names>Rafiqul</given-names></name>
+        <name><surname>Taher</surname><given-names>Yehia</given-names></name>
+        <name><surname>Jaber</surname><given-names>Ali</given-names></name>
       </person-group>
-      <source>Galactic Dynamics: Second Edition</source>
-      <publisher-name>Princeton University Press</publisher-name>
-      <year iso-8601-date="2008">2008</year>
-      <uri>http://adsabs.harvard.edu/abs/2008gady.book.....B</uri>
+      <article-title>Context-aware big data quality assessment: A scoping review</article-title>
+      <source>Journal of Data and Information Quality</source>
+      <year iso-8601-date="2023-06">2023</year><month>06</month>
+      <volume>15</volume>
+      <pub-id pub-id-type="doi">10.1145/3603707</pub-id>
+      <fpage></fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-10.1145U002F3603706">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Fadlallah</surname><given-names>Hadi</given-names></name>
+        <name><surname>Kilany</surname><given-names>Rima</given-names></name>
+        <name><surname>Dhayne</surname><given-names>Houssein</given-names></name>
+        <name><surname>El Haddad</surname><given-names>Rami</given-names></name>
+        <name><surname>Haque</surname><given-names>Rafiqul</given-names></name>
+        <name><surname>Taher</surname><given-names>Yehia</given-names></name>
+        <name><surname>Jaber</surname><given-names>Ali</given-names></name>
+      </person-group>
+      <article-title>BIGQA: Declarative big data quality assessment</article-title>
+      <source>Journal of Data and Information Quality</source>
+      <year iso-8601-date="2023-06">2023</year><month>06</month>
+      <volume>15</volume>
+      <pub-id pub-id-type="doi">10.1145/3603706</pub-id>
+      <fpage></fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-10.1145U002F3580305.3599776">
+    <element-citation publication-type="paper-conference">
+      <person-group person-group-type="author">
+        <name><surname>Tu</surname><given-names>Dezhan</given-names></name>
+        <name><surname>He</surname><given-names>Yeye</given-names></name>
+        <name><surname>Cui</surname><given-names>Weiwei</given-names></name>
+        <name><surname>Ge</surname><given-names>Song</given-names></name>
+        <name><surname>Zhang</surname><given-names>Haidong</given-names></name>
+        <name><surname>Han</surname><given-names>Shi</given-names></name>
+        <name><surname>Zhang</surname><given-names>Dongmei</given-names></name>
+        <name><surname>Chaudhuri</surname><given-names>Surajit</given-names></name>
+      </person-group>
+      <article-title>Auto-validate by-history: Auto-program data quality constraints to validate recurring data pipelines</article-title>
+      <source>Proceedings of the 29th ACM SIGKDD conference on knowledge discovery and data mining</source>
+      <publisher-name>Association for Computing Machinery</publisher-name>
+      <publisher-loc>New York, NY, USA</publisher-loc>
+      <year iso-8601-date="2023">2023</year>
+      <isbn>9798400701030</isbn>
+      <uri>https://doi.org/10.1145/3580305.3599776</uri>
+      <pub-id pub-id-type="doi">10.1145/3580305.3599776</pub-id>
+      <fpage>4991</fpage>
+      <lpage>5003</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-10.14778U002F3229863.3229867">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Schelter</surname><given-names>Sebastian</given-names></name>
+        <name><surname>Lange</surname><given-names>Dustin</given-names></name>
+        <name><surname>Schmidt</surname><given-names>Philipp</given-names></name>
+        <name><surname>Celikel</surname><given-names>Meltem</given-names></name>
+        <name><surname>Biessmann</surname><given-names>Felix</given-names></name>
+        <name><surname>Grafberger</surname><given-names>Andreas</given-names></name>
+      </person-group>
+      <article-title>Automating large-scale data quality verification</article-title>
+      <source>Proc. VLDB Endow.</source>
+      <publisher-name>VLDB Endowment</publisher-name>
+      <year iso-8601-date="2018-08">2018</year><month>08</month>
+      <volume>11</volume>
+      <issue>12</issue>
+      <issn>2150-8097</issn>
+      <uri>https://doi.org/10.14778/3229863.3229867</uri>
+      <pub-id pub-id-type="doi">10.14778/3229863.3229867</pub-id>
+      <fpage>1781</fpage>
+      <lpage>1794</lpage>
     </element-citation>
   </ref>
 </ref-list>

@@ -1,10 +1,12 @@
 ---
-title: 'Cuallee: A Python package for data quality across multiple DataFrame APIs'
+title: 'cuallee: A python package for data quality checks across multiple DataFrame APIs'
 tags:
   - python
   - data quality
   - data checks
   - data unit test
+  - data pipelines
+  - data validation
   - data observability
   - data lake
   - pyspark
@@ -39,17 +41,22 @@ In today's world, where vast amounts of data are generated and collected daily, 
 
 # Statement of need
 
-For data engineers and data scientists, maintaining a consistent workflow involves operating in hybrid environments, where they develop locally before transitioning data pipelines and analysis to cloud-based environments. Whilst working in local environments typically allows them to fit data sets in memory, moving workloads to cloud environments involve operating with full scale data that requires a different computing framework, i.e. distributed computing, parallelization, and horizontal scaling.
+For data engineers and data scientists, maintaining a consistent workflow involves operating in hybrid environments, where they develop locally before transitioning data pipelines and analysis to cloud-based environments. Whilst working in local environments typically allows them to fit data sets in memory, moving workloads to cloud environments involve operating with full scale data that requires a different computing framework [@10.14778/3229863.3229867], i.e. distributed computing, parallelization, and horizontal scaling.
 
-This shift in computing frameworks requires the adoption of testing strategies that can accommodate testing activities in both local and remote environments, without the need to rewrite test scenarios or employ different testing approaches for assessing various quality dimensions of the data.
+This shift in computing frameworks requires the adoption of testing strategies that can accommodate testing activities in both local and remote environments, without the need to rewrite test scenarios or employ different testing approaches for assessing various quality dimensions of the data [@10.1145/3603707].
 
-An additional argument is related to the rapid evolution of the data ecosystem. Organizations and data teams are constantly seeking ways to improve, whether through cost-effective solutions or by integrating new capabilities into their data operations. However, this pursuit presents new challenges when migrating workloads from one technology to another. As information technology and data strategies become more resilient against vendor lock-ins, they turn to technologies that enable seamless operation across platforms, avoiding the chaos of fully re-implementing data products. In essence, no data testing strategy needs to be rewritten or reformulated due to platform changes.
+An additional argument is related to the rapid evolution of the data ecosystem [@10.1145/3603706]. Organizations and data teams are constantly seeking ways to improve, whether through cost-effective solutions or by integrating new capabilities into their data operations. However, this pursuit presents new challenges when migrating workloads from one technology to another. As information technology and data strategies become more resilient against vendor lock-ins, they turn to technologies that enable seamless operation across platforms, avoiding the chaos of fully re-implementing data products. In essence, no data testing strategy needs to be rewritten or reformulated due to platform changes.
 
-A last argument is the need for such a quality tool, is the desire of moving quality procedures to the earliest phases of the data product development life-cycle. Whether in industry or academia, the reduction of time allocated for quality activities is unfortunately like a norm, due to the predominant focus on functional aspects. Enabling a declarative, intuitive and flexible programming interface to data quality, allows teams to embed quality into their development, adopting a mindset of building quality in, as opposed to testing quality out.
+One last argument in favor of using a quality tool is the need to integrate quality procedures into the early stages of data product development. Whether in industry or academia, there's often a tendency to prioritize functional aspects over quality, leading to less time being dedicated to quality activities. By providing a clear, easy-to-use, and adaptable programming interface for data quality, teams can incorporate quality into their development process, promoting a proactive approach of building quality in rather than relying solely on testing to ensure quality.
+
+
+# Methods
+
+`cuallee`  employs a heuristic-based approach to define quality rules for each dataset. This prevents the inadvertent duplication of quality predicates, thus reducing the likelihood of human error in defining rules with identical predicates. Several studies have been conducted on the efficiency of these rules, including auto-validation [@10.1145/3580305.3599776] and auto-definition using profilers.
 
 
 # Checks
-[@Binney:2008] is the reference for the checks
+
 
 Check | Description | DataType
  ------- | ----------- | ----
@@ -84,7 +91,7 @@ Check | Description | DataType
 `has_min_by` | A utilitary predicate for `min(col_a) == x for min(col_b)`  | _agnostic_
 `has_correlation` | Finds correlation between `0..1` on `corr(col_a, col_b)` | _numeric_
 `has_entropy` | Calculates the entropy of a column `entropy(col) == x` for classification problems | _numeric_
-`is_inside_interquartile_range` | Verifies column values reside inside limits of interquartile range `Q1 <= col <= Q3` used on anomalies.  | _numeric_
+`is_inside_iqr` | Verifies column values reside inside limits of interquartile range `Q1 <= col <= Q3` used on anomalies.  | _numeric_
 `is_in_millions` | `col >= 1e6` | _numeric_
 `is_in_billions` | `col >= 1e9` | _numeric_
 `is_t_minus_1` | For date fields confirms 1 day ago `t-1` | _date_
@@ -111,5 +118,12 @@ Check | Description | DataType
 
 # Controls
 This are the controls 
+
+
+Check | Description | DataType
+ ------- | ----------- | ----
+`completeness` | Zero `nulls` | _agnostic_
+`percentage_fill` | `% rows` not empty | _agnostic_
+`percentage_empty` | `% rows` empty | _agnostic_
 
 # References

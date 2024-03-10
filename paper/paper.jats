@@ -137,7 +137,7 @@ a Creative Commons Attribution 4.0 International License (CC BY
   <p>One last argument in favor of using a quality tool such as
   <monospace>cuallee</monospace> is the need to integrate quality
   procedures into the early stages of data product development. Whether
-  in industry or academia, there’s often a tendency to prioritize
+  in industry or academia, there is often a tendency to prioritize
   functional aspects over quality, leading to less time being dedicated
   to quality activities. By providing a clear, easy-to-use, and
   adaptable programming interface for data quality, teams can

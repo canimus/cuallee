@@ -158,6 +158,15 @@ a Creative Commons Attribution 4.0 International License (CC BY
 </sec>
 <sec id="checks">
   <title>Checks</title>
+  <p>In <monospace>cuallee</monospace>, checks serve as the fundamental
+  concept. These checks are implemented by <bold>rules</bold>, which
+  specify <italic>quality predicates</italic>. These predicates, when
+  aggregated, form the criteria used to evaluate the quality of a
+  dataset. Efforts to establish a universal quality metric
+  (<xref alt="Pleimling et al., 2022" rid="ref-10.1145U002F3529190.3529222" ref-type="bibr">Pleimling
+  et al., 2022</xref>) typically involve using statistics and combining
+  dimensions to derive a single reference value that encapsulates
+  overall quality attributes.</p>
   <table-wrap>
     <table>
       <colgroup>
@@ -477,35 +486,28 @@ a Creative Commons Attribution 4.0 International License (CC BY
           <monospace>dataframe</monospace> input for validation</td>
           <td><italic>agnostic</italic></td>
         </tr>
-      </tbody>
-    </table>
-  </table-wrap>
-</sec>
-<sec id="controls">
-  <title>Controls</title>
-  <p>This are the controls</p>
-  <table-wrap>
-    <table>
-      <thead>
         <tr>
-          <th>Check</th>
-          <th>Description</th>
-          <th>DataType</th>
+          <td><monospace>iso.iso_4217</monospace></td>
+          <td>currency compliant <monospace>ccy</monospace></td>
+          <td><italic>string</italic></td>
         </tr>
-      </thead>
-      <tbody>
         <tr>
-          <td><monospace>completeness</monospace></td>
-          <td>Zero <monospace>nulls</monospace></td>
+          <td><monospace>iso.iso_3166</monospace></td>
+          <td>country compliant <monospace>country</monospace></td>
+          <td><italic>string</italic></td>
+        </tr>
+        <tr>
+          <td><monospace>Control.completeness</monospace></td>
+          <td>Zero <monospace>nulls</monospace> all columns</td>
           <td><italic>agnostic</italic></td>
         </tr>
         <tr>
-          <td><monospace>percentage_fill</monospace></td>
+          <td><monospace>Control.percentage_fill</monospace></td>
           <td><monospace>% rows</monospace> not empty</td>
           <td><italic>agnostic</italic></td>
         </tr>
         <tr>
-          <td><monospace>percentage_empty</monospace></td>
+          <td><monospace>Control.percentage_empty</monospace></td>
           <td><monospace>% rows</monospace> empty</td>
           <td><italic>agnostic</italic></td>
         </tr>
@@ -601,6 +603,25 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <pub-id pub-id-type="doi">10.14778/3229863.3229867</pub-id>
       <fpage>1781</fpage>
       <lpage>1794</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-10.1145U002F3529190.3529222">
+    <element-citation publication-type="paper-conference">
+      <person-group person-group-type="author">
+        <name><surname>Pleimling</surname><given-names>Xavier</given-names></name>
+        <name><surname>Shah</surname><given-names>Vedant</given-names></name>
+        <name><surname>Lourentzou</surname><given-names>Ismini</given-names></name>
+      </person-group>
+      <article-title>[Data] quality lies in the eyes of the beholder</article-title>
+      <source>Proceedings of the 15th international conference on PErvasive technologies related to assistive environments</source>
+      <publisher-name>Association for Computing Machinery</publisher-name>
+      <publisher-loc>New York, NY, USA</publisher-loc>
+      <year iso-8601-date="2022">2022</year>
+      <isbn>9781450396318</isbn>
+      <uri>https://doi.org/10.1145/3529190.3529222</uri>
+      <pub-id pub-id-type="doi">10.1145/3529190.3529222</pub-id>
+      <fpage>118</fpage>
+      <lpage>124</lpage>
     </element-citation>
   </ref>
 </ref-list>

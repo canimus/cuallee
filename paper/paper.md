@@ -55,8 +55,9 @@ One last argument in favor of using a quality tool is the need to integrate qual
 `cuallee`  employs a heuristic-based approach to define quality rules for each dataset. This prevents the inadvertent duplication of quality predicates, thus reducing the likelihood of human error in defining rules with identical predicates. Several studies have been conducted on the efficiency of these rules, including auto-validation [@10.1145/3580305.3599776] and auto-definition using profilers.
 
 
-# Checks
 
+# Checks
+In `cuallee`, checks serve as the fundamental concept. These checks are implemented by __rules__, which specify _quality predicates_. These predicates, when aggregated, form the criteria used to evaluate the quality of a dataset. Efforts to establish a universal quality metric [@10.1145/3529190.3529222] typically involve using statistics and combining dimensions to derive a single reference value that encapsulates overall quality attributes. 
 
 Check | Description | DataType
  ------- | ----------- | ----
@@ -114,16 +115,10 @@ Check | Description | DataType
 `has_workflow` | Adjacency matrix validation on `3-column` graph, based on `group`, `event`, `order` columns.  | _agnostic_
 `satisfies` | An open `SQL expression` builder to construct custom checks | _agnostic_
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
-
-
-# Controls
-This are the controls 
-
-
-Check | Description | DataType
- ------- | ----------- | ----
-`completeness` | Zero `nulls` | _agnostic_
-`percentage_fill` | `% rows` not empty | _agnostic_
-`percentage_empty` | `% rows` empty | _agnostic_
+`iso.iso_4217` | currency compliant `ccy` | _string_
+`iso.iso_3166` | country compliant `country` | _string_
+`Control.completeness` | Zero `nulls` all columns| _agnostic_
+`Control.percentage_fill` | `% rows` not empty | _agnostic_
+`Control.percentage_empty` | `% rows` empty | _agnostic_
 
 # References

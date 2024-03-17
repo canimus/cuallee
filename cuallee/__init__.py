@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from toolz import compose, valfilter  # type: ignore
+from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
 __version__ = "0.9.0"
@@ -724,12 +725,12 @@ class Control:
         check = Check(CheckLevel.WARNING, name="Information", **kwargs)
         [check.is_complete(c) for c in dataframe.columns]
         [check.has_infogain(c) for c in dataframe.columns]
+        [check.is_legit(c) for c in dataframe.columns]
         return check.validate(dataframe)
 
     @staticmethod
     def percentage_fill(dataframe, **kwargs):
         """Control the percentage of values filled"""
-        from toolz.curried import map as map_curried
 
         compute = compose(
             map_curried(operator.attrgetter("pass_rate")),
@@ -743,3 +744,20 @@ class Control:
     def percentage_empty(dataframe, **kwargs):
         """Control the percentage of values empty"""
         return 1 - Control.percentage_fill(dataframe, **kwargs)
+
+
+    @staticmethod
+    def intelligence(dataframe, **kwargs) -> List[str]:
+        """Return worthy columns"""
+        complete_gain = compose(
+            list,
+            map_curried(lambda x: x.column),
+            operator.methodcaller("collect"),
+            operator.methodcaller("distinct"),
+            operator.methodcaller("select", "column"),
+            operator.methodcaller("where", "count == 3"),
+            operator.methodcaller("count"),
+            operator.methodcaller("groupby", "column"),
+            operator.methodcaller("where", "status == 'PASS'"),
+        )
+        return complete_gain(Control.information(dataframe))

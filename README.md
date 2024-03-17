@@ -339,4 +339,4 @@ Just preserve the copyright and license.
 
 
 > Made with ❤️ in Utrecht 🇳🇱<br/>
-> Maintained over ⌛ from Ljubljana in 🇸🇮
+> Maintained over ⌛ from Ljubljana 🇸🇮

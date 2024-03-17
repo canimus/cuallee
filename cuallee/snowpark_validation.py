@@ -227,7 +227,7 @@ class Compute:
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
-    
+
     def has_infogain(self, rule: Rule):
         """More than 1 different value"""
         predicate = None

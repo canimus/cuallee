@@ -745,7 +745,6 @@ class Control:
         """Control the percentage of values empty"""
         return 1 - Control.percentage_fill(dataframe, **kwargs)
 
-
     @staticmethod
     def intelligence(dataframe, **kwargs) -> List[str]:
         """Return worthy columns"""

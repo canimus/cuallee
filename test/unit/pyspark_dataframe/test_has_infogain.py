@@ -14,7 +14,7 @@ def test_positive(spark):
 
 
 def test_negative(spark):
-    df = spark.createDataFrame([(0,),(0,),(0,), (0,), (0,)], schema="id integer")
+    df = spark.createDataFrame([(0,), (0,), (0,), (0,), (0,)], schema="id integer")
     check = Check(CheckLevel.WARNING, "pytest")
     check.has_infogain("id")
     rs = check.validate(df)

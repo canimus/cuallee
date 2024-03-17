@@ -74,7 +74,7 @@ class Compute(ComputeEngine):
             ComputeMethod.SQL,
         )
         return self.compute_instruction
-    
+
     def has_infogain(self, rule: Rule):
         """More than 1 distinct value"""
         self.compute_instruction = ComputeInstruction(

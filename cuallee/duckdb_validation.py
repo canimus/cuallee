@@ -75,7 +75,7 @@ class Compute:
 
     def has_cardinality(self, rule: Rule) -> str:
         return f"COUNT(DISTINCT({rule.column})) = {rule.value}"
-    
+
     def has_infogain(self, rule: Rule) -> str:
         return f"COUNT(DISTINCT({rule.column})) > 1"
 

@@ -212,6 +212,7 @@ Check | Description | DataType
 `has_sum` | `Σ(col) == x` | _numeric_
 `has_percentile` | `%(col) == x` | _numeric_
 `has_cardinality` | `count(distinct(col)) == x` | _agnostic_
+`has_infogain` | `count(distinct(col)) > 1` | _agnostic_
 `has_max_by` | A utilitary predicate for `max(col_a) == x for max(col_b)`  | _agnostic_
 `has_min_by` | A utilitary predicate for `min(col_a) == x for min(col_b)`  | _agnostic_
 `has_correlation` | Finds correlation between `0..1` on `corr(col_a, col_b)` | _numeric_
@@ -241,11 +242,13 @@ Check | Description | DataType
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
 
 
-## Controls
+## Controls `pyspark`
 
 Check | Description | DataType
  ------- | ----------- | ----
 `completeness` | Zero `nulls` | _agnostic_
+`information` | Zero nulls `and` cardinality > 1 | _agnostic_
+`intelligence` | Zero nulls, zero empty strings and cardinality > 1 | _agnostic_
 `percentage_fill` | `% rows` not empty | _agnostic_
 `percentage_empty` | `% rows` empty | _agnostic_
 

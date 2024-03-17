@@ -148,7 +148,7 @@ class Rule:
         """Percentage of successful rows by this rule"""
         if self.violations <= rows:
             try:
-                self.pass_rate = round(1 - (self.violations / rows), 3)
+                self.pass_rate = 1 - (self.violations / rows)
             except ZeroDivisionError:
                 self.pass_rate = 1.0
         else:

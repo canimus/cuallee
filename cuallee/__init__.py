@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from toolz import compose, valfilter  # type: ignore
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.8.8"
+__version__ = "0.9.0"
 # Verify Libraries Available
 # ==========================
 try:
@@ -185,8 +185,8 @@ class ComputeEngine(Protocol):
 class Check:
     def __init__(
         self,
-        level: Union[CheckLevel, int],
-        name: str,
+        level: Union[CheckLevel, int] = 0,
+        name: str = "cuallee.check",
         *,
         execution_date: datetime = datetime.now(timezone.utc),
         table_name: str = None,

@@ -45,7 +45,6 @@ except (ModuleNotFoundError, ImportError):
     logger.debug("KO: BigQuery")
 
 
-
 class CheckLevel(enum.Enum):
     WARNING = 0
     ERROR = 1
@@ -190,7 +189,7 @@ class Check:
         *,
         execution_date: datetime = datetime.now(timezone.utc),
         table_name: str = None,
-        session: Any = None
+        session: Any = None,
     ):
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
@@ -209,6 +208,7 @@ class Check:
         self.table_name = table_name
         try:
             from .iso.checks import ISO
+
             self.iso = ISO(self)
         except (ModuleNotFoundError, ImportError):
             logger.error("ISO module requires requests")
@@ -552,6 +552,20 @@ class Check:
         Rule("has_cardinality", column, value, CheckDataType.AGNOSTIC) >> self._rule
         return self
 
+    def has_infogain(self, column: str, pct: float = 1.0):
+        """Validate cardinality > 1"""
+        (
+            Rule(
+                method="has_infogain",
+                column=column,
+                value="N/A",
+                data_type=CheckDataType.AGNOSTIC,
+                coverage=pct,
+            )
+            >> self._rule
+        )
+        return self
+
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
         """Validation for entropy calculation on continuous values"""
         (
@@ -705,14 +719,23 @@ class Control:
         return check.validate(dataframe)
 
     @staticmethod
+    def information(dataframe, **kwargs):
+        """Information gain"""
+        check = Check(CheckLevel.WARNING, name="Information", **kwargs)
+        [check.is_complete(c) for c in dataframe.columns]
+        [check.has_infogain(c) for c in dataframe.columns]
+        return check.validate(dataframe)
+
+    @staticmethod
     def percentage_fill(dataframe, **kwargs):
         """Control the percentage of values filled"""
         from toolz.curried import map as map_curried
+
         compute = compose(
             map_curried(operator.attrgetter("pass_rate")),
             operator.methodcaller("collect"),
-            operator.methodcaller("select", "pass_rate")
-            )
+            operator.methodcaller("select", "pass_rate"),
+        )
         result = list(compute(Control.completeness(dataframe, **kwargs)))
         return sum(result) / len(result)
 

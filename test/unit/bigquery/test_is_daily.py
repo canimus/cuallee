@@ -12,7 +12,6 @@ def test_positive():
     check.is_daily("trip_start_timestamp")
     rs = check.validate(df)
     assert rs.violations[1] > 1
-    
 
 
 def test_negative():
@@ -36,7 +35,7 @@ def test_parameters(rule_value):
     check.is_daily("trip_start_timestamp", rule_value)
     rs = check.validate(df)
     assert rs.status.str.match("FAIL")[1]
-    assert rs.violations[1] > 0    
+    assert rs.violations[1] > 0
 
 
 def test_coverage():

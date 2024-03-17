@@ -71,6 +71,9 @@ class Compute:
     def has_cardinality(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].nunique() == rule.value
 
+    def has_infogain(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
+        return dataframe.loc[:, rule.column].nunique() > 1
+
     def is_between(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].between(*rule.value).astype(int).sum()
 

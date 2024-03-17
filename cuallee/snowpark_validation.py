@@ -790,7 +790,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     elif check.session:
         snowpark = check.session
     else:
-        
+
         # Create SnowparkSession using account info
         SNOWFLAKE_ENVIRONMENT = {
             "account": "SF_ACCOUNT",
@@ -810,7 +810,6 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         ), "SnowFlake Environment variables not available in check configuration"
 
         snowpark = Session.builder.configs(check.config).create()
-
 
     computation_basis = snowpark.createDataFrame(
         [

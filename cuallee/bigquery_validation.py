@@ -74,6 +74,15 @@ class Compute(ComputeEngine):
             ComputeMethod.SQL,
         )
         return self.compute_instruction
+    
+    def has_infogain(self, rule: Rule):
+        """More than 1 distinct value"""
+        self.compute_instruction = ComputeInstruction(
+            None,
+            f"COUNT(DISTINCT({rule.column})) > 1",
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
 
     def are_unique(self, rule: Rule):
         """Validation for unique values in a group of columns"""

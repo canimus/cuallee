@@ -227,6 +227,16 @@ class Compute:
             ComputeMethod.SELECT,
         )
         return self.compute_instruction
+    
+    def has_infogain(self, rule: Rule):
+        """More than 1 different value"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            operator.gt(F.count_distinct(F.col(f"`{rule.column}`")), 1),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
 
     def is_between(self, rule: Rule):
         """Validation of a column between a range"""

@@ -15,7 +15,7 @@ def test_publish(spark, check):
             "https://localhost:5000/msgpack",
             data=compress(check),
             headers=CUALLEE_CLOUD_HEADERS,
-            verify=False
+            verify=False,
         )
 
 

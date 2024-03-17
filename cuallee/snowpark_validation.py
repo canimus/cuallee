@@ -228,6 +228,16 @@ class Compute:
         )
         return self.compute_instruction
 
+    def has_infogain(self, rule: Rule):
+        """More than 1 different value"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            operator.gt(F.count_distinct(F.col(f"`{rule.column}`")), 1),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
+
     def is_between(self, rule: Rule):
         """Validation of a column between a range"""
         predicate = F.col(rule.column).between(*rule.value)
@@ -790,7 +800,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     elif check.session:
         snowpark = check.session
     else:
-        
+
         # Create SnowparkSession using account info
         SNOWFLAKE_ENVIRONMENT = {
             "account": "SF_ACCOUNT",
@@ -810,7 +820,6 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         ), "SnowFlake Environment variables not available in check configuration"
 
         snowpark = Session.builder.configs(check.config).create()
-
 
     computation_basis = snowpark.createDataFrame(
         [

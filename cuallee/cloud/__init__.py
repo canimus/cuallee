@@ -2,6 +2,7 @@ import os
 import logging
 import requests
 from requests.exceptions import ConnectionError
+
 logger = logging.getLogger("cuallee")
 CUALLEE_CLOUD_HEADERS = {
     "Content-Type": "application/octet-stream",
@@ -12,6 +13,7 @@ try:
     import msgpack
 except (ModuleNotFoundError, ImportError):
     logger.error("Module msgpack missing for cloud operations")
+
 
 def standardize(check):
     return {

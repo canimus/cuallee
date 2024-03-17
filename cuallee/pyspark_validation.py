@@ -206,6 +206,16 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
+    def has_infogain(self, rule: Rule):
+        """Validation column with more than 1 value"""
+        predicate = None
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            operator.gt(F.count_distinct(F.col(f"`{rule.column}`")), 1),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
+
     def is_between(self, rule: Rule):
         """Validation of a column between a range"""
         predicate = F.col(f"`{rule.column}`").between(*rule.value).cast("integer")
@@ -771,7 +781,8 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
                 float(rule.pass_rate),
                 float(rule.coverage),
                 rule.status,
-            ) for rule in check.rules
+            )
+            for rule in check.rules
         ],
         schema="id int, timestamp string, check string, level string, column string, rule string, value string, rows int, violations int, pass_rate double, pass_threshold double, status string",
     )

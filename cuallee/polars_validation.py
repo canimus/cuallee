@@ -149,6 +149,12 @@ class Compute:
             dataframe.select(pl.col(rule.column).n_unique() == rule.value).to_series()
         )
 
+    def has_infogain(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """More than 1 value in column"""
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).n_unique() > 1).to_series()
+        )
+
     def is_between(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate value inclusion on threshold boundaries"""
         low, high = rule.value

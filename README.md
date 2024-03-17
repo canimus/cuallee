@@ -316,10 +316,9 @@ Define once, `run everywhere`
 - ~~[x] DuckDB Tables~~
 - ~~[x] BigQuery Client~~
 - ~~[x] Polars DataFrame~~
+- ~~[*] Dagster Integration~~
+- [-] PDF Report
 - [ ] Metadata check
-- [ ] OpenMetadata Integration
-- [ ] Dagster Integration
-- [ ] PDF Report
 - [ ] Help us in a discussion?
 
 

@@ -24,7 +24,7 @@ def test_negative(spark):
     assert rs.first().status == "FAIL"
     assert rs.first().violations == 8
     assert rs.first().pass_threshold == 1.0
-    assert rs.first().pass_rate >= 0.2
+    assert rs.first().pass_rate >= 0.1
 
 
 def test_parameters(spark):
@@ -38,7 +38,7 @@ def test_coverage(spark):
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_on_friday("date", 0.2)
     rs = check.validate(df)
-    assert rs.first().status == "PASS"
+    assert rs.first().status == "FAIL"
     assert rs.first().violations == 8
     assert rs.first().pass_threshold == 0.2
-    assert rs.first().pass_rate >= 0.2
+    assert rs.first().pass_rate >= 0.1

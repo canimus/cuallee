@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.9.0"
+version = "0.9.1"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
@@ -29,6 +29,9 @@ dev = [
 ]
 pyspark = [
   "pyspark>=3.4.0"
+]
+pyspark_connect = [
+  "pyspark[connect]"
 ]
 snowpark = [
   "snowflake-snowpark-python==1.11.1",

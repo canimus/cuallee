@@ -38,7 +38,7 @@ class Compute:
         return Compute._result(
             dataframe.select(
                 [pl.col(c).is_not_null().cast(pl.Int8).sum() for c in rule.column]
-            ).sum(axis=1)
+            ).sum_horizontal()
             / len(rule.column)
         )
 
@@ -53,7 +53,7 @@ class Compute:
         return Compute._result(
             dataframe.select(
                 [pl.col(c).is_unique().cast(pl.Int8).sum() for c in rule.column]
-            ).sum(axis=1)
+            ).sum_horizontal()
             / len(rule.column)
         )
 

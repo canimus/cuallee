@@ -12,7 +12,7 @@ from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.9.0"
+__version__ = "0.9.1"
 # Verify Libraries Available
 # ==========================
 try:
@@ -29,6 +29,11 @@ try:
     from pyspark.sql import DataFrame as pyspark_dataframe
 except (ModuleNotFoundError, ImportError):
     logger.debug("KO: PySpark")
+
+try:
+    from pyspark.sql.connect.dataframe import DataFrame as pyspark_connect_dataframe
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: PySpark Connect")
 
 try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
@@ -671,6 +676,11 @@ class Check:
         # When dataframe is PySpark DataFrame API
         if "pyspark_dataframe" in globals() and isinstance(
             dataframe, pyspark_dataframe
+        ):
+            self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
+
+        elif "pyspark_connect_dataframe" in globals() and isinstance(
+            dataframe, pyspark_connect_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
 

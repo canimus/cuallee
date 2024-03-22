@@ -9,6 +9,7 @@ def test_has_completeness():
 def test_has_information():
     assert hasattr(Control, "information")
 
+
 def test_has_information():
     assert hasattr(Control, "intelligence")
 
@@ -27,6 +28,7 @@ def test_emptyness(spark):
     df = spark.range(10)
     assert Control.percentage_empty(df) == 0
 
+
 def test_intelligence_result(spark):
-    df = spark.createDataFrame([("0",),("1",),("2",)], schema="id string")
+    df = spark.createDataFrame([("0",), ("1",), ("2",)], schema="id string")
     assert Control.intelligence(df) == ["id"]

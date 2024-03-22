@@ -15,6 +15,18 @@ from cuallee import Check, ComputeEngine, Rule
 
 import os
 
+try:
+    from pyspark.sql.connect.dataframe import DataFrame as SparkConnectDataFrame
+    from pyspark.sql.connect.session import SparkSession as SparkConnectSession
+
+    global spark_connect
+    if "SPARK_REMOTE" in os.environ:
+        spark_connect = SparkConnectSession.builder.remote(
+            os.getenv("SPARK_REMOTE")
+        ).getOrCreate()
+except (ModuleNotFoundError, ImportError):
+    pass
+
 
 class ComputeMethod(enum.Enum):
     OBSERVE = "OBSERVE"
@@ -731,8 +743,12 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     """Compute all rules in this check for specific data frame"""
     from pyspark.sql.session import SparkSession
 
+    if "spark_connect" in globals():
+        spark = globals()["spark_connect"]
     # Check SparkSession is available in environment through globals
-    if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
+    elif spark_in_session := valfilter(
+        lambda x: isinstance(x, SparkSession), globals()
+    ):
         # Obtain the first spark session available in the globals
         spark = first(spark_in_session.values())
     else:
@@ -741,7 +757,9 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
 
     # Compute the expression
     computed_expressions = compute(check._rule)
-    if int(spark.version.replace(".", "")[:3]) < 330:
+    if (int(spark.version.replace(".", "")[:3]) < 330) or (
+        "connect" in str(type(spark))
+    ):
         computed_expressions = _replace_observe_compute(computed_expressions)
 
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)

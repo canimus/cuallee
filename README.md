@@ -32,7 +32,7 @@ When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underne
 Provider | API | Versions
  ------- | ----------- | ------
 ![snowflake](logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `1.11.1`, `1.4.0`
-![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` | `3.4.0`, `3.3.x`, `3.2.x`
+![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` & `spark-connect` |`3.5.x`, `3.4.0`, `3.3.x`, `3.2.x`
 ![bigquery](logos/bigquery.png?raw=true "BigQuery Client API")| `bigquery` | `3.4.1`
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.2`, `1.5.x`, `1.4.x`
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.9.2`,~~`0.8.0`~~, ~~`0.7.1`~~
@@ -284,6 +284,14 @@ In order to establish a connection to your SnowFlake account `cuallee` relies in
 - `SF_DATABASE`
 - `SF_SCHEMA`
 
+## Spark Connect
+Just add the environment variable `SPARK_REMOTE` to your remote session, then `cuallee` will connect using
+```python
+spark_connect = SparkSession.builder.remote(os.getenv("SPARK_REMOTE")).getOrCreate()
+```
+and convert all checks to `select` as opposed to `Observation` API compute instructions.
+
+
 ## Databricks Connection
 By default `cuallee` will search for a SparkSession available in the `globals` so there is literally no need to ~~`SparkSession.builder`~~. When working in a local environment it will automatically search for an available session, or start one.
 
@@ -308,6 +316,7 @@ check.validate(conn)
 
 `100%` data frame agnostic implementation of data quality checks.
 Define once, `run everywhere`
+- ~~[x] PySpark 3.5.0~~
 - ~~[x] PySpark 3.4.0~~
 - ~~[x] PySpark 3.3.0~~
 - ~~[x] PySpark 3.2.x~~
@@ -317,6 +326,7 @@ Define once, `run everywhere`
 - ~~[x] BigQuery Client~~
 - ~~[x] Polars DataFrame~~
 - ~~[*] Dagster Integration~~
+- ~~[x] Spark Connect~~
 - [-] PDF Report
 - [ ] Metadata check
 - [ ] Help us in a discussion?

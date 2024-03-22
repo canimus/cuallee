@@ -31,6 +31,11 @@ except (ModuleNotFoundError, ImportError):
     logger.debug("KO: PySpark")
 
 try:
+    from pyspark.sql.connect.dataframe import DataFrame as pyspark_connect_dataframe
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: PySpark Connect")
+
+try:
     from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
 except (ModuleNotFoundError, ImportError):
     logger.debug("KO: Snowpark")
@@ -671,6 +676,12 @@ class Check:
         # When dataframe is PySpark DataFrame API
         if "pyspark_dataframe" in globals() and isinstance(
             dataframe, pyspark_dataframe
+        ):
+            self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
+
+        # When dataframe is Spark Connect DataFrame API
+        elif "pyspark_connect_dataframe" in globals() and isinstance(
+            dataframe, pyspark_connect_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
 

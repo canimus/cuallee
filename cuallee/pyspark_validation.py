@@ -9,6 +9,7 @@ import pyspark.sql.types as T
 from pyspark.sql import Window as W
 from pyspark.sql import Column, DataFrame, Row
 from toolz import first, valfilter  # type: ignore
+from pyspark.sql.connect.dataframe import DataFrame as pyspark_connect_dataframe
 
 import cuallee.utils as cuallee_utils
 from cuallee import Check, ComputeEngine, Rule
@@ -727,7 +728,7 @@ def compute(rules: Dict[str, Rule]) -> Dict:
     return {k: operator.methodcaller(v.method, v)(Compute()) for k, v in rules.items()}
 
 
-def summary(check: Check, dataframe: DataFrame) -> DataFrame:
+def summary(check: Check, dataframe: Union[DataFrame, pyspark_connect_dataframe]) -> Union[DataFrame, pyspark_connect_dataframe]:
     """Compute all rules in this check for specific data frame"""
     from pyspark.sql.session import SparkSession
 
@@ -735,13 +736,35 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
         # Obtain the first spark session available in the globals
         spark = first(spark_in_session.values())
+
+    # Check if pyspark connect is being used
+    elif isinstance(dataframe, pyspark_connect_dataframe) and os.environ.get('SPARK_CONNECT_MODE_ENABLED') == "1":
+
+        # Determine the Spark remote URL from environment variables, prioritizing CUALLEE_SPARK_REMOTE
+        spark_remote_url = os.environ.get("CUALLEE_SPARK_REMOTE") or os.environ.get("SPARK_REMOTE")
+
+        if spark_remote_url:
+
+            try:
+                spark = SparkSession.builder.remote(spark_remote_url).getOrCreate()
+            except Exception as error:
+                # Log or handle the exception as needed.
+                print(f"Failed to connect to remote SparkSession at {spark_remote_url}: {error}")
+
+        else:
+            raise ValueError("No Spark remote URL specified in environment variables. Please set `CUALLEE_SPARK_REMOTE` or `SPARK_REMOTE`.")
+
     else:
         # TODO: Check should have options for compute engine
         spark = SparkSession.builder.getOrCreate()
 
     # Compute the expression
     computed_expressions = compute(check._rule)
-    if int(spark.version.replace(".", "")[:3]) < 330:
+
+    # Check if Spark version is below 3.3.0 or if a pyspark_connect_dataframe is used
+    if int(spark.version.replace(".", "")[:3]) < 330 or isinstance(dataframe, pyspark_connect_dataframe):
+
+        # If Spark version is older than 3.3.0 or dataframe is of a pyspark_connect_dataframe type, use _replace_observe_compute
         computed_expressions = _replace_observe_compute(computed_expressions)
 
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)

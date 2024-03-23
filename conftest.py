@@ -23,6 +23,7 @@ except:
 @pytest.fixture(scope="session")
 def spark():
     try:
+        os.environ["SPARK_REMOTE"] = "sc://localhost:15002"
         logger = logging.getLogger("py4j")
         logger.setLevel(logging.ERROR)
         spark_session = SparkSession.builder.config(
@@ -96,7 +97,7 @@ def bq_client():
             json.dump(json.loads(os.getenv("GOOGLE_KEY")), writer)
 
         credentials = service_account.Credentials.from_service_account_file("key.json")
-        
+
     try:
         client = bigquery.Client(project="cuallee-bigquery-386709", credentials=credentials)
         return client

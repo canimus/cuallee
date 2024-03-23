@@ -49,7 +49,7 @@ def test_coverage(spark):
     assert rs.first().pass_threshold == 0.9
     assert rs.first().pass_rate >= 0.9
 
-
+# FIX THIS
 def test_col_name_error(spark):
     df = spark.range(10).withColumn("id2", F.col("id") * 100)
     check = Check(CheckLevel.WARNING, "check_predicate_on_unknown_columns")

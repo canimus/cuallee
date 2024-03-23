@@ -12,7 +12,7 @@ from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.9.1"
+__version__ = "0.9.2"
 # Verify Libraries Available
 # ==========================
 try:

@@ -4,7 +4,9 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
 from pyspark.sql import DataFrame, SparkSession
-from typing import Tuple, Dict, Set, List
+from pyspark.sql.connect.dataframe import DataFrame as pyspark_connect_dataframe
+from pyspark.sql.utils import is_remote
+from typing import Dict, Set
 from toolz import valfilter  # type: ignore
 
 from cuallee import Check, CheckLevel
@@ -148,7 +150,7 @@ def test_validate_columns(spark):
     )
     rs = PSV.validate_data_types(check.rules, df)
     assert isinstance(rs, bool)
-    assert rs == True
+    assert rs
     check.is_complete("id3")
     with pytest.raises(AssertionError, match="are not present in dataframe"):
         PSV.validate_data_types(check.rules, df)
@@ -167,7 +169,7 @@ def test_numeric_column_validation(spark):
     )
     rs = PSV.validate_data_types(check.rules, df)
     assert isinstance(rs, bool)
-    assert rs == True
+    assert rs
     check.is_greater_than("desc", 2)
     with pytest.raises(AssertionError, match="are not numeric"):
         PSV.validate_data_types(check.rules, df)
@@ -240,9 +242,11 @@ minversion = pytest.mark.skipif(
 )
 
 
-# FIX THIS
 @minversion
 def test_observe_method_return_tuple(spark):
+    if is_remote():
+        pytest.skip("Spark Connect does not support Observation yes")
+
     df = spark.range(10)
     check = (
         Check(CheckLevel.WARNING, "test_observe_method")
@@ -255,13 +259,16 @@ def test_observe_method_return_tuple(spark):
     assert row == df.count()
     assert len(observe) == 1
 
-# FIX THIS
 def test_observe_no_compute(spark):
     df = spark.range(10)
     rs = (
         Check(CheckLevel.WARNING, "test_empty_observation").is_unique("id").validate(df)
     )
-    assert isinstance(rs, DataFrame)
+
+    if is_remote():
+        assert isinstance(rs, pyspark_connect_dataframe)
+    else:
+        assert isinstance(rs, DataFrame)
 
 
 def test_compute_select_method(spark):
@@ -281,16 +288,21 @@ def test_compute_transform_method(spark):
     assert isinstance(transform, Dict)
     assert len(transform) == 1
 
-# FIX THIS
 def test_compute_summary_return_dataframe(spark):
     df = spark.range(10)
     check = Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id")
     rs = PSV.summary(check, df)
-    assert isinstance(rs, DataFrame)
 
-# FIX THIS
+    if is_remote():
+        assert isinstance(rs, pyspark_connect_dataframe)
+    else:
+        assert isinstance(rs, DataFrame)
+
 @patch.object(SparkSession, "version", "3.2.0")
 def test_lower_spark_version(spark):
+    if is_remote():
+        pytest.skip("This test is not applicable for Spark Connect")
+
     df = spark.range(10)
     check = Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id")
     rs = PSV.summary(check, df)

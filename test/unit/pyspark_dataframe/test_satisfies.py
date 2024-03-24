@@ -3,6 +3,8 @@ import pyspark.sql.functions as F
 
 # from pyspark.sql.utils import AnalysisException
 from pyspark.errors.exceptions.captured import AnalysisException
+from pyspark.errors.exceptions.connect import AnalysisException as pyspark_connect_analysis_exception
+from pyspark.sql.utils import is_remote
 from cuallee import Check, CheckLevel
 
 
@@ -49,17 +51,23 @@ def test_coverage(spark):
     assert rs.first().pass_threshold == 0.9
     assert rs.first().pass_rate >= 0.9
 
-# FIX THIS
 def test_col_name_error(spark):
     df = spark.range(10).withColumn("id2", F.col("id") * 100)
     check = Check(CheckLevel.WARNING, "check_predicate_on_unknown_columns")
     check.satisfies(["id", "id2"], "(id * id3) > 10", 0.9)
-    with pytest.raises(
-        AnalysisException,
-        match=r"A column or function parameter with name `id3` cannot be resolved",
-    ):
-        check.validate(df)
 
+    if is_remote():
+        with pytest.raises(
+            pyspark_connect_analysis_exception,
+            match=r"A column or function parameter with name `id3` cannot be resolved",):
+            check.validate(df)
+
+    else:
+        with pytest.raises(
+            AnalysisException,
+            match=r"A column or function parameter with name `id3` cannot be resolved",
+        ):
+            check.validate(df)
 
 def test_unknown_columns(spark):
     df = spark.range(10).withColumn("id2", F.col("id") * 100)

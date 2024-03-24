@@ -731,14 +731,18 @@ def compute(rules: Dict[str, Rule]) -> Dict:
 def summary(check: Check, dataframe: Union[DataFrame, pyspark_connect_dataframe]) -> Union[DataFrame, pyspark_connect_dataframe]:
     """Compute all rules in this check for specific data frame"""
     from pyspark.sql.session import SparkSession
+    from pyspark.sql.utils import is_remote
+
+    # Check if Spark Connect is being used
+    is_spark_connect = isinstance(dataframe, pyspark_connect_dataframe) and is_remote()
 
     # Check SparkSession is available in environment through globals
     if spark_in_session := valfilter(lambda x: isinstance(x, SparkSession), globals()):
         # Obtain the first spark session available in the globals
         spark = first(spark_in_session.values())
 
-    # Check if pyspark connect is being used
-    elif isinstance(dataframe, pyspark_connect_dataframe) and os.environ.get('SPARK_CONNECT_MODE_ENABLED') == "1":
+    # Check if Spark Connect is being used
+    elif is_spark_connect:
 
         # Determine the Spark remote URL from environment variables, prioritizing CUALLEE_SPARK_REMOTE
         spark_remote_url = os.environ.get("CUALLEE_SPARK_REMOTE") or os.environ.get("SPARK_REMOTE")
@@ -762,7 +766,7 @@ def summary(check: Check, dataframe: Union[DataFrame, pyspark_connect_dataframe]
     computed_expressions = compute(check._rule)
 
     # Check if Spark version is below 3.3.0 or if a pyspark_connect_dataframe is used
-    if int(spark.version.replace(".", "")[:3]) < 330 or isinstance(dataframe, pyspark_connect_dataframe):
+    if int(spark.version.replace(".", "")[:3]) < 330 or is_spark_connect:
 
         # If Spark version is older than 3.3.0 or dataframe is of a pyspark_connect_dataframe type, use _replace_observe_compute
         computed_expressions = _replace_observe_compute(computed_expressions)

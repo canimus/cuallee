@@ -28,7 +28,7 @@ class Compute:
     def are_unique(self, rule: Rule, dataframe: daft.DataFrame) -> int:
         # TODO: Find a way to do this in daft and not pandas
         perdicate = [ daft.col(col_name) for col_name in rule.column]
-        return dataframe.select(perdicate).to_pandas().nunique().sum() / len(rule.column)
+        return dataframe.select(*perdicate).to_pandas().nunique().sum() / len(rule.column)
 
     def is_greater_than(self, rule: Rule, dataframe: daft.DataFrame) -> int:
         perdicate = (daft.col(rule.column) > rule.value).cast(daft.DataType.int64())

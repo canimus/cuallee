@@ -1,0 +1,36 @@
+import daft
+import pytest
+import numpy as np
+import pandas as pd
+
+from cuallee import Check
+
+
+def test_positive(check: Check):
+    check.is_greater_than("id", -1)
+    df = daft.from_pydict({"id": np.arange(10)})
+    result = check.validate(df)
+    assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
+
+
+def test_negative(check: Check):
+    check.is_greater_than("id", 5)
+    df = daft.from_pydict({"id": np.arange(10)})
+    result = check.validate(df)
+    assert result.select(daft.col("status").str.match("FAIL")).to_pandas().status.all()
+
+
+@pytest.mark.parametrize("extra_value", [-10, -100010.10001], ids=("int", "float"))
+def test_values(check: Check, extra_value):
+    check.is_greater_than("id", extra_value)
+    df = daft.from_pydict({"id": [1, 2, 3, 4]})
+    result = check.validate(df)
+    assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
+
+
+def test_coverage(check: Check):
+    check.is_greater_than("id", 4, 0.5)
+    df = daft.from_pydict({"id": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]})
+    result = check.validate(df)
+    assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
+    assert result.select(daft.col("pass_rate").max() == 0.5).to_pandas().pass_rate.all()

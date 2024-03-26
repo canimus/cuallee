@@ -87,18 +87,23 @@ class Compute:
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_contained_in(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-
         rule_value = list(rule.value) if isinstance(rule.value, tuple) else rule.value
-
         perdicate = daft.col(rule.column).is_in(rule_value).cast(daft.DataType.int64()).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def not_contained_in(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-
         rule_value = list(rule.value) if isinstance(rule.value, tuple) else rule.value
-
         perdicate = daft.col(rule.column).is_in(rule_value).__ne__(True).cast(daft.DataType.int64()).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def has_percentile(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        # TODO: Find a way to do this in daft and not pandas
+        perdicate = daft.col(rule.column)
+        return (
+            np.percentile(dataframe.select(perdicate).to_pandas().values, rule.settings["percentile"] * 100)  # type: ignore
+            == rule.value  # type: ignore
+        )
+
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""

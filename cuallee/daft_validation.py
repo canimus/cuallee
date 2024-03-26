@@ -86,7 +86,19 @@ class Compute:
         perdicate = ( ( daft.col(rule.column) >= min(rule.value) ).__and__( daft.col(rule.column) <= max(rule.value) ) ).cast(daft.DataType.int64()).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
+    def is_contained_in(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
 
+        rule_value = list(rule.value) if isinstance(rule.value, tuple) else rule.value
+
+        perdicate = daft.col(rule.column).is_in(rule_value).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def not_contained_in(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+
+        rule_value = list(rule.value) if isinstance(rule.value, tuple) else rule.value
+
+        perdicate = daft.col(rule.column).is_in(rule_value).__ne__(True).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""

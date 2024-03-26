@@ -174,8 +174,9 @@ class Compute:
         raise NotImplementedError
 
     def is_inside_interquartile_range(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, complex]:
-        # TODO: Implement this later
-        raise NotImplementedError
+        lower, upper = dataframe.select(daft.col(rule.column)).to_pandas().quantile(rule.value).values
+        perdicate = ( ( daft.col(rule.column) >= lower ).__and__( daft.col(rule.column) <= upper ) ).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_workflow(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         """Compliance with adjacency matrix"""

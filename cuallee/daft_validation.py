@@ -114,6 +114,13 @@ class Compute:
         predicate_2 = daft.col("id2").__eq__(daft.col("id2").min())
         return dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0] == rule.value
 
+    def has_correlation(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        predicate = [daft.col(rule.column[0]), daft.col(rule.column[1])]
+        return (
+            dataframe.select(*predicate).to_pandas().corr().fillna(0).iloc[0, 1] == rule.value
+        )
+
+
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""

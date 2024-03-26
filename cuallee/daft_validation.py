@@ -34,6 +34,21 @@ class Compute:
         perdicate = (daft.col(rule.column) > rule.value).cast(daft.DataType.int64()).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
+    def is_greater_or_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = (daft.col(rule.column) >= rule.value).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_less_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = (daft.col(rule.column) < rule.value).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_less_or_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = (daft.col(rule.column) <= rule.value).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = (daft.col(rule.column) == rule.value).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""

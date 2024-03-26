@@ -165,6 +165,25 @@ class Compute:
         perdicate = daft.col(rule.column).dt.day_of_week().__eq__(6).cast(daft.DataType.int64()).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
+    def is_on_schedule(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = ( ( daft.col(rule.column).dt.hour() >= min(rule.value) ).__and__( daft.col(rule.column).dt.hour() <= max(rule.value) ) ).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_daily(self, rule: Rule, dataframe: daft.DataFrame) -> complex:
+        # TODO: Implement this later
+        raise NotImplementedError
+
+    def is_inside_interquartile_range(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, complex]:
+        # TODO: Implement this later
+        raise NotImplementedError
+
+    def has_workflow(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        """Compliance with adjacency matrix"""
+        # TODO: Implement this later
+        raise NotImplementedError
+
+
+
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""
     return True

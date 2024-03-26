@@ -16,21 +16,21 @@ class Compute:
         perdicate = daft.col(rule.column).not_null().cast(daft.DataType.int64()).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def are_complete(self, rule: Rule, dataframe: daft.DataFrame) -> int:
+    def are_complete(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         col_names = rule.column
         perdicate = [ daft.col(col_name).not_null().cast(daft.DataType.int64()).sum() for col_name in col_names]
         return dataframe.select(*perdicate).to_pandas().astype(int).sum().sum() / len(col_names)
 
-    def is_unique(self, rule: Rule, dataframe: daft.DataFrame) -> int:
+    def is_unique(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column)
         return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0]
 
-    def are_unique(self, rule: Rule, dataframe: daft.DataFrame) -> int:
+    def are_unique(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         # TODO: Find a way to do this in daft and not pandas
         perdicate = [ daft.col(col_name) for col_name in rule.column]
         return dataframe.select(*perdicate).to_pandas().nunique().sum() / len(rule.column)
 
-    def is_greater_than(self, rule: Rule, dataframe: daft.DataFrame) -> int:
+    def is_greater_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = (daft.col(rule.column) > rule.value).cast(daft.DataType.int64()).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
@@ -81,6 +81,12 @@ class Compute:
     def has_infogain(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column)
         return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0] > 1
+
+    def is_between(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = ( ( daft.col(rule.column) >= min(rule.value) ).__and__( daft.col(rule.column) <= max(rule.value) ) ).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""

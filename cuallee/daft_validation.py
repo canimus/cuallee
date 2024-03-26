@@ -120,7 +120,50 @@ class Compute:
             dataframe.select(*predicate).to_pandas().corr().fillna(0).iloc[0, 1] == rule.value
         )
 
+    def satisfies(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        # TODO: Implement this later
+        # Note: Add this moment `daft.DataFrame.where` just accepts Expression not a string
+        raise NotImplementedError
 
+    def has_entropy(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        # TODO: Implement this later
+        raise NotImplementedError
+
+    def is_on_weekday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().is_in([0, 1, 2, 3, 4]).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_weekend(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().is_in([5, 6]).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_monday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(0).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_tuesday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(1).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_wednesday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(2).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_thursday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(3).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_friday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(4).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_saturday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(5).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
+
+    def is_on_sunday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(6).cast(daft.DataType.int64()).sum()
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""

@@ -59,7 +59,7 @@ class Compute:
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
 
     def has_max(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).max()
+        perdicate = daft.col(rule.column).min()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
 
     def has_std(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:

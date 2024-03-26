@@ -74,6 +74,14 @@ class Compute:
         perdicate = daft.col(rule.column).sum()
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
 
+    def has_cardinality(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column)
+        return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0] == rule.value
+
+    def has_infogain(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        perdicate = daft.col(rule.column)
+        return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0] > 1
+
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""
     return True

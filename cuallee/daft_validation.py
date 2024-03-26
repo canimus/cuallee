@@ -104,6 +104,16 @@ class Compute:
             == rule.value  # type: ignore
         )
 
+    def has_max_by(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        predicate_1 = daft.col("id")
+        predicate_2 = daft.col("id2").__eq__(daft.col("id2").max())
+        return dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0] == rule.value
+
+    def has_min_by(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        predicate_1 = daft.col("id")
+        predicate_2 = daft.col("id2").__eq__(daft.col("id2").min())
+        return dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0] == rule.value
+
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""

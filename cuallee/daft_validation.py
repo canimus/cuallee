@@ -10,6 +10,9 @@ from typing import Union
 from numbers import Number
 from typing import Dict, List
 
+from itertools import groupby
+from operator import itemgetter
+
 from cuallee import Check, Rule
 
 
@@ -240,9 +243,51 @@ class Compute:
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_workflow(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        # TODO: Implement this later
-        raise NotImplementedError
 
+        next_event = "CUALLEE_NEXT_EVENT"
+        cuallee_edge = "CUALLEE_EDGE"
+        group, event, order = rule.column
+
+        edges = [f"({a}, {b})" for a, b in rule.value]
+
+        @daft.udf(return_dtype=daft.DataType.string())
+        def create_edge(x: daft.Series, y: daft.Series):
+            return [ f"({a}, {b})" for a, b in zip(x.to_pylist(), y.to_pylist())]
+
+        @daft.udf(return_dtype=daft.DataType.string())
+        def calculate_next_event(group,order, event):
+
+            # Step 1: Zip the lists together
+            zipped_data = list(zip(event.to_pylist(), group.to_pylist(), order.to_pylist()))
+
+            # Step 2: Sort by group, then by order
+            sorted_data = sorted(zipped_data, key=itemgetter(1, 2))
+
+            # Function to calculate the next event within each group
+            def calculate_next_event(group):
+                items = list(group)
+                for i in range(len(items)):
+                    # Assign the next event's data if it's not the last item; otherwise, assign None
+                    next_event = items[i + 1][0] if i + 1 < len(items) else None
+                    yield items[i] + (next_event,)
+
+            # Step 3 & 4: Group by 'group' and calculate the next event
+            grouped_data = groupby(sorted_data, key=itemgetter(1))
+            result = [item for _, group in grouped_data for item in calculate_next_event(group)]
+
+            _, _, _, next_events = zip(*result)
+
+            return [str(item) for item in next_events]
+
+        return ( dataframe.with_column(
+                                    next_event,
+                                    calculate_next_event(daft.col(group), daft.col(order), daft.col(event)))
+                            .with_column(
+                                    cuallee_edge,
+                                    create_edge(daft.col(event), daft.col(next_event)))
+                            .select(
+                                (daft.col(cuallee_edge).is_in(edges)).alias("key").cast(daft.DataType.int64()).sum())
+                            ).to_pandas().iloc[0, 0]
 
 
 def compute(rules: Dict[str, Rule]):

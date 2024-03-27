@@ -1,3 +1,4 @@
+import daft
 import pytest
 import pandas as pd
 from pyspark.sql import DataFrame
@@ -96,6 +97,35 @@ def test_column_name_validation_pandas():
         )
         assert "Column(s): ide not in dataframe" == str(e)
 
+
+# __ Daft DATAFRAME TESTS __
+
+def test_return_daft_dataframe():
+    df = daft.from_pydict({"id": [1, 2], "desc": ["1", "2"]})
+    rs = (
+        Check(CheckLevel.WARNING, "test_column_name_pandas")
+        .is_complete("id")
+        .validate(df)
+    )
+    assert isinstance(rs, daft.DataFrame)
+
+
+def test_empty_dictionary_daft():
+    df = daft.from_pydict({"id": [1, 2], "desc": ["1", "2"]})
+    with pytest.raises(
+        Exception,
+        match="Check is empty",
+    ):
+        Check(CheckLevel.WARNING, "test_empty_observation_pandas").validate(df)
+
+
+def test_column_name_validation_daft():
+    df = daft.from_pydict({"id": [1, 2], "desc": ["1", "2"]})
+    with pytest.raises(Exception) as e:
+        Check(CheckLevel.WARNING, "test_empty_observation").is_complete("ide").validate(
+            df
+        )
+        assert "Column(s): ide not in dataframe" == str(e)
 
 # __ BIGQUERY TESTS __
 # def test_validate_bigquery(bq_client):

@@ -50,6 +50,10 @@ try:
 except (ModuleNotFoundError, ImportError):
     logger.debug("KO: BigQuery")
 
+try:
+    from daft import DataFrame as daft_dataframe
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: BigQuery")
 
 class CheckLevel(enum.Enum):
     WARNING = 0
@@ -708,6 +712,11 @@ class Check:
             dataframe, polars_dataframe
         ):
             self.compute_engine = importlib.import_module("cuallee.polars_validation")
+
+        elif "daft_dataframe" in globals() and isinstance(
+            dataframe, daft_dataframe
+        ):
+            self.compute_engine = importlib.import_module("cuallee.daft_validation")
 
         else:
             raise Exception(

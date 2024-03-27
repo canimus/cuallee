@@ -64,6 +64,9 @@ cloud = [
 pdf = [
   "fpdf2==2.7.8"
 ]
+daft = [
+  "getdaft == 0.2.19"
+]
 
 [tool.ruff.lint]
 # Skip unused variable rules (`F841`).

@@ -14,7 +14,7 @@
 
 Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
-This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, and more.
+This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, `daft` and more.
 It is a replacement written in pure `python` of the `pydeequ` framework.
 
 I gave up in _deequ_ as after extensive use, the API is not user-friendly, the Python Callback servers produce additional costs in our compute clusters, and the lack of support to the newest version of PySpark.
@@ -22,7 +22,7 @@ I gave up in _deequ_ as after extensive use, the API is not user-friendly, the P
 As result `cuallee` was born
 
 This implementation goes in hand with the latest API from PySpark and uses the `Observation` API to collect metrics
-at the lower cost of computation. 
+at the lower cost of computation.
 When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underneath and **remarkably** less memory.
 
 ## Support
@@ -36,8 +36,9 @@ Provider | API | Versions
 ![bigquery](logos/bigquery.png?raw=true "BigQuery Client API")| `bigquery` | `3.4.1`
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.2`, `1.5.x`, `1.4.x`
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.9.2`,~~`0.8.0`~~, ~~`0.7.1`~~
-![polars](logos/polars.svg?raw=true "Polars API")|`polars`| `0.19.6` 
- 
+![polars](logos/polars.svg?raw=true "Polars API")|`polars`| `0.19.6`
+![daft](logos/daftlogo.png?raw=true "Daft API")|`daft`| `0.2.19`
+
  <sub>Logos are trademarks of their own brands.</sub>
 
 
@@ -72,11 +73,11 @@ Perhaps one of the most useful features of `cuallee` is its extensive number of 
 check = Check(CheckLevel.WARNING, "CheckIsBetweenDates")
 df = spark.sql(
     """
-    SELECT 
+    SELECT
         explode(
             sequence(
-                to_date('2022-01-01'), 
-                to_date('2022-01-10'), 
+                to_date('2022-01-01'),
+                to_date('2022-01-10'),
                 interval 1 day)) as date
     """)
 assert (
@@ -127,9 +128,9 @@ check.validate(df).first().status == "PASS"
 
 ### Workflows (Process Mining)
 Besides the common `citizen-like` checks, `cuallee` offers out-of-the-box real-life checks. For example, suppose that you are working __SalesForce__ or __SAP__ environment. Very likely your business processes will be driven by a lifecycle:
-- `Order-To-Cash` 
-- `Request-To-Pay` 
-- `Inventory-Logistics-Delivery` 
+- `Order-To-Cash`
+- `Request-To-Pay`
+- `Inventory-Logistics-Delivery`
 - Others.
  In this scenario, `cuallee` offers the ability that the sequence of events registered over time, are according to a sequence of events, like the example below:
 
@@ -138,8 +139,8 @@ import pyspark.sql.functions as F
 from cuallee import Check, CheckLevel
 
 data = pd.DataFrame({
-    "name":["herminio", "herminio", "virginie", "virginie"], 
-    "event":["new","active", "new", "active"], 
+    "name":["herminio", "herminio", "virginie", "virginie"],
+    "event":["new","active", "new", "active"],
     "date": ["2022-01-01", "2022-01-02", "2022-01-03", "2022-02-04"]}
     )
 df = spark.createDataFrame(data).withColumn("date", F.to_date("date"))
@@ -327,6 +328,7 @@ Define once, `run everywhere`
 - ~~[x] Polars DataFrame~~
 - ~~[*] Dagster Integration~~
 - ~~[x] Spark Connect~~
+- ~~[x] Daft~~
 - [-] PDF Report
 - [ ] Metadata check
 - [ ] Help us in a discussion?
@@ -337,8 +339,8 @@ Whilst expanding the functionality feels a bit as an overkill because you most l
 In the desire to make it even more `user-friendly` we are aiming to make `cuallee` portable to all the providers above.
 
 ## Authors
-- [canimus](https://github.com/canimus) / Herminio Vazquez / 🇲🇽 
-- [vestalisvirginis](https://github.com/vestalisvirginis) / Virginie Grosboillot / 🇫🇷 
+- [canimus](https://github.com/canimus) / Herminio Vazquez / 🇲🇽
+- [vestalisvirginis](https://github.com/vestalisvirginis) / Virginie Grosboillot / 🇫🇷
 
 
 

@@ -137,9 +137,18 @@ class Compute:
 
 
     def satisfies(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        # TODO: Implement this later
         # Note: At the moment `daft.DataFrame.where` just accepts Expression not string
-        raise NotImplementedError
+
+        if not isinstance(rule.value, daft.Expression):
+            raise ValueError("The value of the rule must be an `daft.Expression`")
+
+        if isinstance(rule.column, list) or isinstance(rule.column, tuple):
+            cols = [daft.col(col) for col in rule.column]
+            return dataframe.where(rule.value).count(*cols).to_pandas().iloc[0, 0]
+        else:
+            col = daft.col(rule.column)
+            return dataframe.where(rule.value).count(col).to_pandas().iloc[0, 0]
+
 
     def has_entropy(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
 

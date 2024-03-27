@@ -1,5 +1,6 @@
 import daft
 import operator
+import statistics
 import numpy as np
 import pandas as pd
 
@@ -9,6 +10,8 @@ from numbers import Number
 from typing import Dict, List
 
 from cuallee import Check, Rule
+
+from itertools import repeat
 
 
 class Compute:
@@ -64,8 +67,12 @@ class Compute:
         return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
 
     def has_std(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        # TODO: Find a way to do this in daft and not pandas
-        return dataframe.to_pandas().loc[:, rule.column].std() == rule.value
+
+        @daft.udf(return_dtype=daft.DataType.float64())
+        def std_dev(data):
+            return [statistics.stdev(data.to_pylist())]
+
+        return dataframe.select(std_dev(daft.col(rule.column))).to_pandas().iloc[0, 0] == rule.value
 
     def has_mean(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).mean()
@@ -116,6 +123,7 @@ class Compute:
         return dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0] == rule.value
 
     def has_correlation(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        # TODO: Find a way to do this in daft and not pandas
         predicate = [daft.col(rule.column[0]), daft.col(rule.column[1])]
         return (
             dataframe.select(*predicate).to_pandas().corr().fillna(0).iloc[0, 1] == rule.value
@@ -123,7 +131,7 @@ class Compute:
 
     def satisfies(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         # TODO: Implement this later
-        # Note: Add this moment `daft.DataFrame.where` just accepts Expression not string
+        # Note: At the moment `daft.DataFrame.where` just accepts Expression not string
         raise NotImplementedError
 
     def has_entropy(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
@@ -204,7 +212,6 @@ class Compute:
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_workflow(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        """Compliance with adjacency matrix"""
         # TODO: Implement this later
         raise NotImplementedError
 

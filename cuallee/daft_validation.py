@@ -137,7 +137,9 @@ class Compute:
 
 
     def satisfies(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        # Note: At the moment `daft.DataFrame.where` just accepts Expression not string
+        """
+        Note: At the moment `daft.DataFrame.where` just accepts Expression not string
+        """
 
         if not isinstance(rule.value, daft.Expression):
             raise ValueError("The value of the rule must be an `daft.Expression`")

@@ -3,6 +3,7 @@ import pytest
 
 from cuallee import Check
 
+
 def test_positive(check: Check):
     check.is_unique("id")
     df = daft.from_pydict({"id": [10, 20, 30]})
@@ -34,4 +35,6 @@ def test_coverage(check: Check):
     df = daft.from_pydict({"id": [10, 20, 30, 10]})
     result = check.validate(df)
     assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
-    assert result.select(daft.col("pass_rate").max() == 0.75).to_pandas().pass_rate.all()
+    assert (
+        result.select(daft.col("pass_rate").max() == 0.75).to_pandas().pass_rate.all()
+    )

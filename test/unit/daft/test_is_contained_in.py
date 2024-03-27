@@ -19,7 +19,17 @@ def test_negative(check: Check):
 
 
 def test_coverage(check: Check):
-    check.is_contained_in("id", [0,1,2,3,4,], 0.50)
+    check.is_contained_in(
+        "id",
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+        ],
+        0.50,
+    )
     df = daft.from_pydict({"id": np.arange(10)})
     result = check.validate(df)
     assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()

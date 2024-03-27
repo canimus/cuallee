@@ -11,7 +11,6 @@ def test_positive(check: Check):
     assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
 
 
-
 def test_negative(check: Check):
     check.has_entropy("id", 1.0)
     df = daft.from_pydict({"id": [10, 10, 10, 10, 50]})

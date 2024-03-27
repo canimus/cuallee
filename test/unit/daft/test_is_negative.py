@@ -6,7 +6,7 @@ from cuallee import Check
 
 def test_positive(check: Check):
     check.is_negative("id")
-    df = daft.from_pydict({"id": [-1, -2, -3, -4 , -5]})
+    df = daft.from_pydict({"id": [-1, -2, -3, -4, -5]})
     result = check.validate(df)
     assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
 

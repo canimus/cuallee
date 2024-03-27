@@ -1,5 +1,4 @@
 import daft
-import pytest
 import numpy as np
 
 from cuallee import Check

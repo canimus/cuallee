@@ -12,8 +12,6 @@ from typing import Dict, List
 
 from cuallee import Check, Rule
 
-from itertools import repeat
-
 
 class Compute:
 

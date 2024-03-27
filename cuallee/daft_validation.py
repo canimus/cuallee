@@ -104,7 +104,7 @@ class Compute:
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_percentile(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        # TODO: Find a way to do this in daft and not pandas
+        # TODO: Find a way to do this in daft and not rely on pandas
         perdicate = daft.col(rule.column)
         return (
             np.percentile(dataframe.select(perdicate).to_pandas().values, rule.settings["percentile"] * 100)  # type: ignore

@@ -1,9 +1,10 @@
 import daft
 import operator
 import numpy as np
+import pandas as pd
 
-from typing import Union
 from toolz import first
+from typing import Union
 from numbers import Number
 from typing import Dict, List
 
@@ -122,7 +123,7 @@ class Compute:
 
     def satisfies(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         # TODO: Implement this later
-        # Note: Add this moment `daft.DataFrame.where` just accepts Expression not a string
+        # Note: Add this moment `daft.DataFrame.where` just accepts Expression not string
         raise NotImplementedError
 
     def has_entropy(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
@@ -170,8 +171,32 @@ class Compute:
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_daily(self, rule: Rule, dataframe: daft.DataFrame) -> complex:
-        # TODO: Implement this later
-        raise NotImplementedError
+        if rule.value is None:
+            day_mask = [0, 1, 2, 3, 4]
+        else:
+            day_mask = rule.value
+
+        agg_predicate = [ daft.col(rule.column).dt.date().min().alias("min"), daft.col(rule.column).dt.date().max().alias("max") ]
+        select_predicate = [ daft.col("min").cast(daft.DataType.string()), daft.col("max").cast(daft.DataType.string()) ]
+
+        lower, upper = dataframe.agg(*agg_predicate).select(*select_predicate).to_pandas().iloc[0].tolist()
+
+        sequence = (
+            pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
+        )
+        sequence = list(
+            sequence[sequence.ts.dt.dayofweek.isin(day_mask)]
+            .reset_index(drop=True)
+            .ts.unique()
+            .astype("datetime64[ms]")
+        )
+
+        filter_predicate = daft.col(rule.column).dt.day_of_week().is_in(day_mask)
+        select_predicate = daft.col(rule.column).cast(daft.DataType.from_numpy_dtype("datetime64[ms]"))
+        delivery = dataframe.where(filter_predicate).select(select_predicate).to_pandas()[rule.column].tolist()
+
+        # No difference between sequence of daily as a complex number
+        return complex(len(dataframe), len(set(sequence).difference(delivery)))
 
     def is_inside_interquartile_range(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, complex]:
         lower, upper = dataframe.select(daft.col(rule.column)).to_pandas().quantile(rule.value).values
@@ -189,12 +214,13 @@ def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""
     return True
 
+
 # TODO: Implement validate_data_types for daft
 def validate_data_types(rules: List[Rule], dataframe: daft.DataFrame):
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
     return True
 
-# TODO: Implement summary engine for daft
+
 def summary(check: Check, dataframe: daft.DataFrame):
     compute = Compute()
     unified_results = {

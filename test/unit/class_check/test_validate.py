@@ -100,6 +100,7 @@ def test_column_name_validation_pandas():
 
 # __ Daft DATAFRAME TESTS __
 
+
 def test_return_daft_dataframe():
     df = daft.from_pydict({"id": [1, 2], "desc": ["1", "2"]})
     rs = (
@@ -126,6 +127,7 @@ def test_column_name_validation_daft():
             df
         )
         assert "Column(s): ide not in dataframe" == str(e)
+
 
 # __ BIGQUERY TESTS __
 # def test_validate_bigquery(bq_client):

@@ -24,45 +24,78 @@ class Compute:
 
     def are_complete(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         col_names = rule.column
-        perdicate = [ daft.col(col_name).not_null().cast(daft.DataType.int64()).sum() for col_name in col_names]
-        return dataframe.select(*perdicate).to_pandas().astype(int).sum().sum() / len(col_names)
+        perdicate = [
+            daft.col(col_name).not_null().cast(daft.DataType.int64()).sum()
+            for col_name in col_names
+        ]
+        return dataframe.select(*perdicate).to_pandas().astype(int).sum().sum() / len(
+            col_names
+        )
 
     def is_unique(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column)
-        return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0]
+        return (
+            dataframe.select(perdicate)
+            .distinct()
+            .count(perdicate)
+            .to_pandas()
+            .iloc[0, 0]
+        )
 
     def are_unique(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         # TODO: Find a way to do this in daft and not pandas
-        perdicate = [ daft.col(col_name) for col_name in rule.column]
-        return dataframe.select(*perdicate).to_pandas().nunique().sum() / len(rule.column)
+        perdicate = [daft.col(col_name) for col_name in rule.column]
+        return dataframe.select(*perdicate).to_pandas().nunique().sum() / len(
+            rule.column
+        )
 
-    def is_greater_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) > rule.value).cast(daft.DataType.int64()).sum()
+    def is_greater_than(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
+        perdicate = (
+            (daft.col(rule.column) > rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def is_greater_or_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) >= rule.value).cast(daft.DataType.int64()).sum()
+    def is_greater_or_equal_than(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
+        perdicate = (
+            (daft.col(rule.column) >= rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_less_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) < rule.value).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (daft.col(rule.column) < rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def is_less_or_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) <= rule.value).cast(daft.DataType.int64()).sum()
+    def is_less_or_equal_than(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
+        perdicate = (
+            (daft.col(rule.column) <= rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) == rule.value).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (daft.col(rule.column) == rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_pattern(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column).str.match(rule.value)).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (daft.col(rule.column).str.match(rule.value))
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_min(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).min()
-        return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
 
     def has_max(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).max()
@@ -74,36 +107,75 @@ class Compute:
         def std_dev(data):
             return [statistics.stdev(data.to_pylist())]
 
-        return dataframe.select(std_dev(daft.col(rule.column))).to_pandas().iloc[0, 0] == rule.value
+        return (
+            dataframe.select(std_dev(daft.col(rule.column))).to_pandas().iloc[0, 0]
+            == rule.value
+        )
 
     def has_mean(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).mean()
-        return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
 
     def has_sum(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).sum()
-        return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
 
-    def has_cardinality(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+    def has_cardinality(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
         perdicate = daft.col(rule.column)
-        return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0] == rule.value
+        return (
+            dataframe.select(perdicate)
+            .distinct()
+            .count(perdicate)
+            .to_pandas()
+            .iloc[0, 0]
+            == rule.value
+        )
 
     def has_infogain(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column)
-        return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0] > 1
+        return (
+            dataframe.select(perdicate)
+            .distinct()
+            .count(perdicate)
+            .to_pandas()
+            .iloc[0, 0]
+            > 1
+        )
 
     def is_between(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = ( ( daft.col(rule.column) >= min(rule.value) ).__and__( daft.col(rule.column) <= max(rule.value) ) ).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (
+                (daft.col(rule.column) >= min(rule.value)).__and__(
+                    daft.col(rule.column) <= max(rule.value)
+                )
+            )
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def is_contained_in(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+    def is_contained_in(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
         rule_value = list(rule.value) if isinstance(rule.value, tuple) else rule.value
-        perdicate = daft.col(rule.column).is_in(rule_value).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column).is_in(rule_value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def not_contained_in(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+    def not_contained_in(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
         rule_value = list(rule.value) if isinstance(rule.value, tuple) else rule.value
-        perdicate = daft.col(rule.column).is_in(rule_value).__ne__(True).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .is_in(rule_value)
+            .__ne__(True)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_percentile(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
@@ -117,14 +189,22 @@ class Compute:
     def has_max_by(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         predicate_1 = daft.col("id")
         predicate_2 = daft.col("id2").__eq__(daft.col("id2").max())
-        return dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0] == rule.value
+        return (
+            dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0]
+            == rule.value
+        )
 
     def has_min_by(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         predicate_1 = daft.col("id")
         predicate_2 = daft.col("id2").__eq__(daft.col("id2").min())
-        return dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0] == rule.value
+        return (
+            dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0]
+            == rule.value
+        )
 
-    def has_correlation(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+    def has_correlation(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
 
         @daft.udf(return_dtype=daft.DataType.float64())
         def correlation(x, y):
@@ -132,12 +212,21 @@ class Compute:
 
         return (
             dataframe.select(
-                    correlation(
-                            daft.col(rule.column[0]).is_null().if_else(daft.lit(0), daft.col(rule.column[0])).alias("x"),
-                            daft.col(rule.column[1]).is_null().if_else(daft.lit(0), daft.col(rule.column[1])).alias("y"),
-                            )
-                ).to_pandas().iloc[0, 0] == rule.value )
-
+                correlation(
+                    daft.col(rule.column[0])
+                    .is_null()
+                    .if_else(daft.lit(0), daft.col(rule.column[0]))
+                    .alias("x"),
+                    daft.col(rule.column[1])
+                    .is_null()
+                    .if_else(daft.lit(0), daft.col(rule.column[1]))
+                    .alias("y"),
+                )
+            )
+            .to_pandas()
+            .iloc[0, 0]
+            == rule.value
+        )
 
     def satisfies(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         """
@@ -154,59 +243,129 @@ class Compute:
             col = daft.col(rule.column)
             return dataframe.where(rule.value).count(col).to_pandas().iloc[0, 0]
 
-
     def has_entropy(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
 
         @daft.udf(return_dtype=daft.DataType.float64())
         def entropy(probabilities: daft.Series):
-            return [ -sum(p * log2(p) for p in probabilities.to_pylist() if p > 0)]
+            return [-sum(p * log2(p) for p in probabilities.to_pylist() if p > 0)]
 
-        dataframe = (dataframe.with_column("label", daft.col(rule.column).cast(daft.DataType.string()))
-                            .groupby("label")
-                            .count(rule.column)
-                            .with_column("probabilities", daft.col(rule.column) / daft.col(rule.column).sum() ))
+        dataframe = (
+            dataframe.with_column(
+                "label", daft.col(rule.column).cast(daft.DataType.string())
+            )
+            .groupby("label")
+            .count(rule.column)
+            .with_column(
+                "probabilities", daft.col(rule.column) / daft.col(rule.column).sum()
+            )
+        )
 
-        return dataframe.select(entropy(daft.col("probabilities"))).to_pandas().iloc[0, 0] == float(rule.value)
-
+        return dataframe.select(entropy(daft.col("probabilities"))).to_pandas().iloc[
+            0, 0
+        ] == float(rule.value)
 
     def is_on_weekday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().is_in([0, 1, 2, 3, 4]).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .is_in([0, 1, 2, 3, 4])
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_weekend(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().is_in([5, 6]).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .is_in([5, 6])
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_monday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(0).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .__eq__(0)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_tuesday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(1).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .__eq__(1)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def is_on_wednesday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(2).cast(daft.DataType.int64()).sum()
+    def is_on_wednesday(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .__eq__(2)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_thursday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(3).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .__eq__(3)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_friday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(4).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .__eq__(4)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_saturday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(5).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .__eq__(5)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_sunday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = daft.col(rule.column).dt.day_of_week().__eq__(6).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            daft.col(rule.column)
+            .dt.day_of_week()
+            .__eq__(6)
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_on_schedule(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = ( ( daft.col(rule.column).dt.hour() >= min(rule.value) ).__and__( daft.col(rule.column).dt.hour() <= max(rule.value) ) ).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (
+                (daft.col(rule.column).dt.hour() >= min(rule.value)).__and__(
+                    daft.col(rule.column).dt.hour() <= max(rule.value)
+                )
+            )
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_daily(self, rule: Rule, dataframe: daft.DataFrame) -> complex:
@@ -215,10 +374,22 @@ class Compute:
         else:
             day_mask = rule.value
 
-        agg_predicate = [ daft.col(rule.column).dt.date().min().alias("min"), daft.col(rule.column).dt.date().max().alias("max") ]
-        select_predicate = [ daft.col("min").cast(daft.DataType.string()), daft.col("max").cast(daft.DataType.string()) ]
+        agg_predicate = [
+            daft.col(rule.column).dt.date().min().alias("min"),
+            daft.col(rule.column).dt.date().max().alias("max"),
+        ]
+        select_predicate = [
+            daft.col("min").cast(daft.DataType.string()),
+            daft.col("max").cast(daft.DataType.string()),
+        ]
 
-        lower, upper = dataframe.agg(*agg_predicate).select(*select_predicate).to_pandas().iloc[0].tolist()
+        lower, upper = (
+            dataframe.agg(*agg_predicate)
+            .select(*select_predicate)
+            .to_pandas()
+            .iloc[0]
+            .tolist()
+        )
 
         sequence = (
             pd.date_range(start=lower, end=upper, freq="D").rename("ts").to_frame()
@@ -231,15 +402,33 @@ class Compute:
         )
 
         filter_predicate = daft.col(rule.column).dt.day_of_week().is_in(day_mask)
-        select_predicate = daft.col(rule.column).cast(daft.DataType.from_numpy_dtype("datetime64[ms]"))
-        delivery = dataframe.where(filter_predicate).select(select_predicate).to_pandas()[rule.column].tolist()
+        select_predicate = daft.col(rule.column).cast(
+            daft.DataType.from_numpy_dtype("datetime64[ms]")
+        )
+        delivery = (
+            dataframe.where(filter_predicate)
+            .select(select_predicate)
+            .to_pandas()[rule.column]
+            .tolist()
+        )
 
         # No difference between sequence of daily as a complex number
         return complex(len(dataframe), len(set(sequence).difference(delivery)))
 
-    def is_inside_interquartile_range(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, complex]:
-        lower, upper = dataframe.select(daft.col(rule.column)).to_pandas().quantile(rule.value).values
-        perdicate = ( ( daft.col(rule.column) >= lower ).__and__( daft.col(rule.column) <= upper ) ).cast(daft.DataType.int64()).sum()
+    def is_inside_interquartile_range(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, complex]:
+        lower, upper = (
+            dataframe.select(daft.col(rule.column))
+            .to_pandas()
+            .quantile(rule.value)
+            .values
+        )
+        perdicate = (
+            ((daft.col(rule.column) >= lower).__and__(daft.col(rule.column) <= upper))
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_workflow(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
@@ -252,13 +441,15 @@ class Compute:
 
         @daft.udf(return_dtype=daft.DataType.string())
         def create_edge(x: daft.Series, y: daft.Series):
-            return [ f"({a}, {b})" for a, b in zip(x.to_pylist(), y.to_pylist())]
+            return [f"({a}, {b})" for a, b in zip(x.to_pylist(), y.to_pylist())]
 
         @daft.udf(return_dtype=daft.DataType.string())
-        def calculate_next_event(group,order, event):
+        def calculate_next_event(group, order, event):
 
             # Step 1: Zip the lists together
-            zipped_data = list(zip(event.to_pylist(), group.to_pylist(), order.to_pylist()))
+            zipped_data = list(
+                zip(event.to_pylist(), group.to_pylist(), order.to_pylist())
+            )
 
             # Step 2: Sort by group, then by order
             sorted_data = sorted(zipped_data, key=itemgetter(1, 2))
@@ -273,21 +464,37 @@ class Compute:
 
             # Step 3 & 4: Group by 'group' and calculate the next event
             grouped_data = groupby(sorted_data, key=itemgetter(1))
-            result = [item for _, group in grouped_data for item in calculate_next_event(group)]
+            result = [
+                item
+                for _, group in grouped_data
+                for item in calculate_next_event(group)
+            ]
 
             _, _, _, next_events = zip(*result)
 
             return [str(item) for item in next_events]
 
-        return ( dataframe.with_column(
-                                    next_event,
-                                    calculate_next_event(daft.col(group), daft.col(order), daft.col(event)))
-                            .with_column(
-                                    cuallee_edge,
-                                    create_edge(daft.col(event), daft.col(next_event)))
-                            .select(
-                                (daft.col(cuallee_edge).is_in(edges)).alias("key").cast(daft.DataType.int64()).sum())
-                            ).to_pandas().iloc[0, 0]
+        return (
+            (
+                dataframe.with_column(
+                    next_event,
+                    calculate_next_event(
+                        daft.col(group), daft.col(order), daft.col(event)
+                    ),
+                )
+                .with_column(
+                    cuallee_edge, create_edge(daft.col(event), daft.col(next_event))
+                )
+                .select(
+                    (daft.col(cuallee_edge).is_in(edges))
+                    .alias("key")
+                    .cast(daft.DataType.int64())
+                    .sum()
+                )
+            )
+            .to_pandas()
+            .iloc[0, 0]
+        )
 
 
 def compute(rules: Dict[str, Rule]):

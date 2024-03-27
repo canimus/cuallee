@@ -3,7 +3,7 @@ from cuallee import Check
 
 
 def test_positive(check: Check):
-    value = (daft.col("id") > 0) & (daft.col("id2") > 200 )
+    value = (daft.col("id") > 0) & (daft.col("id2") > 200)
     check.satisfies("id", value)
     df = daft.from_pydict({"id": [10, 20], "id2": [300, 500]})
     result = check.validate(df)
@@ -19,7 +19,7 @@ def test_negative(check: Check):
 
 
 def test_coverage(check: Check):
-    value = (daft.col("id") > 0)
+    value = daft.col("id") > 0
     check.satisfies("id", value, pct=0.5)
     df = daft.from_pydict({"id": [10, -10], "id2": [300, 500]})
     result = check.validate(df)

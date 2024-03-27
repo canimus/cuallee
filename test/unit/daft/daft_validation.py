@@ -18,45 +18,76 @@ class Compute:
 
     def are_complete(self, rule: Rule, dataframe: daft.DataFrame) -> int:
         col_names = rule.column
-        perdicate = [ daft.col(col_name).not_null().cast(daft.DataType.int64()).sum() for col_name in col_names]
-        return dataframe.select(*perdicate).to_pandas().astype(int).sum().sum() / len(col_names)
+        perdicate = [
+            daft.col(col_name).not_null().cast(daft.DataType.int64()).sum()
+            for col_name in col_names
+        ]
+        return dataframe.select(*perdicate).to_pandas().astype(int).sum().sum() / len(
+            col_names
+        )
 
     def is_unique(self, rule: Rule, dataframe: daft.DataFrame) -> int:
         perdicate = daft.col(rule.column)
-        return dataframe.select(perdicate).distinct().count(perdicate).to_pandas().iloc[0, 0]
+        return (
+            dataframe.select(perdicate)
+            .distinct()
+            .count(perdicate)
+            .to_pandas()
+            .iloc[0, 0]
+        )
 
     def are_unique(self, rule: Rule, dataframe: daft.DataFrame) -> int:
         # TODO: Find a way to do this in daft and not pandas
-        perdicate = [ daft.col(col_name) for col_name in rule.column]
-        return dataframe.select(*perdicate).to_pandas().nunique().sum() / len(rule.column)
+        perdicate = [daft.col(col_name) for col_name in rule.column]
+        return dataframe.select(*perdicate).to_pandas().nunique().sum() / len(
+            rule.column
+        )
 
     def is_greater_than(self, rule: Rule, dataframe: daft.DataFrame) -> int:
-        perdicate = (daft.col(rule.column) > rule.value).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (daft.col(rule.column) > rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def is_greater_or_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) >= rule.value).cast(daft.DataType.int64()).sum()
+    def is_greater_or_equal_than(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
+        perdicate = (
+            (daft.col(rule.column) >= rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_less_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) < rule.value).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (daft.col(rule.column) < rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
-    def is_less_or_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) <= rule.value).cast(daft.DataType.int64()).sum()
+    def is_less_or_equal_than(
+        self, rule: Rule, dataframe: daft.DataFrame
+    ) -> Union[bool, int]:
+        perdicate = (
+            (daft.col(rule.column) <= rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def is_equal_than(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column) == rule.value).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (daft.col(rule.column) == rule.value).cast(daft.DataType.int64()).sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_pattern(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        perdicate = (daft.col(rule.column).str.match(rule.value)).cast(daft.DataType.int64()).sum()
+        perdicate = (
+            (daft.col(rule.column).str.match(rule.value))
+            .cast(daft.DataType.int64())
+            .sum()
+        )
         return dataframe.select(perdicate).to_pandas().iloc[0, 0]
 
     def has_min(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).min()
-        return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
 
     def has_max(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).min()
@@ -68,20 +99,23 @@ class Compute:
 
     def has_mean(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).mean()
-        return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
 
     def has_sum(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).sum()
-        return dataframe.select(perdicate).to_pandas().iloc[0, 0]  == rule.value
+        return dataframe.select(perdicate).to_pandas().iloc[0, 0] == rule.value
+
 
 def compute(rules: Dict[str, Rule]):
     """Daft computes directly on the predicates"""
     return True
 
+
 # TODO: Implement validate_data_types for daft
 def validate_data_types(rules: List[Rule], dataframe: daft.DataFrame):
     """Validate the datatype of each column according to the CheckDataType of the rule's method"""
     return True
+
 
 # TODO: Implement summary engine for daft
 def summary(check: Check, dataframe: daft.DataFrame):

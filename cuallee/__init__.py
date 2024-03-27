@@ -12,7 +12,7 @@ from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.9.2"
+__version__ = "0.10.0"
 # Verify Libraries Available
 # ==========================
 try:
@@ -54,6 +54,7 @@ try:
     from daft import DataFrame as daft_dataframe
 except (ModuleNotFoundError, ImportError):
     logger.debug("KO: BigQuery")
+
 
 class CheckLevel(enum.Enum):
     WARNING = 0
@@ -713,9 +714,7 @@ class Check:
         ):
             self.compute_engine = importlib.import_module("cuallee.polars_validation")
 
-        elif "daft_dataframe" in globals() and isinstance(
-            dataframe, daft_dataframe
-        ):
+        elif "daft_dataframe" in globals() and isinstance(dataframe, daft_dataframe):
             self.compute_engine = importlib.import_module("cuallee.daft_validation")
 
         else:

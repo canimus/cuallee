@@ -15,7 +15,7 @@ def test_negative(check: Check):
     check.has_correlation("id", "id2", 1.0)
     df = daft.from_pydict({"id": [10, 20, 30, None], "id2": [100, 200, 300, 400]})
     result = check.validate(df)
-    assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
+    assert result.select(daft.col("status").str.match("FAIL")).to_pandas().status.all()
 
 
 def test_values(check: Check):

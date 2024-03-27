@@ -123,11 +123,19 @@ class Compute:
         return dataframe.where(predicate_2).select(predicate_1).to_pandas().iloc[0, 0] == rule.value
 
     def has_correlation(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        # TODO: Find a way to do this in daft and not pandas
-        predicate = [daft.col(rule.column[0]), daft.col(rule.column[1])]
+
+        @daft.udf(return_dtype=daft.DataType.float64())
+        def correlation(x, y):
+            return [statistics.correlation(x.to_pylist(), y.to_pylist())]
+
         return (
-            dataframe.select(*predicate).to_pandas().corr().fillna(0).iloc[0, 1] == rule.value
-        )
+            dataframe.select(
+                    correlation(
+                            daft.col(rule.column[0]).is_null().if_else(daft.lit(0), daft.col(rule.column[0])).alias("x"),
+                            daft.col(rule.column[1]).is_null().if_else(daft.lit(0), daft.col(rule.column[1])).alias("y"),
+                            )
+                ).to_pandas().iloc[0, 0] == rule.value )
+
 
     def satisfies(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         # TODO: Implement this later

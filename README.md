@@ -342,6 +342,10 @@ In the desire to make it even more `user-friendly` we are aiming to make `cualle
 - [canimus](https://github.com/canimus) / Herminio Vazquez / 🇲🇽
 - [vestalisvirginis](https://github.com/vestalisvirginis) / Virginie Grosboillot / 🇫🇷
 
+## Contributors
+<a href="https://github.com/canimus/cuallee/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=canimus/cuallee" />
+</a>
 
 
 ## License
@@ -351,4 +355,5 @@ Just preserve the copyright and license.
 
 
 > Made with ❤️ in Utrecht 🇳🇱<br/>
-> Maintained over ⌛ from Ljubljana 🇸🇮
+> Maintained over ⌛ from Ljubljana 🇸🇮<br/>
+> Extended 🚀 by contributions all over the 🌎

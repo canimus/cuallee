@@ -4,6 +4,7 @@ import statistics
 import numpy as np
 import pandas as pd
 
+from math import log2
 from toolz import first
 from typing import Union
 from numbers import Number
@@ -143,8 +144,18 @@ class Compute:
         raise NotImplementedError
 
     def has_entropy(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
-        # TODO: Implement this later
-        raise NotImplementedError
+
+        @daft.udf(return_dtype=daft.DataType.float64())
+        def entropy(probabilities: daft.Series):
+            return [ -sum(p * log2(p) for p in probabilities.to_pylist() if p > 0)]
+
+        dataframe = (dataframe.with_column("label", daft.col(rule.column).cast(daft.DataType.string()))
+                            .groupby("label")
+                            .count(rule.column)
+                            .with_column("probabilities", daft.col(rule.column) / daft.col(rule.column).sum() ))
+
+        return dataframe.select(entropy(daft.col("probabilities"))).to_pandas().iloc[0, 0] == float(rule.value)
+
 
     def is_on_weekday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         perdicate = daft.col(rule.column).dt.day_of_week().is_in([0, 1, 2, 3, 4]).cast(daft.DataType.int64()).sum()

@@ -5,7 +5,8 @@ import logging
 
 from pathlib import Path
 from pyspark.sql import SparkSession
-from pytest_postgresql import factories
+from pytest_mysql import factories as mysql_factories
+from pytest_postgresql import factories as postgres_factories
 
 from cuallee import Check, CheckLevel, db_connector
 
@@ -109,10 +110,19 @@ def bq_client():
         #client.stop()
 
 
-postgresql_in_docker = factories.postgresql_noproc(host="localhost", user= "postgres", password="another!!22TEST", dbname="testdb")
-postgresql = factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/db/init-db.sql")])
+postgresql_in_docker = postgres_factories.postgresql_noproc(host="localhost", user= "postgres", password="another!!22TEST", dbname="testdb")
+postgresql = postgres_factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/db/init-db.sql")])
+
+# IDEA: Add mysql tests
+# mysql_in_docker = mysql_factories.mysql_noproc(host="localhost", user= "root")
+# mysql = mysql_factories.mysql("mysql_in_docker",passwd="another!!22TEST",dbname="testdb", load=[Path("./test/unit/db/init-db.sql")])
 
 @pytest.fixture(scope="session")
 def db_conn():
     uri = "postgresql://postgres:another!!22TEST@localhost/testdb"
     return db_connector(uri)
+
+# IDEA: create a fixture for automated tests
+# @pytest.fixture(params=[postgresql, mysql])
+# def database(request):
+#     return request.param

@@ -1,0 +1,2 @@
+docker run -e POSTGRES_PASSWORD="another!!22TEST" -p 5432:5432 -d --name psql_test_db postgres:alpine3.18
+docker run -e MYSQL_ROOT_PASSWORD="another!!22TEST" -p 3306:3306 -d --name myql_test_db mysql:latest

@@ -19,6 +19,11 @@ class Compute(duckdb_compute):
     def are_unique(self, rule: Rule) -> str:
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "
 
+    def has_std(self, rule: Rule) -> str:
+        #BUG: This could fail due to floating point precision
+        #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
+        return f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT)"
+
 def validate_data_types(check: Check, dataframe):
     return True
 

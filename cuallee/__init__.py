@@ -10,6 +10,7 @@ from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
 from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
+from functools import partial
 
 logger = logging.getLogger("cuallee")
 __version__ = "0.10.0"
@@ -55,6 +56,10 @@ try:
 except (ModuleNotFoundError, ImportError):
     logger.debug("KO: BigQuery")
 
+try:
+    from polars import read_database_uri
+except (ModuleNotFoundError, ImportError):
+    logger.debug("KO: Polars")
 
 class CheckLevel(enum.Enum):
     WARNING = 0
@@ -717,6 +722,9 @@ class Check:
         elif "daft_dataframe" in globals() and isinstance(dataframe, daft_dataframe):
             self.compute_engine = importlib.import_module("cuallee.daft_validation")
 
+        elif "read_database_uri" in globals() and isinstance(dataframe, partial):
+            self.compute_engine = importlib.import_module("cuallee.db_validation")
+
         else:
             raise Exception(
                 "Cuallee is not ready for this data structure. You can log a Feature Request in Github."
@@ -778,3 +786,7 @@ class Control:
             operator.methodcaller("where", "status == 'PASS'"),
         )
         return complete_gain(Control.information(dataframe))
+
+
+def db_connector(uri):
+    return partial(read_database_uri, uri=uri, engine='connectorx')

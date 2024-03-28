@@ -1,11 +1,14 @@
 import os
-import warnings
 import pytest
-from cuallee import Check, CheckLevel
-from pyspark.sql import SparkSession
-from pathlib import Path
-import logging
 import duckdb
+import logging
+
+from pathlib import Path
+from pyspark.sql import SparkSession
+from pytest_postgresql import factories
+
+from cuallee import Check, CheckLevel, db_connector
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +75,7 @@ def snowpark():
 
 
 @pytest.fixture(scope="function")
-def db() -> duckdb.DuckDBPyConnection:
+def db() -> duckdb.DuckDBPyConnection: # type: ignore
     try:
         conn = duckdb.connect(":memory:")
         conn.execute("CREATE TABLE TEMP AS SELECT UNNEST(RANGE(10)) AS ID")
@@ -96,7 +99,7 @@ def bq_client():
             json.dump(json.loads(os.getenv("GOOGLE_KEY")), writer)
 
         credentials = service_account.Credentials.from_service_account_file("key.json")
-        
+
     try:
         client = bigquery.Client(project="cuallee-bigquery-386709", credentials=credentials)
         return client
@@ -104,3 +107,12 @@ def bq_client():
         pass
     #finally:
         #client.stop()
+
+
+postgresql_in_docker = factories.postgresql_noproc(host="localhost", user= "postgres", password="another!!22TEST", dbname="testdb")
+postgresql = factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/db/init-db.sql")])
+
+@pytest.fixture(scope="session")
+def db_conn():
+    uri = "postgresql://postgres:another!!22TEST@localhost/testdb"
+    return db_connector(uri)

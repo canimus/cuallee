@@ -7,7 +7,7 @@ from toolz import first
 from numbers import Number
 from functools import reduce
 
-from cuallee import Check, db_connector
+from cuallee import Check, Rule, db_connector
 from cuallee.duckdb_validation import Compute as duckdb_compute
 
 
@@ -15,6 +15,9 @@ class Compute(duckdb_compute):
 
     def __init__(self, table_name: str = None):
         super().__init__(table_name)
+
+    def are_unique(self, rule: Rule) -> str:
+        return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "
 
 def validate_data_types(check: Check, dataframe):
     return True
@@ -37,12 +40,6 @@ def summary(check: Check, connection: db_connector) -> list:
     FROM
     \t{check.table_name}
     """
-
-    # print(
-    #     highlight(
-    #         textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter()
-    #     )
-    # )
 
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):

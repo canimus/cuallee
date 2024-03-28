@@ -11,3 +11,11 @@ INSERT INTO public.test1 VALUES (2, 7, 1, 2, 1, NULL);
 INSERT INTO public.test1 VALUES (3, 8, 1, 2, 2, 3);
 INSERT INTO public.test1 VALUES (4, 9, 1, 2, 2, NULL);
 INSERT INTO public.test1 VALUES (5, 10, 1, 2, 3, 5);
+
+
+CREATE TABLE public.test2 (id integer, id2 integer, id3 integer, id4 integer);
+INSERT INTO public.test2 VALUES (10, 100, 10.0, 10);
+INSERT INTO public.test2 VALUES (20, 200, 20.0, 20);
+INSERT INTO public.test2 VALUES (30, 300, 30.0, 30);
+INSERT INTO public.test2 VALUES (40, 400, 40.0, 40);
+INSERT INTO public.test2 VALUES (50, 500, 50.0, Null);

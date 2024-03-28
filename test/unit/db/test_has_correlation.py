@@ -20,7 +20,6 @@ def test_with_null(check: Check, postgresql, db_conn):
 
 def test_values(check: Check, postgresql, db_conn):
     check.has_correlation("id", "id3", 1.0)
-    df = pl.DataFrame({"id": [1, 2, 3], "id2": [1.0, 2.0, 3.0]})
     check.table_name = "public.test2"
     result = check.validate(db_conn)
     assert (result.select(pl.col("status")) == "PASS" ).to_series().all()

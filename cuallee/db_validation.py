@@ -24,6 +24,9 @@ class Compute(duckdb_compute):
         #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
         return f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT)"
 
+    def has_entropy(self, rule: Rule) -> str:
+        raise NotImplementedError
+
 def validate_data_types(check: Check, dataframe):
     return True
 

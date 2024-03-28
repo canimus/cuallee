@@ -19,3 +19,11 @@ INSERT INTO public.test2 VALUES (20, 200, 20.0, 20);
 INSERT INTO public.test2 VALUES (30, 300, 30.0, 30);
 INSERT INTO public.test2 VALUES (40, 400, 40.0, 40);
 INSERT INTO public.test2 VALUES (50, 500, 50.0, Null);
+
+CREATE TABLE public.test3 (id integer, id2 integer, id3 integer);
+INSERT INTO public.test3 VALUES (1, 10, 10.0);
+INSERT INTO public.test3 VALUES (1, 10, 10.0);
+INSERT INTO public.test3 VALUES (1, 10, 10.0);
+INSERT INTO public.test3 VALUES (0, 10, 10.0);
+INSERT INTO public.test3 VALUES (0, 10, 10.0);
+INSERT INTO public.test3 VALUES (0, 50, 10.0);

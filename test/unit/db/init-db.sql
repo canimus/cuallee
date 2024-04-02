@@ -27,3 +27,11 @@ INSERT INTO public.test3 VALUES (1, 10, 10.0);
 INSERT INTO public.test3 VALUES (0, 10, 10.0);
 INSERT INTO public.test3 VALUES (0, 10, 10.0);
 INSERT INTO public.test3 VALUES (0, 50, 10.0);
+
+
+CREATE TABLE public.test4 (id integer, id2 date);
+INSERT INTO public.test4 VALUES (10, '2022-04-01');
+INSERT INTO public.test4 VALUES (20, '2022-05-01');
+INSERT INTO public.test4 VALUES (30, '2022-06-01');
+INSERT INTO public.test4 VALUES (40, '2022-07-01');
+INSERT INTO public.test4 VALUES (50, '2022-08-01');

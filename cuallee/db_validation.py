@@ -10,6 +10,11 @@ from functools import reduce
 from cuallee import Check, Rule, db_connector
 from cuallee.duckdb_validation import Compute as duckdb_compute
 
+import textwrap
+from pygments import highlight
+from pygments.lexers import SqlLexer
+from pygments.formatters.terminal256 import TerminalTrueColorFormatter
+
 
 class Compute(duckdb_compute):
 
@@ -27,6 +32,26 @@ class Compute(duckdb_compute):
     def has_entropy(self, rule: Rule) -> str:
         raise NotImplementedError
 
+    def has_max_by(self, rule: Rule) -> str:
+        """
+        ```sql
+        SELECT id
+        FROM public.test1
+        WHERE id2 = (SELECT MAX(id2) FROM public.test1);
+        ```
+        """
+        raise NotImplementedError
+
+    def has_min_by(self, rule: Rule) -> str:
+        """
+        ```sql
+        SELECT id
+        FROM public.test1
+        WHERE id2 = (SELECT MIN(id2) FROM public.test1);
+        ```
+        """
+        raise NotImplementedError
+
 def validate_data_types(check: Check, dataframe):
     return True
 
@@ -37,6 +62,7 @@ def compute(check: Check):
 def summary(check: Check, connection: db_connector) -> list:
     unified_columns = ",\n\t".join(
         [
+            # This is the same as compute.`rule.method`(rule)
             operator.methodcaller(rule.method, rule)(Compute(check.table_name))
             + f' AS "{rule.key}"'
             for rule in check.rules
@@ -48,6 +74,12 @@ def summary(check: Check, connection: db_connector) -> list:
     FROM
     \t{check.table_name}
     """
+
+    print(
+        highlight(
+            textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter()
+        )
+    )
 
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):

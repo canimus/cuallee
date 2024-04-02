@@ -22,17 +22,21 @@ class Compute(duckdb_compute):
         super().__init__(table_name)
 
     def are_unique(self, rule: Rule) -> str:
+        """Validate absence of duplicate in group of columns"""
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "
 
     def has_std(self, rule: Rule) -> str:
+        """Validate standard deviation on column"""
         #BUG: This could fail due to floating point precision
         #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
         return f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT)"
 
     def has_entropy(self, rule: Rule) -> str:
+        """Computes entropy of 0-1 vector."""
         raise NotImplementedError
 
     def has_max_by(self, rule: Rule) -> str:
+        """Adjacent column maximum value verifiation on threshold"""
         """
         ```sql
         SELECT id
@@ -43,6 +47,7 @@ class Compute(duckdb_compute):
         raise NotImplementedError
 
     def has_min_by(self, rule: Rule) -> str:
+        """Adjacent column minimum value verifiation on threshold"""
         """
         ```sql
         SELECT id
@@ -51,6 +56,10 @@ class Compute(duckdb_compute):
         ```
         """
         raise NotImplementedError
+
+    def has_percentile(self, rule: Rule) -> str:
+        """Percentile range verification for column"""
+        return f"PERCENTILE_CONT({rule.settings['percentile']}) WITHIN GROUP (ORDER BY {rule.column})  = {rule.value}"
 
 def validate_data_types(check: Check, dataframe):
     return True

@@ -113,35 +113,24 @@ def bq_client():
 postgresql_in_docker = postgres_factories.postgresql_noproc(host="localhost", user= "postgres", password="another!!22TEST", dbname="testdb")
 postgresql = postgres_factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/psql/init-db.sql")])
 
-# mysql_in_docker = mysql_factories.mysql_noproc(host="localhost", user= "root")
-# mysql = mysql_factories.mysql("mysql_in_docker", passwd="another!!22TEST", dbname="public")
+mysql_in_docker = mysql_factories.mysql_noproc(host="localhost", user= "root")
+mysql = mysql_factories.mysql("mysql_in_docker", passwd="another!!22TEST", dbname="public")
 
-# @pytest.fixture(params=["postgresql", "mysql"], ids=["PostgreSQL", "MySQL"])
-# def db_conn(request):
+@pytest.fixture()
+def db_conn_mysql(request):
 
-#     fixture_name = request.param
+    mysql = request.getfixturevalue("mysql")
+    try:
+        with open(Path("./test/unit/psql/init-db.sql"), 'r') as f:
+            with mysql.cursor() as cur:
+                cur.execute(f.read())
+                mysql.commit()
+                cur.close()
+    except:
+        pass
 
-#     # Connect to the PostgreSQL database
-#     if fixture_name == 'postgresql':
-#         request.getfixturevalue(fixture_name)
-#         # Connect to the PostgreSQL database
-#         uri = "postgresql://postgres:another!!22TEST@localhost/testdb"
-#         yield db_connector(uri)
-
-
-#     # Connect to the MySQL database
-#     elif fixture_name == 'mysql':
-#         mysql = request.getfixturevalue(fixture_name)
-#         try:
-#             with open(Path("./test/unit/db/init-db.sql"), 'r') as f:
-#                 cur = mysql.cursor()
-#                 cur.execute(f.read())
-#                 # mysql.commit()
-#                 # cur.close()
-#                 uri = "mysql://root:another!!22TEST@localhost/public"
-#                 yield db_connector(uri)
-#         except:
-#             pass
+    uri = "mysql://root:another!!22TEST@localhost"
+    yield db_connector(uri)
 
 
 @pytest.fixture(scope="session")

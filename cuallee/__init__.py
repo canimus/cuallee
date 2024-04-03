@@ -722,7 +722,7 @@ class Check:
         elif "daft_dataframe" in globals() and isinstance(dataframe, daft_dataframe):
             self.compute_engine = importlib.import_module("cuallee.daft_validation")
 
-        elif "read_database_uri" in globals() and isinstance(dataframe, partial):
+        elif "read_database_uri" in globals() and isinstance(dataframe, partial) and get_uri_schema(dataframe) == "postgresql":
             self.compute_engine = importlib.import_module("cuallee.psql_validation")
 
         else:
@@ -790,3 +790,24 @@ class Control:
 
 def db_connector(uri):
     return partial(read_database_uri, uri=uri, engine='connectorx')
+
+def get_uri_schema(db_connector: partial) -> Optional[str]:
+    """
+    Extracts the URI schema from a partial object's 'uri' keyword argument.
+
+    Args:
+    db_connector (partial): A partial object possibly containing a 'uri' keyword.
+
+    Returns:
+    Optional[str]: The schema of the URI if it's recognized and valid, None otherwise.
+    """
+
+    # Validate the input is a partial object and contains 'uri' keyword argument
+    if not isinstance(db_connector, partial) or 'uri' not in db_connector.keywords:
+        return None
+
+    # Extract the schema from the 'uri' keyword argument
+    schema = db_connector.keywords['uri'].split("://")[0]
+
+    # Return the schema if it is recognized, None otherwise
+    return schema if schema in {"postgresql", "mysql"} else None

@@ -134,6 +134,6 @@ def db_conn_mysql(request):
 
 
 @pytest.fixture(scope="session")
-def db_conn():
+def db_conn_psql():
     uri = "postgresql://postgres:another!!22TEST@localhost/testdb"
     yield db_connector(uri)

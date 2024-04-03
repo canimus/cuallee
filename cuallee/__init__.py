@@ -725,6 +725,9 @@ class Check:
         elif "read_database_uri" in globals() and isinstance(dataframe, partial) and get_uri_schema(dataframe) == "postgresql":
             self.compute_engine = importlib.import_module("cuallee.psql_validation")
 
+        elif "read_database_uri" in globals() and isinstance(dataframe, partial) and get_uri_schema(dataframe) == "mysql":
+            self.compute_engine = importlib.import_module("cuallee.mysql_validation")
+
         else:
             raise Exception(
                 "Cuallee is not ready for this data structure. You can log a Feature Request in Github."

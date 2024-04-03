@@ -56,3 +56,10 @@ CREATE TABLE public.test7 (id bigint, id2 bigint, id3 bigint, id4 bigint);
 INSERT INTO public.test7 VALUES (1000001, 1000001, 1000000001, 1000000001);
 INSERT INTO public.test7 VALUES (2000001, 2      , 2000000001, 2);
 INSERT INTO public.test7 VALUES (3000002, 3000002, 3000000002, 3000000002);
+
+CREATE TABLE public.test8 (id integer, id2 float, id3 integer, id4 float, id5 float);
+INSERT INTO public.test8 VALUES (10, 10.0, -10, -10.0, 10.0);
+INSERT INTO public.test8 VALUES (20, 10.0, -20, -20.0, -20.0);
+INSERT INTO public.test8 VALUES (30, 10.0, -30, -30.0, 30.0);
+INSERT INTO public.test8 VALUES (40, 10.0, -40, -40.0, -40.0);
+INSERT INTO public.test8 VALUES (50, 10.0, -50, -50.0, 50);

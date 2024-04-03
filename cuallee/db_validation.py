@@ -73,6 +73,10 @@ class Compute(duckdb_compute):
                 THEN 1 ELSE 0 END)
                 """
 
+    def has_workflow(self, rule: Rule) -> str:
+        """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
+        raise NotImplementedError
+
 def validate_data_types(check: Check, dataframe):
     return True
 

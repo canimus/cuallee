@@ -34,16 +34,16 @@ INSERT INTO public.test4 VALUES (30, '2022-06-01');
 INSERT INTO public.test4 VALUES (40, '2022-07-01');
 INSERT INTO public.test4 VALUES (50, '2022-08-01');
 
-CREATE TABLE public.test5 (id integer, id2 date);
-INSERT INTO public.test5 VALUES (10, '2024-04-01');
-INSERT INTO public.test5 VALUES (20, '2024-04-02');
-INSERT INTO public.test5 VALUES (30, '2024-04-03');
-INSERT INTO public.test5 VALUES (40, '2024-04-04');
-INSERT INTO public.test5 VALUES (50, '2024-04-05');
-INSERT INTO public.test5 VALUES (60, '2024-04-06');
-INSERT INTO public.test5 VALUES (70, '2024-04-07');
-INSERT INTO public.test5 VALUES (80, '2024-04-08');
-INSERT INTO public.test5 VALUES (90, '2024-04-09');
+CREATE TABLE public.test5 (id integer, id2 date, id3 date);
+INSERT INTO public.test5 VALUES (10, '2024-04-01', '2024-04-01');
+INSERT INTO public.test5 VALUES (20, '2024-04-02', '2024-05-01');
+INSERT INTO public.test5 VALUES (30, '2024-04-03', '2024-06-01');
+INSERT INTO public.test5 VALUES (40, '2024-04-04', '2024-07-01');
+INSERT INTO public.test5 VALUES (50, '2024-04-05', '2024-08-01');
+INSERT INTO public.test5 VALUES (60, '2024-04-06', '2024-09-01');
+INSERT INTO public.test5 VALUES (70, '2024-04-07', '2024-10-02');
+INSERT INTO public.test5 VALUES (80, '2024-04-08', '2024-10-03');
+INSERT INTO public.test5 VALUES (90, '2024-04-09', '2024-10-04');
 
 CREATE TABLE public.test6 (id integer, id2 TIMESTAMP);
 INSERT INTO public.test6 VALUES (10, '2024-04-01 10:00:00');

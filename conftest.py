@@ -113,16 +113,38 @@ def bq_client():
 postgresql_in_docker = postgres_factories.postgresql_noproc(host="localhost", user= "postgres", password="another!!22TEST", dbname="testdb")
 postgresql = postgres_factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/db/init-db.sql")])
 
-# IDEA: Add mysql tests
 # mysql_in_docker = mysql_factories.mysql_noproc(host="localhost", user= "root")
-# mysql = mysql_factories.mysql("mysql_in_docker",passwd="another!!22TEST",dbname="testdb", load=[Path("./test/unit/db/init-db.sql")])
+# mysql = mysql_factories.mysql("mysql_in_docker", passwd="another!!22TEST", dbname="public")
+
+# @pytest.fixture(params=["postgresql", "mysql"], ids=["PostgreSQL", "MySQL"])
+# def db_conn(request):
+
+#     fixture_name = request.param
+
+#     # Connect to the PostgreSQL database
+#     if fixture_name == 'postgresql':
+#         request.getfixturevalue(fixture_name)
+#         # Connect to the PostgreSQL database
+#         uri = "postgresql://postgres:another!!22TEST@localhost/testdb"
+#         yield db_connector(uri)
+
+
+#     # Connect to the MySQL database
+#     elif fixture_name == 'mysql':
+#         mysql = request.getfixturevalue(fixture_name)
+#         try:
+#             with open(Path("./test/unit/db/init-db.sql"), 'r') as f:
+#                 cur = mysql.cursor()
+#                 cur.execute(f.read())
+#                 # mysql.commit()
+#                 # cur.close()
+#                 uri = "mysql://root:another!!22TEST@localhost/public"
+#                 yield db_connector(uri)
+#         except:
+#             pass
+
 
 @pytest.fixture(scope="session")
 def db_conn():
     uri = "postgresql://postgres:another!!22TEST@localhost/testdb"
-    return db_connector(uri)
-
-# IDEA: create a fixture for automated tests
-# @pytest.fixture(params=[postgresql, mysql])
-# def database(request):
-#     return request.param
+    yield db_connector(uri)

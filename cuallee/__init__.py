@@ -723,7 +723,7 @@ class Check:
             self.compute_engine = importlib.import_module("cuallee.daft_validation")
 
         elif "read_database_uri" in globals() and isinstance(dataframe, partial):
-            self.compute_engine = importlib.import_module("cuallee.db_validation")
+            self.compute_engine = importlib.import_module("cuallee.psql_validation")
 
         else:
             raise Exception(

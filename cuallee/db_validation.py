@@ -5,6 +5,7 @@ import polars as pl
 
 from toolz import first
 from numbers import Number
+from string import Template
 from functools import reduce
 
 from cuallee import Check, Rule, db_connector
@@ -61,6 +62,17 @@ class Compute(duckdb_compute):
         """Percentile range verification for column"""
         return f"PERCENTILE_CONT({rule.settings['percentile']}) WITHIN GROUP (ORDER BY {rule.column})  = {rule.value}"
 
+    def is_inside_interquartile_range(self, rule: Rule) -> str:
+        """Validates a number resides inside the Q3 - Q1 range of values"""
+        return f"""
+                SUM(CASE WHEN {rule.column}
+                BETWEEN
+                (SELECT PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY {rule.column}) AS first_quartile FROM {self.table_name})
+                AND
+                (SELECT PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY {rule.column}) AS third_quartile FROM {self.table_name})
+                THEN 1 ELSE 0 END)
+                """
+
 def validate_data_types(check: Check, dataframe):
     return True
 
@@ -84,11 +96,7 @@ def summary(check: Check, connection: db_connector) -> list:
     \t{check.table_name}
     """
 
-    print(
-        highlight(
-            textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter()
-        )
-    )
+    print( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
 
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):

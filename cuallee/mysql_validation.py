@@ -72,6 +72,10 @@ class Compute(duckdb_compute):
         """Computes entropy of 0-1 vector."""
         raise NotImplementedError
 
+    def is_complete(self, rule: Rule) -> str:
+        """Verify the absence of null values in a column"""
+        return f"SUM({rule.column} IS NOT NULL)"
+
     def are_complete(self, rule: Rule) -> str:
         """Verify the abscence of null values on groups of columns"""
         return (

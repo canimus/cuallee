@@ -22,6 +22,26 @@ class Compute(duckdb_compute):
     def __init__(self, table_name: str = None):
         super().__init__(table_name)
 
+    def has_cardinality(self, rule: Rule) -> str:
+        return f"IF(COUNT(DISTINCT({rule.column})) = {rule.value}, 'True', 'False')"
+
+    def has_correlation(self, rule: Rule) -> str:
+        raise NotImplementedError
+
+    def has_entropy(self, rule: Rule) -> str:
+        """Computes entropy of 0-1 vector."""
+        raise NotImplementedError
+
+    def are_complete(self, rule: Rule) -> str:
+        """Verify the abscence of null values on groups of columns"""
+        return (
+            "SUM( "
+            + " + ".join(
+                [f"({column} IS NOT NULL)" for column in rule.column]
+            )
+            + f") / {float(len(rule.column))}"
+        )
+
     def are_unique(self, rule: Rule) -> str:
         """Validate absence of duplicate in group of columns"""
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "
@@ -102,6 +122,7 @@ def summary(check: Check, connection: db_connector) -> list:
 
     print( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
 
+    # TODO: Fix this
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):
             if result:
@@ -113,7 +134,13 @@ def summary(check: Check, connection: db_connector) -> list:
         elif isinstance(result, list):
             if len(result) == 2:
                 return result[1]
+        elif isinstance(result, str):
+            if result.lower() == "true":
+                return 0
+            elif result.lower() == "false":
+                return nrows
 
+    # TODO: Fix this
     def _calculate_pass_rate(result, nrows):
         if isinstance(result, (bool, np.bool_)):
             if result:
@@ -130,6 +157,11 @@ def summary(check: Check, connection: db_connector) -> list:
                     return result[1] / nrows
             else:
                 return 1.0
+        elif isinstance(result, str):
+            if result.lower() == 'true':
+                return 1.0
+            elif result.lower() == 'false':
+                return 0.0
 
     def _evaluate_status(pass_rate, pass_threshold):
         if pass_rate >= pass_threshold:

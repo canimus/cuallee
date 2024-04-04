@@ -38,8 +38,8 @@ Provider | API | Versions
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.9.2`,~~`0.8.0`~~, ~~`0.7.1`~~
 ![polars](logos/polars.svg?raw=true "Polars API")|`polars`| `0.19.6`
 ![daft](logos/daft.png?raw=true "Daft API")|`daft`| `0.2.19`
-![postgresql](logos/postgres.png?raw=true "PostgreSQL")|`postgresql`|
-![mysql](logos/mysql.png?raw=true "MySQL")|`mysql`|
+![postgresql](logos/postgres.png?raw=true "PostgreSQL")|`postgresql`| tested on `16`
+![mysql](logos/mysql.png?raw=true "MySQL")|`mysql`| tested on `8.3`
 
  <sub>Logos are trademarks of their own brands.</sub>
 
@@ -316,12 +316,12 @@ check.validate(conn)
 ```
 
 ## Relational Databases
-It is possible to use `cuallee` to validate tables in relational databases.
+`[2024-04-06]` ✨ __New feature!__ From `cuallee==<version>`, you can check and validate tables in relational databases. `cuallee` utilizes `Polars` through the `ConnectorX` engine to read from a database. `ConnectorX`, written in Rust, has native support for Apache Arrow, enabling it to transfer data directly into a `Polars`'s `DataFrame` without copying the data (zero-copy).
 
 ### PostgreSQL
 
-All the checks are not available for `PostgreSQL` at the moment.
-List of unavailable checks:
+Not all checks are currently available for `PostgreSQL`.
+Unavailable checks include:
 - `is_daily`
 - `has_entrop`
 - `has_max_by`
@@ -366,8 +366,8 @@ check.validate(db_conn_psql)
 
 ### MySQL
 
-All the checks are not available for `MySQL` at the moment.
-List of unavailable checks:
+Not all checks are currently available for `MySQL`.
+Unavailable checks include:
 - `is_daily`
 - `has_entrop`
 - `has_max_by`
@@ -376,7 +376,9 @@ List of unavailable checks:
 - `has_percentile`
 - `has_correlation`
 - `is_inside_interquartile_range`
+
 <br>
+
 ```python
 from cuallee import db_connector, Check, CheckLevel
 

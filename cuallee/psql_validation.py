@@ -25,9 +25,11 @@ class Compute(duckdb_compute):
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "
 
     def has_std(self, rule: Rule) -> str:
-        """Validate standard deviation on column"""
-        #BUG: This could fail due to floating point precision
-        #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
+        """Validate standard deviation on column.
+        Issues: #Note: This could fail due to floating point precision
+        Suggestions: #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
+        """
+
         return f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT)"
 
     def has_pattern(self, rule: Rule) -> str:
@@ -87,6 +89,17 @@ def compute(check: Check):
 
 
 def summary(check: Check, connection: db_connector) -> list:
+    """
+    Note:
+    -----
+    It appears that the hash key's length exceeds Postgres' limits, resulting in it being truncated.
+
+    For example, the original hash key "B58F8BBF3BEFEBCE45F552AD29CC697673FB82A6D64F30C1F2AB3435E96D5431"
+    will be shortened to "B58F8BBF3BEFEBCE45F552AD29CC697673FB82A6D64F30C1F2AB3435E96D543".
+
+    To prevent the side effects of this truncation, the last character is removed from the hash key by using: `hash_key[:-1]`
+    """
+
     unified_columns = ",\n\t".join(
         [
             # This is the same as compute.`rule.method`(rule)
@@ -142,9 +155,6 @@ def summary(check: Check, connection: db_connector) -> list:
     rows = connection(query = f"select count(*) from {check.table_name}").item(0,0)
 
     unified_results = connection(query = unified_query).to_dict(as_series=False)
-
-    #NOTE: identifier "B58F8BBF3BEFEBCE45F552AD29CC697673FB82A6D64F30C1F2AB3435E96D5431" will
-    #NOTE: be truncated to "B58F8BBF3BEFEBCE45F552AD29CC697673FB82A6D64F30C1F2AB3435E96D543"
 
     computation_basis = [
         {

@@ -29,9 +29,11 @@ class Compute(duckdb_compute):
         return f"IF(MIN({rule.column}) = {rule.value}, 'True', 'False')"
 
     def has_std(self, rule: Rule) -> str:
-        """Validate standard deviation on column"""
-        #BUG: This could fail due to floating point precision
-        #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
+        """Validate standard deviation on column.
+        Issues: #Note: This could fail due to floating point precision
+        Suggestions: #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
+        """
+
         return f"IF( CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT), 'True', 'False')"
 
     def has_mean(self, rule: Rule) -> str:

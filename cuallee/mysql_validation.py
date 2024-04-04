@@ -22,6 +22,28 @@ class Compute(duckdb_compute):
     def __init__(self, table_name: str = None):
         super().__init__(table_name)
 
+    def has_max(self, rule: Rule) -> str:
+        """Validation of a column’s maximum value"""
+        return f"IF(MAX({rule.column}) = {rule.value}, 'True', 'False')"
+
+    def has_min(self, rule: Rule) -> str:
+        """Validation of a column’s minimum value"""
+        return f"IF(MIN({rule.column}) = {rule.value}, 'True', 'False')"
+
+    def has_std(self, rule: Rule) -> str:
+        """Validate standard deviation on column"""
+        #BUG: This could fail due to floating point precision
+        #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
+        return f"IF( CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT), 'True', 'False')"
+
+    def has_mean(self, rule: Rule) -> str:
+        """Validation of a column's average/mean"""
+        return f"IF(AVG({rule.column}) = {rule.value}, 'True', 'False')"
+
+    def has_sum(self, rule: Rule) -> str:
+        """Validation of a column’s sum of values"""
+        return f"IF(SUM({rule.column}) = {rule.value}, 'True', 'False')"
+
     def has_infogain(self, rule: Rule) -> str:
         """Validation column with more than 1 value"""
         return f"IF(COUNT(DISTINCT({rule.column})) > 1, 'True', 'False')"
@@ -51,12 +73,6 @@ class Compute(duckdb_compute):
     def are_unique(self, rule: Rule) -> str:
         """Validate absence of duplicate in group of columns"""
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "
-
-    def has_std(self, rule: Rule) -> str:
-        """Validate standard deviation on column"""
-        #BUG: This could fail due to floating point precision
-        #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
-        return f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT)"
 
     def has_entropy(self, rule: Rule) -> str:
         """Computes entropy of 0-1 vector."""
@@ -126,7 +142,12 @@ def summary(check: Check, connection: db_connector) -> list:
     \t{check.table_name}
     """
 
-    print( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
+
+    print("\n")
+    print("====================== Query: ========================")
+    print(unified_query)
+    print("======================================================")
+
 
     # TODO: Fix this
     def _calculate_violations(result, nrows):

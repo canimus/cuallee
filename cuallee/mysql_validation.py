@@ -181,7 +181,7 @@ def summary(check: Check, connection: db_connector) -> list:
 
     print("\n")
     print("====================== Query: ========================")
-    print(unified_query)
+    print( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
     print("======================================================")
 
 

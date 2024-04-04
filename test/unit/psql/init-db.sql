@@ -1,10 +1,3 @@
-
--- id1: all unique
--- id2: all unique
--- id3: all same
--- id4: all same
--- id5: 2 repeats
--- id6: 2 nulls
 CREATE TABLE public.test1 (id integer, id2 integer, id3 integer, id4 integer, id5 integer, id6 integer);
 INSERT INTO public.test1 VALUES (1, 6, 1, 2, 1, 1);
 INSERT INTO public.test1 VALUES (2, 7, 1, 2, 1, NULL);
@@ -62,4 +55,7 @@ INSERT INTO public.test8 VALUES (10, 10.0, -10, -10.0, 10.0);
 INSERT INTO public.test8 VALUES (20, 10.0, -20, -20.0, -20.0);
 INSERT INTO public.test8 VALUES (30, 10.0, -30, -30.0, 30.0);
 INSERT INTO public.test8 VALUES (40, 10.0, -40, -40.0, -40.0);
-INSERT INTO public.test8 VALUES (50, 10.0, -50, -50.0, 50);
+INSERT INTO public.test8 VALUES (50, 10.0, -50, -50.0, 50.0);
+
+CREATE TABLE public.test9 (id integer);
+INSERT INTO public.test9 VALUES (10);

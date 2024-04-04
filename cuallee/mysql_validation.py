@@ -116,6 +116,45 @@ class Compute(duckdb_compute):
     def satisfies(self, rule: Rule) -> str:
         return f"SUM({rule.value})"
 
+    def is_on_weekday(self, rule: Rule) -> str:
+        """Validates a datetime column is in a Mon-Fri time range"""
+        return f"SUM(DAYOFWEEK({rule.column}) BETWEEN 2 AND 6)"
+
+    def is_on_weekend(self, rule: Rule) -> str:
+        """Validates a datetime column is in a Sat-Sun time range"""
+        return f"SUM(DAYOFWEEK({rule.column}) IN (1,7))"
+
+    def is_on_monday(self, rule: Rule) -> str:
+        """Validates a datetime column is on Mon"""
+        return f"SUM(DAYOFWEEK({rule.column}) = 2 )"
+
+    def is_on_tuesday(self, rule: Rule) -> str:
+        """Validates a datetime column is on Tue"""
+        return f"SUM(DAYOFWEEK({rule.column}) = 3 )"
+
+    def is_on_wednesday(self, rule: Rule) -> str:
+        """Validates a datetime column is on Wed"""
+        return f"SUM(DAYOFWEEK({rule.column}) = 4 )"
+
+    def is_on_thursday(self, rule: Rule) -> str:
+        """Validates a datetime column is on Thu"""
+        return f"SUM(DAYOFWEEK({rule.column}) = 5 )"
+
+    def is_on_friday(self, rule: Rule) -> str:
+        """Validates a datetime column is on Fri"""
+        return f"SUM(DAYOFWEEK({rule.column}) = 6 )"
+
+    def is_on_saturday(self, rule: Rule) -> str:
+        """Validates a datetime column is on Sat"""
+        return f"SUM(DAYOFWEEK({rule.column}) = 7 )"
+
+    def is_on_sunday(self, rule: Rule) -> str:
+        """Validates a datetime column is on Sun"""
+        return f"SUM(DAYOFWEEK({rule.column}) = 1 )"
+
+    def is_on_schedule(self, rule: Rule) -> str:
+        return f"SUM(CAST(EXTRACT(hour from {rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]} AS INTEGER))"
+
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         """Validates a number resides inside the Q3 - Q1 range of values"""
         raise NotImplementedError

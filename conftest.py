@@ -111,7 +111,7 @@ def bq_client():
 
 
 postgresql_in_docker = postgres_factories.postgresql_noproc(host="localhost", user= "postgres", password="another!!22TEST", dbname="testdb")
-postgresql = postgres_factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/psql/init-db.sql")])
+postgresql = postgres_factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/psql/init-db-psql.sql")])
 
 mysql_in_docker = mysql_factories.mysql_noproc(host="localhost", user= "root")
 mysql = mysql_factories.mysql("mysql_in_docker", passwd="another!!22TEST", dbname="public")
@@ -121,7 +121,7 @@ def db_conn_mysql(request):
 
     mysql = request.getfixturevalue("mysql")
     try:
-        with open(Path("./test/unit/psql/init-db.sql"), 'r') as f:
+        with open(Path("./test/unit/mysql/init-db-mysql.sql"), 'r') as f:
             with mysql.cursor() as cur:
                 cur.execute(f.read())
                 mysql.commit()

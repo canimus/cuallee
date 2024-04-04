@@ -2,24 +2,23 @@ import polars as pl
 
 from cuallee import Check
 
-# [ ]: TODO: Fix this test
-# TODO: FIX THIS TESTS
-def test_positive(check: Check):
-    df = pl.DataFrame({"id": ["Herminio", "Herbert", "Harry"]})
+def test_positive(check: Check, postgresql, db_conn_psql):
     check.has_pattern("id", r"^H.*")
-    result = check.validate(df).select(pl.col("status")) == "PASS"
-    assert all(result.to_series().to_list())
+    check.table_name = "public.test9"
+    result = check.validate(db_conn_psql)
+    assert (result.select(pl.col("status")) == "PASS" ).to_series().all()
 
 
-def test_is_legit(check: Check):
-    df = pl.DataFrame({"id": ["Herminio", "Herbert", "Harry"]})
-    check.is_legit("id")
-    result = check.validate(df).select(pl.col("status")) == "PASS"
-    assert all(result.to_series().to_list())
+def test_is_legit(check: Check, postgresql, db_conn_psql):
+    check.has_pattern("id3", r"^H.*")
+    check.table_name = "public.test9"
+    result = check.validate(db_conn_psql)
+    assert (result.select(pl.col("status")) == "FAIL" ).to_series().all()
 
 
-def test_is_not_legit(check: Check):
-    df = pl.DataFrame({"id": ["Herminio", "Herbert", ""]})
-    check.is_legit("id")
-    result = check.validate(df).select(pl.col("status")) == "FAIL"
-    assert all(result.to_series().to_list())
+def test_is_not_legit(check: Check, postgresql, db_conn_psql):
+    check.has_pattern("id2", r"^H.*", 2/3)
+    check.table_name = "public.test9"
+    result = check.validate(db_conn_psql)
+    assert (result.select(pl.col("status")) == "PASS" ).to_series().all()
+    assert (result.select(pl.col("pass_rate")) == 2/3).to_series().all()

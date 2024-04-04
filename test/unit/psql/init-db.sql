@@ -57,5 +57,11 @@ INSERT INTO public.test8 VALUES (30, 10.0, -30, -30.0, 30.0);
 INSERT INTO public.test8 VALUES (40, 10.0, -40, -40.0, -40.0);
 INSERT INTO public.test8 VALUES (50, 10.0, -50, -50.0, 50.0);
 
-CREATE TABLE public.test9 (id integer);
-INSERT INTO public.test9 VALUES (10);
+CREATE TABLE public.test9 (id varchar(255), id2 varchar(255), id3 varchar(255));
+INSERT INTO public.test9 VALUES ('Herminio', 'Herminio', 'Jack');
+INSERT INTO public.test9 VALUES ('Herbert',  'Herbert',  'Jill');
+INSERT INTO public.test9 VALUES ('Harry',    '',        'Jillian');
+
+
+CREATE TABLE public.test10 (id integer);
+INSERT INTO public.test10 VALUES (10);

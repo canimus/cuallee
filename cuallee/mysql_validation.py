@@ -156,6 +156,10 @@ class Compute(duckdb_compute):
         """Validation of a datetime column between an hour interval"""
         return f"SUM(HOUR({rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]})"
 
+    def has_pattern(self, rule: Rule) -> str:
+        """Validation for string type column matching regex expression"""
+        return f"SUM({rule.column} REGEXP '{rule.value}')"
+
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         """Validates a number resides inside the Q3 - Q1 range of values"""
         raise NotImplementedError

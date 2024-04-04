@@ -32,6 +32,10 @@ class Compute(duckdb_compute):
         #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
         return f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT)"
 
+    def has_pattern(self, rule: Rule) -> str:
+        """Validation for string type column matching regex expression"""
+        return f"SUM(CASE WHEN {rule.column} ~ '{rule.value}' THEN 1 ELSE 0 END)"
+
     def has_entropy(self, rule: Rule) -> str:
         """Computes entropy of 0-1 vector."""
         raise NotImplementedError

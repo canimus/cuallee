@@ -236,7 +236,6 @@ def summary(check: Check, connection: db_connector) -> list:
 
     logging.debug( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
 
-    # TODO: Fix this
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):
             if result:
@@ -254,7 +253,6 @@ def summary(check: Check, connection: db_connector) -> list:
             elif result.lower() == "false":
                 return nrows
 
-    # TODO: Fix this
     def _calculate_pass_rate(result, nrows):
         if isinstance(result, (bool, np.bool_)):
             if result:
@@ -293,9 +291,9 @@ def summary(check: Check, connection: db_connector) -> list:
             "timestamp": check.date.strftime("%Y-%m-%d %H:%M:%S"),
             "check": check.name,
             "level": check.level.name,
-            "column": rule.column,
+            "column": str(rule.column),
             "rule": rule.method,
-            "value": rule.value,
+            "value": str(rule.value),
             "rows": rows,
             "violations": _calculate_violations(first(unified_results[hash_key]), rows),
             "pass_rate": _calculate_pass_rate(first(unified_results[hash_key]), rows),

@@ -106,6 +106,13 @@ class Compute(duckdb_compute):
         """Validation for numeric column equal than value"""
         return f"SUM({rule.column} = {rule.value})"
 
+    def is_contained_in(self, rule: Rule) -> str:
+        return f"SUM({rule.column} IN {rule.value})"
+
+    def is_inside_interquartile_range(self, rule: Rule) -> str:
+        """Validates a number resides inside the Q3 - Q1 range of values"""
+        raise NotImplementedError
+
     def are_unique(self, rule: Rule) -> str:
         """Validate absence of duplicate in group of columns"""
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "

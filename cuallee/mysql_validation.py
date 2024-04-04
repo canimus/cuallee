@@ -60,6 +60,10 @@ class Compute(duckdb_compute):
         """Validation for string type column matching regex expression"""
         return f"SUM(CAST(REGEXP_MATCHES({rule.column}, '{rule.value}') AS INTEGER))"
 
+    def is_between(self, rule: Rule) -> str:
+        """Validation of a column between a range"""
+        return f"SUM({rule.column} BETWEEN '{rule.value[0]}' AND '{rule.value[1]}')"
+
     def has_correlation(self, rule: Rule) -> str:
         """Validates the correlation between 2 columns with some tolerance"""
         raise NotImplementedError

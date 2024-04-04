@@ -62,6 +62,5 @@ INSERT INTO public.test9 VALUES ('Herminio', 'Herminio', 'Jack');
 INSERT INTO public.test9 VALUES ('Herbert',  'Herbert',  'Jill');
 INSERT INTO public.test9 VALUES ('Harry',    '',        'Jillian');
 
-
 CREATE TABLE public.test10 (id integer);
 INSERT INTO public.test10 VALUES (10);

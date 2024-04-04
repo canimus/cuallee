@@ -15,7 +15,7 @@ def test_positive(check: Check, postgresql, db_conn_psql):
 @pytest.mark.skip(reason="Not implemented yet!")
 def test_negative(check: Check, postgresql, db_conn_psql):
     check.has_entropy("id", 1.0)
-    df = pl.DataFrame({"id": [10, 10, 10, 10, 50]})
+    df = pl.DataFrame({"id": [10, 10, 10, 10, 50]})  # noqa: F841
     check.table_name = "public.test1"
     result = check.validate(db_conn_psql)
     assert (result.select(pl.col("status")) == "FAIL" ).to_series().all()

@@ -1,12 +1,10 @@
+import logging
 import operator
 import numpy as np
-import pandas as pd
 import polars as pl
 
 from toolz import first
 from numbers import Number
-from string import Template
-from functools import reduce
 
 from cuallee import Check, Rule, db_connector
 from cuallee.duckdb_validation import Compute as duckdb_compute
@@ -156,7 +154,7 @@ class Compute(duckdb_compute):
         """Validation of a datetime column between an hour interval"""
         return f"SUM(HOUR({rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]})"
 
-    def has_pattern(self, rule: Rule) -> str:
+    def has_pattern(self, rule: Rule) -> str:  # noqa: F811
         """Validation for string type column matching regex expression"""
         return f"SUM({rule.column} REGEXP '{rule.value}')"
 
@@ -168,7 +166,7 @@ class Compute(duckdb_compute):
         """Validate absence of duplicate in group of columns"""
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "
 
-    def has_entropy(self, rule: Rule) -> str:
+    def has_entropy(self, rule: Rule) -> str: # noqa: F811
         """Computes entropy of 0-1 vector."""
         raise NotImplementedError
 
@@ -194,11 +192,11 @@ class Compute(duckdb_compute):
         """
         raise NotImplementedError
 
-    def has_percentile(self, rule: Rule) -> str:
+    def has_percentile(self, rule: Rule) -> str: # noqa: F811
         """Percentile range verification for column"""
         raise NotImplementedError
 
-    def is_inside_interquartile_range(self, rule: Rule) -> str:
+    def is_inside_interquartile_range(self, rule: Rule) -> str: # noqa: F811
         """Validates a number resides inside the Q3 - Q1 range of values"""
         return f"""
                 SUM(CASE WHEN {rule.column}
@@ -236,12 +234,7 @@ def summary(check: Check, connection: db_connector) -> list:
     \t{check.table_name}
     """
 
-
-    print("\n")
-    print("====================== Query: ========================")
-    print( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
-    print("======================================================")
-
+    logging.debug( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
 
     # TODO: Fix this
     def _calculate_violations(result, nrows):

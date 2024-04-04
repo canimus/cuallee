@@ -1,6 +1,4 @@
-import pytest
 import polars as pl
-from datetime import date
 
 from cuallee import Check
 

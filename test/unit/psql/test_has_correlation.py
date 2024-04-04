@@ -14,7 +14,6 @@ def test_with_null(check: Check, postgresql, db_conn_psql):
     check.has_correlation("id4", "id2", 1.0)
     check.table_name = "public.test2"
     result = check.validate(db_conn_psql)
-    print(result)
     assert (result.select(pl.col("status")) == "PASS" ).to_series().all()
 
 

@@ -1,12 +1,10 @@
+import logging
 import operator
 import numpy as np
-import pandas as pd
 import polars as pl
 
 from toolz import first
 from numbers import Number
-from string import Template
-from functools import reduce
 
 from cuallee import Check, Rule, db_connector
 from cuallee.duckdb_validation import Compute as duckdb_compute
@@ -104,7 +102,7 @@ def summary(check: Check, connection: db_connector) -> list:
     \t{check.table_name}
     """
 
-    print( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
+    logging.debug( highlight( textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter() ) )
 
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):

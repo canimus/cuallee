@@ -14,7 +14,6 @@ def test_negative(check: Check, db_conn_mysql):
     check.is_negative("id")
     check.table_name = "public.test8"
     result = check.validate(db_conn_mysql)
-    print(db_conn_mysql(query="""SELECT * FROM public.test8"""))
     assert (result.select(pl.col("status")) == "FAIL" ).to_series().all()
 
 

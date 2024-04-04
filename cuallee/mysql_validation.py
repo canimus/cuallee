@@ -52,6 +52,14 @@ class Compute(duckdb_compute):
         """Validation of a column’s different values"""
         return f"IF(COUNT(DISTINCT({rule.column})) = {rule.value}, 'True', 'False')"
 
+    def has_percentile(self, rule: Rule) -> str:
+        """Validation of a column percentile value"""
+        return f"QUANTILE_CONT({rule.column}, {rule.settings['percentile']}) = {rule.value}"
+
+    def has_pattern(self, rule: Rule) -> str:
+        """Validation for string type column matching regex expression"""
+        return f"SUM(CAST(REGEXP_MATCHES({rule.column}, '{rule.value}') AS INTEGER))"
+
     def has_correlation(self, rule: Rule) -> str:
         """Validates the correlation between 2 columns with some tolerance"""
         raise NotImplementedError
@@ -102,7 +110,7 @@ class Compute(duckdb_compute):
 
     def has_percentile(self, rule: Rule) -> str:
         """Percentile range verification for column"""
-        return f"PERCENTILE_CONT({rule.settings['percentile']}) WITHIN GROUP (ORDER BY {rule.column})  = {rule.value}"
+        raise NotImplementedError
 
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         """Validates a number resides inside the Q3 - Q1 range of values"""

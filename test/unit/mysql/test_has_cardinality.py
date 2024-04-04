@@ -2,7 +2,6 @@ import polars as pl
 
 from cuallee import Check
 
-# CHECK: results if they are correct
 
 def test_positive(check: Check, db_conn_mysql):
     check.has_cardinality("id", 5)

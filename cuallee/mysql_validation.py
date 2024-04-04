@@ -22,10 +22,16 @@ class Compute(duckdb_compute):
     def __init__(self, table_name: str = None):
         super().__init__(table_name)
 
+    def has_infogain(self, rule: Rule) -> str:
+        """Validation column with more than 1 value"""
+        return f"IF(COUNT(DISTINCT({rule.column})) > 1, 'True', 'False')"
+
     def has_cardinality(self, rule: Rule) -> str:
+        """Validation of a column’s different values"""
         return f"IF(COUNT(DISTINCT({rule.column})) = {rule.value}, 'True', 'False')"
 
     def has_correlation(self, rule: Rule) -> str:
+        """Validates the correlation between 2 columns with some tolerance"""
         raise NotImplementedError
 
     def has_entropy(self, rule: Rule) -> str:

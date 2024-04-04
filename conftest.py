@@ -126,7 +126,7 @@ def db_conn_mysql(request):
                 cur.execute(f.read())
                 mysql.commit()
                 cur.close()
-    except:
+    except:  # noqa: E722
         pass
 
     uri = "mysql://root:another!!22TEST@localhost"

@@ -7,14 +7,14 @@ import pytest
 @pytest.mark.skip(reason="Not implemented yet!")
 def test_positive(check: Check, db_conn_psql):
     check.has_min_by("id", "id2", 300)
-    df = pl.DataFrame({"id": [10, 20], "id2": [300, 500]})
+    df = pl.DataFrame({"id": [10, 20], "id2": [300, 500]})  # noqa: F841
     result = check.validate(db_conn_psql).select(pl.col("status")) == "PASS"
     assert all(result.to_series().to_list())
 
 @pytest.mark.skip(reason="Not implemented yet!")
 def test_negative(check: Check, db_conn_psql):
     check.has_min_by("id", "id2", 50)
-    df = pl.DataFrame({"id": [10, 20], "id2": [300, 500]})
+    df = pl.DataFrame({"id": [10, 20], "id2": [300, 500]})  # noqa: F841
     result = check.validate(db_conn_psql).select(pl.col("status")) == "FAIL"
     assert all(result.to_series().to_list())
 

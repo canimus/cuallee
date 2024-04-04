@@ -153,7 +153,8 @@ class Compute(duckdb_compute):
         return f"SUM(DAYOFWEEK({rule.column}) = 1 )"
 
     def is_on_schedule(self, rule: Rule) -> str:
-        return f"SUM(CAST(EXTRACT(hour from {rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]} AS INTEGER))"
+        """Validation of a datetime column between an hour interval"""
+        return f"SUM(HOUR({rule.column}) BETWEEN {rule.value[0]} AND {rule.value[1]})"
 
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         """Validates a number resides inside the Q3 - Q1 range of values"""

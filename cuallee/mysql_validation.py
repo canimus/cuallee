@@ -86,6 +86,26 @@ class Compute(duckdb_compute):
             + f") / {float(len(rule.column))}"
         )
 
+    def is_greater_than(self, rule: Rule) -> str:
+        """Validation for numeric greater than value"""
+        return f"SUM({rule.column} > {rule.value})"
+
+    def is_less_than(self, rule: Rule) -> str:
+        """Validation for numeric less than value"""
+        return f"SUM({rule.column} < {rule.value})"
+
+    def is_greater_or_equal_than(self, rule: Rule) -> str:
+        """Validation for numeric greater or equal than value"""
+        return f"SUM({rule.column} >= {rule.value})"
+
+    def is_less_or_equal_than(self, rule: Rule) -> str:
+        """Validation for numeric less or equal than value"""
+        return f"SUM({rule.column} <= {rule.value})"
+
+    def is_equal_than(self, rule: Rule) -> str:
+        """Validation for numeric column equal than value"""
+        return f"SUM({rule.column} = {rule.value})"
+
     def are_unique(self, rule: Rule) -> str:
         """Validate absence of duplicate in group of columns"""
         return "( "+ " + ".join( f"COUNT(DISTINCT({column}))" for column in rule.column) + f" ) / {float(len(rule.column))} "

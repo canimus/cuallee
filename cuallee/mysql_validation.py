@@ -113,6 +113,9 @@ class Compute(duckdb_compute):
         """Validation of column value not in a set of given values"""
         return f"SUM({rule.column} NOT IN {rule.value})"
 
+    def satisfies(self, rule: Rule) -> str:
+        return f"SUM({rule.value})"
+
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         """Validates a number resides inside the Q3 - Q1 range of values"""
         raise NotImplementedError

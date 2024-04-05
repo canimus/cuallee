@@ -29,7 +29,6 @@ class Compute(duckdb_compute):
         Issues: #Note: This could fail due to floating point precision
         Suggestions: #IDEA: Use f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) - CAST({rule.value} AS FLOAT) < {percision_error}"
         """
-
         return f"CAST(STDDEV_SAMP({rule.column}) AS FLOAT) = CAST({rule.value} AS FLOAT)"
 
     def has_pattern(self, rule: Rule) -> str:

@@ -1,5 +1,5 @@
 # How To Setup Test Environment
-This guide simplifies the process of unit testing `cuallee` with `PyTest`.
+This guide assists with the setup of unit testing `cuallee` with `PyTest`.
 
 ## PostgreSQL
 
@@ -11,7 +11,7 @@ docker run -e POSTGRES_PASSWORD="another!!22TEST" -p 5432:5432 -d --name psql_te
 ```
 This will create a container with name `psql_test_db` and user `postgres` with password `another!!22TEST`. Once the database is created, you can use it to run tests.
 
-The project integrates `pytest-postgresql` to facilitate testing. This tool provides a `PyTest` fixture that establishes a connection to your PostgreSQL database, loads test data from `./test/unit/mysql/init-db-mysql.sql`, and ensures proper cleanup after tests conclude.
+The project integrates `pytest-postgresql` to facilitate testing. This tool provides a `PyTest` fixture that establishes a connection to your PostgreSQL database, loads test data from `./test/unit/psql/init-db-psql.sql`, and ensures proper cleanup after tests conclude.
 
 Simply incorporate this fixture into your test cases to automatically leverage the configured database.
 

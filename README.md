@@ -316,7 +316,7 @@ check.validate(conn)
 ```
 
 ## Relational Databases
-`[2024-04-06]` ✨ __New feature!__ From `cuallee==<version>`, you can check and validate tables in relational databases. `cuallee` utilizes `Polars` through the `ConnectorX` engine to read from a database. `ConnectorX`, written in Rust, has native support for Apache Arrow, enabling it to transfer data directly into a `Polars`'s `DataFrame` without copying the data (zero-copy).
+`[2024-04-06]` ✨ __New feature!__ From `cuallee==<version>`, you can check and validate tables in relational databases. `cuallee` utilizes `Polars` with the `ConnectorX` engine to read from a database. `ConnectorX`, written in Rust, has native support for Apache Arrow, enabling it to transfer data directly into a `Polars`'s `DataFrame` without copying the data (zero-copy).
 
 ### PostgreSQL
 

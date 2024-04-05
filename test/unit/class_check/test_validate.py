@@ -4,6 +4,7 @@ import pandas as pd
 from pyspark.sql import DataFrame
 from google.cloud import bigquery
 from cuallee import Check, CheckLevel
+from polars import DataFrame as polars_dataframe
 
 
 # __ SPARK DATAFRAME TESTS __
@@ -128,6 +129,52 @@ def test_column_name_validation_daft():
         )
         assert "Column(s): ide not in dataframe" == str(e)
 
+
+# __ DB Tables TESTS __
+
+def test_return_mysql_dataframe(check: Check, db_conn_mysql):
+    check.is_complete("id")
+    check.table_name = "public.test1"
+    result = check.validate(db_conn_mysql)
+    assert isinstance(result, polars_dataframe)
+
+def test_return_psql_dataframe(check: Check, postgresql, db_conn_psql):
+    check.is_complete("id")
+    check.table_name = "public.test1"
+    result = check.validate(db_conn_psql)
+    assert isinstance(result, polars_dataframe)
+
+
+def test_empty_dictionary_mysql(db_conn_mysql):
+    with pytest.raises(
+        Exception,
+        match="Check is empty",
+    ):
+        Check(CheckLevel.WARNING, "test_empty_observation_db").validate(db_conn_mysql)
+
+def test_empty_dictionary_psql(postgresql, db_conn_psql):
+    with pytest.raises(
+        Exception,
+        match="Check is empty",
+    ):
+        Check(CheckLevel.WARNING, "test_empty_observation_db").validate(db_conn_psql)
+
+
+def test_column_name_validation_mysql(check: Check, db_conn_mysql):
+    with pytest.raises(Exception) as e:
+        check.is_complete("ide")
+        check.table_name = "public.test1"
+        check.validate(db_conn_mysql)
+    assert "MySqlError { ERROR 1054 (42S22): Unknown column 'ide' in 'field list' }" in str(e.value)
+
+
+def test_column_name_validation_psql(check: Check, postgresql, db_conn_psql):
+    with pytest.raises(Exception) as e:
+        check.is_complete("ide")
+        check.table_name = "public.test1"
+        check.validate(db_conn_psql)
+        print(str(e.value))
+    assert 'db error: ERROR: column "ide" does not exist' in str(e.value)
 
 # __ BIGQUERY TESTS __
 # def test_validate_bigquery(bq_client):

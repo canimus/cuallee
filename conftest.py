@@ -1,11 +1,15 @@
 import os
-import warnings
 import pytest
-from cuallee import Check, CheckLevel
-from pyspark.sql import SparkSession
-from pathlib import Path
-import logging
 import duckdb
+import logging
+
+from pathlib import Path
+from pyspark.sql import SparkSession
+from pytest_mysql import factories as mysql_factories
+from pytest_postgresql import factories as postgres_factories
+
+from cuallee import Check, CheckLevel, db_connector
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +76,7 @@ def snowpark():
 
 
 @pytest.fixture(scope="function")
-def db() -> duckdb.DuckDBPyConnection:
+def db() -> duckdb.DuckDBPyConnection: # type: ignore
     try:
         conn = duckdb.connect(":memory:")
         conn.execute("CREATE TABLE TEMP AS SELECT UNNEST(RANGE(10)) AS ID")
@@ -96,7 +100,7 @@ def bq_client():
             json.dump(json.loads(os.getenv("GOOGLE_KEY")), writer)
 
         credentials = service_account.Credentials.from_service_account_file("key.json")
-        
+
     try:
         client = bigquery.Client(project="cuallee-bigquery-386709", credentials=credentials)
         return client
@@ -104,3 +108,32 @@ def bq_client():
         pass
     #finally:
         #client.stop()
+
+
+postgresql_in_docker = postgres_factories.postgresql_noproc(host="localhost", user= "postgres", password="another!!22TEST", dbname="testdb")
+postgresql = postgres_factories.postgresql("postgresql_in_docker", load=[Path("./test/unit/psql/init-db-psql.sql")])
+
+mysql_in_docker = mysql_factories.mysql_noproc(host="localhost", user= "root")
+mysql = mysql_factories.mysql("mysql_in_docker", passwd="another!!22TEST", dbname="public")
+
+@pytest.fixture()
+def db_conn_mysql(request):
+
+    mysql = request.getfixturevalue("mysql")
+    try:
+        with open(Path("./test/unit/mysql/init-db-mysql.sql"), 'r') as f:
+            with mysql.cursor() as cur:
+                cur.execute(f.read())
+                mysql.commit()
+                cur.close()
+    except:  # noqa: E722
+        pass
+
+    uri = "mysql://root:another!!22TEST@localhost"
+    yield db_connector(uri)
+
+
+@pytest.fixture(scope="session")
+def db_conn_psql():
+    uri = "postgresql://postgres:another!!22TEST@localhost/testdb"
+    yield db_connector(uri)

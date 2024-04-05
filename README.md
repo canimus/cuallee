@@ -14,7 +14,7 @@
 
 Meaning `good` in Aztec (Nahuatl), _pronounced: QUAL-E_
 
-This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, `daft` and more.
+This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `Pandas`, `Snowpark`, `DuckDB`, `BigQuery` ,`Daft`, `MySQL`, `PostgreSQL` and more.
 It is a replacement written in pure `python` of the `pydeequ` framework.
 
 I gave up in _deequ_ as after extensive use, the API is not user-friendly, the Python Callback servers produce additional costs in our compute clusters, and the lack of support to the newest version of PySpark.
@@ -38,6 +38,8 @@ Provider | API | Versions
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.9.2`,~~`0.8.0`~~, ~~`0.7.1`~~
 ![polars](logos/polars.svg?raw=true "Polars API")|`polars`| `0.19.6`
 ![daft](logos/daft.png?raw=true "Daft API")|`daft`| `0.2.19`
+![postgresql](logos/postgres.png?raw=true "PostgreSQL")|`postgresql`| tested on `16`
+![mysql](logos/mysql.png?raw=true "MySQL")|`mysql`| tested on `8.3`
 
  <sub>Logos are trademarks of their own brands.</sub>
 
@@ -313,6 +315,94 @@ check.validate(conn)
 1   2  2022-10-31 23:15:06  test  WARNING  tpep_pickup_datetime  is_complete   N/A  19817583         0.0        1.0             1.0   PASS
 ```
 
+## Relational Databases
+`[2024-04-06]` ✨ __New feature!__ From `cuallee==<version>`, you can check and validate tables in relational databases. `cuallee` utilizes `Polars` with the `ConnectorX` engine to read from a database. `ConnectorX`, written in Rust, has native support for Apache Arrow, enabling it to transfer data directly into a `Polars`'s `DataFrame` without copying the data (zero-copy).
+
+### PostgreSQL
+
+Not all checks are currently available for `PostgreSQL`.
+Unavailable checks include:
+- `is_daily`
+- `has_entropy`
+- `has_workflow`
+
+<br>
+
+```python
+from cuallee import db_connector, Check, CheckLevel
+
+# Postgres URI connection
+uri = "postgresql://<User>:<Password>@<Host>/<Database>"
+
+# Using db_connector to create connector to the database
+db_conn_psql = db_connector(uri)
+
+# Create a check with table name with schema
+check = Check(CheckLevel.WARNING, "PostgresCheck", table_name="schema.table")
+
+(  check.are_complete(("id", "id2"))
+        .is_positive("id", 0.5)
+        .is_less_than("id", 50)
+        .is_between("id2", (0, 100)))
+
+check.validate(db_conn_psql)
+
+┌─────┬─────────────────────┬───────────────┬─────────┬───────────────┬─────────────────┬──────────┬──────┬────────────┬───────────┬────────────────┬────────┐
+│ id  ┆ timestamp           ┆ check         ┆ level   ┆ column        ┆ rule            ┆ value    ┆ rows ┆ violations ┆ pass_rate ┆ pass_threshold ┆ status │
+│ --- ┆ ---                 ┆ ---           ┆ ---     ┆ ---           ┆ ---             ┆ ---      ┆ ---  ┆ ---        ┆ ---       ┆ ---            ┆ ---    │
+│ i64 ┆ str                 ┆ str           ┆ str     ┆ str           ┆ str             ┆ str      ┆ i64  ┆ f64        ┆ f64       ┆ f64            ┆ str    │
+╞═════╪═════════════════════╪═══════════════╪═════════╪═══════════════╪═════════════════╪══════════╪══════╪════════════╪═══════════╪════════════════╪════════╡
+│ 1   ┆ 2024-04-04 21:38:50 ┆ PostgresCheck ┆ WARNING ┆ ('id', 'id2') ┆ are_complete    ┆ N/A      ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 1.0            ┆ PASS   │
+│ 2   ┆ 2024-04-04 21:38:50 ┆ PostgresCheck ┆ WARNING ┆ id            ┆ is_greater_than ┆ 0        ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 0.5            ┆ PASS   │
+│ 3   ┆ 2024-04-04 21:38:50 ┆ PostgresCheck ┆ WARNING ┆ id            ┆ is_less_than    ┆ 50       ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 1.0            ┆ PASS   │
+│ 4   ┆ 2024-04-04 21:38:50 ┆ PostgresCheck ┆ WARNING ┆ id2           ┆ is_between      ┆ (0, 100) ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 1.0            ┆ PASS   │
+└─────┴─────────────────────┴───────────────┴─────────┴───────────────┴─────────────────┴──────────┴──────┴────────────┴───────────┴────────────────┴────────┘
+```
+
+### MySQL
+
+Not all checks are currently available for `MySQL`.
+Unavailable checks include:
+- `is_daily`
+- `has_entropy`
+- `has_workflow`
+- `has_percentile`
+- `has_correlation`
+- `is_inside_interquartile_range`
+
+<br>
+
+```python
+from cuallee import db_connector, Check, CheckLevel
+
+# MySQL URI Connection
+uri = "mysql://<User>:<Password>@<Host>"
+
+# Using db_connector to create connector to the database
+db_conn_mysql = db_connector(uri)
+
+# Create a check with table name with database name
+check = Check(CheckLevel.WARNING, "MySQLCheck", table_name="database_name.table")
+
+(  check.are_complete(("id", "id2"))
+        .is_positive("id", 0.5)
+        .is_less_than("id", 50)
+        .is_between("id2", (0, 100)))
+
+check.validate(db_conn_mysql)
+
+┌─────┬─────────────────────┬────────────┬─────────┬───────────────┬─────────────────┬──────────┬──────┬────────────┬───────────┬────────────────┬────────┐
+│ id  ┆ timestamp           ┆ check      ┆ level   ┆ column        ┆ rule            ┆ value    ┆ rows ┆ violations ┆ pass_rate ┆ pass_threshold ┆ status │
+│ --- ┆ ---                 ┆ ---        ┆ ---     ┆ ---           ┆ ---             ┆ ---      ┆ ---  ┆ ---        ┆ ---       ┆ ---            ┆ ---    │
+│ i64 ┆ str                 ┆ str        ┆ str     ┆ str           ┆ str             ┆ str      ┆ i64  ┆ f64        ┆ f64       ┆ f64            ┆ str    │
+╞═════╪═════════════════════╪════════════╪═════════╪═══════════════╪═════════════════╪══════════╪══════╪════════════╪═══════════╪════════════════╪════════╡
+│ 1   ┆ 2024-04-04 21:49:21 ┆ MySQLCheck ┆ WARNING ┆ ('id', 'id2') ┆ are_complete    ┆ N/A      ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 1.0            ┆ PASS   │
+│ 2   ┆ 2024-04-04 21:49:21 ┆ MySQLCheck ┆ WARNING ┆ id            ┆ is_greater_than ┆ 0        ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 0.5            ┆ PASS   │
+│ 3   ┆ 2024-04-04 21:49:21 ┆ MySQLCheck ┆ WARNING ┆ id            ┆ is_less_than    ┆ 50       ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 1.0            ┆ PASS   │
+│ 4   ┆ 2024-04-04 21:49:21 ┆ MySQLCheck ┆ WARNING ┆ id2           ┆ is_between      ┆ (0, 100) ┆ 5    ┆ 0.0        ┆ 1.0       ┆ 1.0            ┆ PASS   │
+└─────┴─────────────────────┴────────────┴─────────┴───────────────┴─────────────────┴──────────┴──────┴────────────┴───────────┴────────────────┴────────┘
+```
+
 ## Roadmap
 
 `100%` data frame agnostic implementation of data quality checks.
@@ -329,6 +419,7 @@ Define once, `run everywhere`
 - ~~[*] Dagster Integration~~
 - ~~[x] Spark Connect~~
 - ~~[x] Daft~~
+- [-] Relational Databases (MySQL, PostgreSQL)
 - [-] PDF Report
 - [ ] Metadata check
 - [ ] Help us in a discussion?

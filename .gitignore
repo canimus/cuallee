@@ -29,3 +29,6 @@ build/
 .coverage
 app/
 creds.json
+
+playground.ipynb
+playground.py

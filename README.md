@@ -393,9 +393,7 @@ check = Check(CheckLevel.WARNING, "MySQLCheck", table_name="database_name.table"
         .is_less_than("id", 50)
         .is_between("id2", (0, 100)))
 
-result = check.validate(db_conn_mysql)
-print(result)
-
+check.validate(db_conn_mysql)
 
 ┌─────┬─────────────────────┬────────────┬─────────┬───────────────┬─────────────────┬──────────┬──────┬────────────┬───────────┬────────────────┬────────┐
 │ id  ┆ timestamp           ┆ check      ┆ level   ┆ column        ┆ rule            ┆ value    ┆ rows ┆ violations ┆ pass_rate ┆ pass_threshold ┆ status │

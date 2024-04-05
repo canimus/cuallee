@@ -333,13 +333,13 @@ Unavailable checks include:
 ```python
 from cuallee import db_connector, Check, CheckLevel
 
-# Postgres URI Connection
+# Postgres URI connection
 uri = "postgresql://<User>:<Password>@<Host>/<Database>"
 
 # Using db_connector to create connector to the database
 db_conn_psql = db_connector(uri)
 
-# Create Check with table name with schema
+# Create a check with table name with schema
 check = Check(CheckLevel.WARNING, "PostgresCheck", table_name="schema.table")
 
 (  check.are_complete(("id", "id2"))
@@ -385,7 +385,7 @@ uri = "mysql://<User>:<Password>@<Host>"
 # Using db_connector to create connector to the database
 db_conn_mysql = db_connector(uri)
 
-# Create Check with table Name with database name
+# Create a check with table name with database name
 check = Check(CheckLevel.WARNING, "MySQLCheck", table_name="database_name.table")
 
 (  check.are_complete(("id", "id2"))

@@ -176,25 +176,21 @@ class Compute:
 
     def has_max_by(self, rule: Rule) -> str:
         """Adjacent column maximum value verifiation on threshold"""
-        """
-        ```sql
-        SELECT id
-        FROM public.test1
-        WHERE id2 = (SELECT MAX(id2) FROM public.test1);
-        ```
-        """
-        raise NotImplementedError
+        return f"""if(
+                    (SELECT {rule.column[1]}  = {rule.value}
+                        FROM {self.table_name}
+                        WHERE
+                            {rule.column[0]} = (SELECT MAX({rule.column[0]}) FROM {self.table_name}) )
+                    , 'True', 'False')"""
 
     def has_min_by(self, rule: Rule) -> str:
         """Adjacent column minimum value verifiation on threshold"""
-        """
-        ```sql
-        SELECT id
-        FROM public.test1
-        WHERE id2 = (SELECT MIN(id2) FROM public.test1);
-        ```
-        """
-        raise NotImplementedError
+        return f"""if(
+                    (SELECT {rule.column[1]}  = {rule.value}
+                        FROM {self.table_name}
+                        WHERE
+                            {rule.column[0]} = (SELECT MIN({rule.column[0]}) FROM {self.table_name}) )
+                    , 'True', 'False')"""
 
     def has_percentile(self, rule: Rule) -> str: # noqa: F811
         """Percentile range verification for column"""

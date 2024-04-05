@@ -323,9 +323,7 @@ check.validate(conn)
 Not all checks are currently available for `PostgreSQL`.
 Unavailable checks include:
 - `is_daily`
-- `has_entrop`
-- `has_max_by`
-- `has_min_by`
+- `has_entropy`
 - `has_workflow`
 
 <br>
@@ -366,9 +364,7 @@ check.validate(db_conn_psql)
 Not all checks are currently available for `MySQL`.
 Unavailable checks include:
 - `is_daily`
-- `has_entrop`
-- `has_max_by`
-- `has_min_by`
+- `has_entropy`
 - `has_workflow`
 - `has_percentile`
 - `has_correlation`

@@ -339,11 +339,8 @@ uri = "postgresql://<User>:<Password>@<Host>/<Database>"
 # Using db_connector to create connector to the database
 db_conn_psql = db_connector(uri)
 
-# Create Check
-check = Check(CheckLevel.WARNING, "PostgresCheck")
-
-# Table Name with Schema
-check.table_name = "schema.table"
+# Create Check with table name with schema
+check = Check(CheckLevel.WARNING, "PostgresCheck", table_name="schema.table")
 
 (  check.are_complete(("id", "id2"))
         .is_positive("id", 0.5)
@@ -388,11 +385,8 @@ uri = "mysql://<User>:<Password>@<Host>"
 # Using db_connector to create connector to the database
 db_conn_mysql = db_connector(uri)
 
-# Create Check
-check = Check(CheckLevel.WARNING, "MySQLCheck")
-
-# Table Name with database name
-check.table_name = "database_name.table"
+# Create Check with table Name with database name
+check = Check(CheckLevel.WARNING, "MySQLCheck", table_name="database_name.table")
 
 (  check.are_complete(("id", "id2"))
         .is_positive("id", 0.5)

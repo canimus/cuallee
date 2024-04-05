@@ -7,7 +7,6 @@ from toolz import first
 from numbers import Number
 
 from cuallee import Check, Rule, db_connector
-from cuallee.duckdb_validation import Compute as duckdb_compute
 
 import textwrap
 from pygments import highlight
@@ -15,10 +14,10 @@ from pygments.lexers import SqlLexer
 from pygments.formatters.terminal256 import TerminalTrueColorFormatter
 
 
-class Compute(duckdb_compute):
+class Compute:
 
     def __init__(self, table_name: str = None):
-        super().__init__(table_name)
+        self.table_name = table_name
 
     def has_max(self, rule: Rule) -> str:
         """Validation of a column’s maximum value"""
@@ -162,6 +161,10 @@ class Compute(duckdb_compute):
     def is_inside_interquartile_range(self, rule: Rule) -> str:
         """Validates a number resides inside the Q3 - Q1 range of values"""
         raise NotImplementedError
+
+    def is_unique(self, rule: Rule) -> str:
+        """Confirms the absence of duplicate values in a column"""
+        return f"COUNT(DISTINCT({rule.column}))"
 
     def are_unique(self, rule: Rule) -> str:
         """Validate absence of duplicate in group of columns"""

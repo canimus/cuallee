@@ -205,7 +205,7 @@ class Check:
         """A container of data quality rules."""
         self._rule: Dict[str, Rule] = {}
         # TODO: Should be a compute engine protocol
-        self.compute_engine: ModuleType
+        self.compute_engine: Optional[ModuleType] = None
 
         if isinstance(level, int):
             # When the user is lazy and wants to do WARN=0, or ERR=1
@@ -675,57 +675,37 @@ class Check:
     def validate(self, dataframe: Any):
         """Compute all rules in this check for specific data frame"""
 
-        # Stop execution if the there is no rules in the check
+        # Stop execution if there is no rules in the check
         assert not self.empty, "Check is empty. Try adding some rules?"
 
-        # When dataframe is PySpark DataFrame API
-        if "pyspark_dataframe" in globals() and isinstance(
-            dataframe, pyspark_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
+        # Mapping DataFrame types to validation modules
+        dataframe_validators = {
+            "pyspark_dataframe": "cuallee.pyspark_validation",
+            "pyspark_connect_dataframe": "cuallee.pyspark_validation",
+            "pandas_dataframe": "cuallee.pandas_validation",
+            "snowpark_dataframe": "cuallee.snowpark_validation",
+            "duckdb_dataframe": "cuallee.duckdb_validation",
+            "bigquery": "cuallee.bigquery_validation",
+            "polars_dataframe": "cuallee.polars_validation",
+            "daft_dataframe": "cuallee.daft_validation",
+        }
 
-        elif "pyspark_connect_dataframe" in globals() and isinstance(
-            dataframe, pyspark_connect_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
-
-        # When dataframe is Pandas DataFrame API
-        elif "pandas_dataframe" in globals() and isinstance(
-            dataframe, pandas_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.pandas_validation")
-
-        # When dataframe is Snowpark DataFrame API
-        elif "snowpark_dataframe" in globals() and isinstance(
-            dataframe, snowpark_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
-
-        elif "duckdb_dataframe" in globals() and isinstance(
-            dataframe, duckdb_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
-
-        elif "bigquery" in globals() and isinstance(dataframe, bigquery.table.Table):
-            self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
-
-        elif "polars_dataframe" in globals() and isinstance(
-            dataframe, polars_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.polars_validation")
-
-        elif "daft_dataframe" in globals() and isinstance(dataframe, daft_dataframe):
-            self.compute_engine = importlib.import_module("cuallee.daft_validation")
-
+        # Check if DataFrame type is supported
+        for df_type, validator_module in dataframe_validators.items():
+            if df_type in globals() and isinstance(dataframe, globals()[df_type]):
+                self.compute_engine = importlib.import_module(validator_module)
+                break
         else:
             raise Exception(
                 "Cuallee is not ready for this data structure. You can log a Feature Request in Github."
             )
 
+        # Validate data types between rules and dataframe
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
 
+        # Compute summary
         return self.compute_engine.summary(self, dataframe)
 
 

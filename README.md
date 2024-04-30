@@ -347,6 +347,9 @@ In the desire to make it even more `user-friendly` we are aiming to make `cualle
   <img src="https://contrib.rocks/image?repo=canimus/cuallee" />
 </a>
 
+### Community guidelines
+- [Contributing to cuallee](CONTRIBUTING.md)
+
 
 ## License
 Apache License 2.0

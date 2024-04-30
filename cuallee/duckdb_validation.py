@@ -216,12 +216,6 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
     \t'{check.table_name}'
     """
 
-    # print(
-    #     highlight(
-    #         textwrap.dedent(unified_query), SqlLexer(), TerminalTrueColorFormatter()
-    #     )
-    # )
-
     def _calculate_violations(result, nrows):
         if isinstance(result, (bool, np.bool_)):
             if result:
@@ -230,7 +224,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
                 return nrows
         elif isinstance(result, Number):
             return nrows - result
-        elif isinstance(result, list):
+        elif isinstance(result, (list, np.ndarray)):
             if len(result) == 2:
                 return result[1]
 
@@ -242,7 +236,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
                 return 0.0
         elif isinstance(result, Number):
             return result / nrows
-        elif isinstance(result, list):
+        elif isinstance(result, (list, np.ndarray)):
             if result[1] > 0:
                 if result[1] > nrows:
                     return nrows / result[1]
@@ -265,6 +259,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
     rows = first(
         connection.execute(f"select count(*) from '{check.table_name}'").fetchone()
     )
+    
     computation_basis = [
         {
             "id": index,

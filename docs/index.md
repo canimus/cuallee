@@ -38,7 +38,10 @@ graph LR
 
 ## Installation
 
-`cuallee` is designed to work primarily with `pyspark==3.3.0` and this is its only dependency.
+`cuallee` is developed with a `functional` programming style, however to make it compatible with `pydeeque` it was necessary to create classes and therefore adhering more into a `object-oriented` programming style. `cuallee` has only `2` library _dependencies_.
+- `toolz` for functional programming adoption
+- `requests` for downloading ISO standard internet references required by the `check.iso` interface.
+
 It uses the `Observation` API features in pyspark, to reduce the computation time for aggregations, and calculating summaries in one pass of the data frames being validated.
 
 ## pip

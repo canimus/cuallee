@@ -1,8 +1,7 @@
-# Check
+# PySpark
 
-## pyspark
 
-### is_complete
+## is_complete
 
 This check is the most popular. It validates the _completeness_ attribute of a data set. It confirms that all fields contain values different of `null`.
 
@@ -18,17 +17,17 @@ This check is the most popular. It validates the _completeness_ attribute of a d
         check.is_complete("id")
 
         # Validate
-        check.validate(spark, df).show(truncate=False)
+        check.validate(df).show(truncate=False)
         ```
 
         __Result:__
 
         ``` markdown
-        +---+-------------------+-----------------+-------+------+-----------+-----+----+----------+---------+--------------+--------+------+
-        |id |timestamp          |check            |level  |column|rule       |value|rows|violations|pass_rate|pass_threshold|metadata|status|
-        +---+-------------------+-----------------+-------+------+-----------+-----+----+----------+---------+--------------+--------+------+
-        |1  |2022-10-09 23:45:10|CompletePredicate|WARNING|id    |is_complete|N/A  |10  |0         |1.0      |1.0           |{}      |PASS  |
-        +---+-------------------+-----------------+-------+------+-----------+-----+----+----------+---------+--------------+--------+------+
+        +---+-------------------+-----------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
+        |id |timestamp          |check            |level  |column|rule       |value|rows|violations|pass_rate|pass_threshold|status|
+        +---+-------------------+-----------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
+        |1  |2024-05-10 21:00:09|CompletePredicate|WARNING|id    |is_complete|N/A  |10  |0         |1.0      |1.0           |PASS  |
+        +---+-------------------+-----------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
         ```
 
     === "coverage"
@@ -40,7 +39,7 @@ This check is the most popular. It validates the _completeness_ attribute of a d
         check.is_complete("id", .5) # Only 50% coverage
 
         # Validate
-        check.validate(spark, df).show(truncate=False)
+        check.validate(df).show(truncate=False)
         ```
 
         __Result:__

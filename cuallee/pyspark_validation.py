@@ -364,11 +364,11 @@ class Compute(ComputeEngine):
                 )
                 .withColumn("probs", F.transform("freq", lambda x: x / F.col("rows")))
                 .withColumn("n_labels", F.size("probs"))
-                .withColumn("log_labels", F.log("n_labels"))
-                .withColumn("log_prob", F.transform("probs", lambda x: F.log(x)))
+                .withColumn("log_labels", F.log2("n_labels"))
+                .withColumn("log_prob", F.transform("probs", lambda x: F.log2(x)))
                 .withColumn(
                     "log_classes",
-                    F.transform("probs", lambda x: F.log((x / x) * F.col("n_labels"))),
+                    F.transform("probs", lambda x: F.log2((x / x) * F.col("n_labels"))),
                 )
                 .withColumn("entropy_vals", F.arrays_zip("probs", "log_prob"))
                 .withColumn(
@@ -379,13 +379,13 @@ class Compute(ComputeEngine):
                     ),
                 )
                 .select(
-                    (
+                    F.coalesce(
                         F.aggregate(
                             "product_prob", F.lit(0.0), lambda acc, x: acc + x
                         ).alias("p")
                         / F.col("log_labels")
                         * -1
-                    ).alias("entropy")
+                    , F.lit(0.0)).alias("entropy")
                 )
                 .select(
                     F.expr(

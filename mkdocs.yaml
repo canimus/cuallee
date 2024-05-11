@@ -4,20 +4,15 @@ nav:
     - Getting Started:
       - Installation: installation.md
       - Dependencies: dependencies.md
-      - New Checks: new-check.md
-    - PySpark: 
-        - pyspark/index.md
-        - About observation: pyspark/observation.md
-    - Pandas:
-        - pandas/index.md
-    - Snowpark: 
-        - snowpark/index.md
-    - Advanced: advanced.md
-    - Validate: validate.md
+      - Usage: usage.md
+    - Code Reference: 
+      - Check: module/check.md
+      - Rule: module/rule.md
 theme:
   features:
     # - announce.dismiss
     - content.code.annotate
+    - content.code.copy
     # - content.tabs.link
     - content.tooltips
     # - header.autohide
@@ -70,9 +65,13 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - def_list
-  - attr_list
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - attr_list  
   - pymdownx.tasklist:
       custom_checkbox: true
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google

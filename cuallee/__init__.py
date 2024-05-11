@@ -12,7 +12,7 @@ from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.10.1"
+__version__ = "0.10.2"
 # Verify Libraries Available
 # ==========================
 try:
@@ -57,11 +57,13 @@ except (ModuleNotFoundError, ImportError):
 
 
 class CheckLevel(enum.Enum):
+    """Level of verifications in cuallee"""
     WARNING = 0
     ERROR = 1
 
 
 class CheckDataType(enum.Enum):
+    """Accepted data types in checks"""
     AGNOSTIC = 0
     NUMERIC = 1
     STRING = 2
@@ -71,6 +73,7 @@ class CheckDataType(enum.Enum):
 
 
 class CheckStatus(enum.Enum):
+    """Validation result criteria"""
     PASS = "PASS"
     FAIL = "FAIL"
     NO_RUN = "NO_RUN"
@@ -78,6 +81,7 @@ class CheckStatus(enum.Enum):
 
 @dataclass
 class Rule:
+    """Predicate definition holder"""
     method: str
     column: Union[str, List[str], Tuple[str, str]]
     value: Optional[Any]
@@ -91,10 +95,12 @@ class Rule:
 
     @property
     def settings(self) -> dict:
+        """holds the additional settings for the predicate execution"""
         return dict(self.options)
 
     @property
     def key(self):
+        """blake2s hash of the rule, made of method, column, value, options and coverage"""
         return (
             hashlib.blake2s(
                 bytes(
@@ -182,6 +188,7 @@ class Rule:
 
 
 class ComputeEngine(Protocol):
+    """An interface for validatiosn to adhere to"""
     def compute(self, rules: Dict[str, Rule]) -> bool:
         """Returns compute instructions for each rule"""
 
@@ -202,7 +209,17 @@ class Check:
         table_name: str = None,
         session: Any = None,
     ):
-        """A container of data quality rules."""
+        """
+        A container of data quality rules.
+
+        Args:
+            level (CheckLevel): [0-1] value to describe if its a WARNING or ERROR check
+            name (str): Normally the name of the dataset being verified, or a name for this check
+            execution_date (date): An automatically generated timestamp of the check in UTC
+            table_name (str): When using databases matches the table name of the source 
+            session (Session): When operating in Session enabled environments like Databricks or Snowflake
+        
+        """
         self._rule: Dict[str, Rule] = {}
         # TODO: Should be a compute engine protocol
         self.compute_engine: ModuleType
@@ -233,7 +250,7 @@ class Check:
 
     @property
     def sum(self):
-        """Collect compute, unique and union type of rules"""
+        """Total number of rules in Check"""
         return len(self._rule.keys())
 
     @property
@@ -252,16 +269,32 @@ class Check:
         return len(self.rules) == 0
 
     def _remove_rule_generic(self, key: str):
-        """Remove a key from rules and compute dictionaries"""
+        """
+        Remove a key from rules and compute dictionaries
+        
+        Args:
+            key (str): the blake2s key of the rule
+        """
         if key in self._rule:
             self._rule.pop(key)
 
     def add_rule(self, method: str, *arg):
-        """Add a new rule to the Check class."""
+        """
+        Add a new rule to the Check class.
+        
+        Args:
+            method (str): Check name
+            args (list): Parameters of the check
+        """
         return operator.methodcaller(method, *arg)(self)
 
     def delete_rule_by_key(self, keys: Union[str, List[str]]):
-        """Delete rules from self._rule and self._compute dictionnary based on keys."""
+        """
+        Delete rules from check based on keys.
+        
+        Args:
+            keys (List[str]): a single or list of keys to remove from the check
+        """
         if isinstance(keys, str):
             keys = [keys]
 
@@ -273,7 +306,13 @@ class Check:
         rule_attribute: Literal["method", "column", "coverage"],
         values: Union[List[str], List[float]],
     ):
-        """Delete rule based on method(s) or column name(s) or coverage value(s)."""
+        """
+        Delete rule based on method(s) or column name(s) or coverage value(s).
+        
+        Args:
+            rule_attribute (str): Finds a rule with by: method, column or coverage
+            values (List[str]): Deletes a rule that matches the rule_attribute equal to the value in this parameter
+        """
         if not isinstance(values, List):
             values = [values]
 
@@ -286,7 +325,15 @@ class Check:
         return self
 
     def adjust_rule_coverage(self, rule_index: int, rule_coverage: float):
-        """Targeted for adjusting the predicate/rows ratio or making rules less strict"""
+        """
+        Adjust the ratio predicate/rows for a rule. 
+        It is intended to lower or increase tolerance without having to rewrite the entire check
+
+        Args:
+            rule_index (int): The position of the rule in the check list
+            rule_coverage (float): New value between [0..1] for tolerance
+        
+        """
         target_rule = self.rules[rule_index]
         old_key = target_rule.key
         target_rule = self._rule.pop(old_key)
@@ -295,48 +342,105 @@ class Check:
         return self
 
     def is_complete(self, column: str, pct: float = 1.0):
-        """Validation for non-null values in column"""
+        """
+        Validation for non-null values in column
+
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+
+        """
         Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def are_complete(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
-        """Validation for non-null values in a group of columns"""
+        """
+        Validation for non-null values in a group of columns
+        
+        Args:
+            column (List[str]): A tuple or list of column names in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("are_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def is_unique(self, column: str, pct: float = 1.0):
-        """Validation for unique values in column"""
+        """
+        Validation for unique values in column
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def is_primary_key(self, column: str, pct: float = 1.0):
-        """Validation for unique values in column"""
+        """
+        Validation for unique values in column
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def are_unique(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
-        """Validation for unique values in a group of columns"""
+        """
+        Validation for unique values in a group of columns
+        
+        Args:
+            column (List[str]): A tuple or list of column names in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def is_composite_key(
         self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0
     ):
-        """Validation for unique values in a group of columns"""
+        """
+        Validation for unique values in a group of columns
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
-        """Validation for numeric greater than value"""
+        """
+        Validation for numeric greater than value
+        
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_greater_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def is_positive(self, column: str, pct: float = 1.0):
-        """Validation for numeric greater than zero"""
+        """
+        Validation for numeric greater than zero
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_greater_than(column, 0, pct)
 
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
-        """Validation for numeric greater or equal than value"""
+        """
+        Validation for numeric greater or equal than value
+        
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         (
             Rule("is_greater_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
             >> self._rule
@@ -344,24 +448,56 @@ class Check:
         return self
 
     def is_in_millions(self, column: str, pct: float = 1.0):
-        """Validates that a column has values greater than 1M"""
+        """
+        Validates that a column has values greater than 1M (1e6)
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_greater_or_equal_than(column, 1e6, pct)
 
     def is_in_billions(self, column: str, pct: float = 1.0):
-        """Validates that a column has values greater than 1B"""
+        """
+        Validates that a column has values greater than 1B (1e9)
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_greater_or_equal_than(column, 1e9, pct)
 
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
-        """Validation for numeric less than value"""
+        """
+        Validation for numeric less than value
+        
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_less_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def is_negative(self, column: str, pct: float = 1.0):
-        """Validation for numeric less than zero"""
+        """
+        Validation for numeric less than zero
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_less_than(column, 0, pct)
 
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
-        """Validation for numeric less or equal than value"""
+        """
+        Validation for numeric less or equal than value
+        
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         (
             Rule("is_less_or_equal_than", column, value, CheckDataType.NUMERIC, pct)
             >> self._rule
@@ -369,47 +505,108 @@ class Check:
         return self
 
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
-        """Validation for numeric column equal than value"""
+        """
+        Validation for numeric column equal than value
+        
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_equal_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
     def has_pattern(self, column: str, value: str, pct: float = 1.0):
-        """Validation for string type column matching regex expression"""
+        """
+        Validation for string type column matching regex expression
+        
+        Args:
+            column (str): Column name in dataframe
+            value (regex): A regular expression used to  match values in the `column`
+            pct (float): The threshold percentage required to pass
+        """
         Rule("has_pattern", column, value, CheckDataType.STRING, pct) >> self._rule
         return self
 
     def is_legit(self, column: str, pct: float = 1.0):
-        """Validation for string type having none space chars. Useful for CSV reading"""
+        """
+        Validation for string columns giving wrong signal about completeness due to empty strings. 
+        
+        Useful for reading CSV files and preventing empty strings being reported as valid records.
+        This is an `alias` implementation of the `has_pattern` rule using `^\S+$` as the pattern 
+        Which validates the presence of non-empty characters between the begining and end of a string.
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("has_pattern", column, "^\S+$", CheckDataType.STRING, pct) >> self._rule
         return self
 
     def has_min(self, column: str, value: float):
-        """Validation of a column’s minimum value"""
+        """
+        Validation of a column's minimum value
+        
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+        """
         Rule("has_min", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
     def has_max(self, column: str, value: float):
-        """Validation of a column’s maximum value"""
+        """
+        Validation of a column's maximum value
+        
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+        """
         Rule("has_max", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
     def has_std(self, column: str, value: float):
-        """Validation of a column’s standard deviation"""
+        """
+        Validation of a column's standard deviation
+
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+        """
         Rule("has_std", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
     def has_mean(self, column: str, value: float):
-        """Validation of a column's average/mean"""
+        """
+        Validation of a column's average/mean
+
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+        """
         Rule("has_mean", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
     def has_sum(self, column: str, value: float):
-        """Validation of a sum of all values of a column"""
+        """
+        Validation of a sum of all values of a column
+
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+        """
         Rule("has_sum", column, value, CheckDataType.NUMERIC) >> self._rule
         return self
 
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
-        """Validation of a column between a range"""
+        """
+        Validation of a column between a range
+        
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_between", column, value, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
@@ -419,7 +616,14 @@ class Check:
         value: Union[List, Tuple],
         pct: float = 1.0,
     ):
-        """Validation of column value not in set of given values"""
+        """
+        Validation of column value not in set of given values
+        
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         (
             Rule("not_contained_in", column, value, CheckDataType.AGNOSTIC, pct)
             >> self._rule
@@ -428,7 +632,14 @@ class Check:
         return self
 
     def not_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
-        """Vaidation of column value not in set of given values"""
+        """
+        Vaidation of column value not in set of given values
+        
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         return self.not_contained_in(column, value, pct)
 
     def is_contained_in(
@@ -437,7 +648,14 @@ class Check:
         value: Union[List, Tuple],
         pct: float = 1.0,
     ):
-        """Validation of column value in set of given values"""
+        """
+        Validation of column value in set of given values
+        
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
 
         (
             Rule("is_contained_in", column, value, CheckDataType.AGNOSTIC, pct)
@@ -447,38 +665,91 @@ class Check:
         return self
 
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
-        """Vaidation of column value in set of given values"""
+        """
+        Vaidation of column value in set of given values
+        
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_contained_in(column, value, pct)
 
     def is_t_minus_n(self, column: str, value: int, pct: float = 1.0):
-        """Validate that date is yesterday"""
+        """
+        Validate that date is `n` days before the current date
+        
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The number of days before the current date
+            pct (float): The threshold percentage required to pass
+        """
         yesterday = datetime.utcnow() - timedelta(days=value)
         return self.is_in(column, tuple([yesterday.strftime("%Y-%m-%d")]), pct)
 
     def is_t_minus_1(self, column: str, pct: float = 1.0):
-        """Validate that date is yesterday"""
+        """
+        Validate that date is yesterday
+
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_t_minus_n(column, 1, pct)
 
     def is_t_minus_2(self, column: str, pct: float = 1.0):
-        """Validate that date is 2 days ago"""
+        """
+        Validate that date is 2 days ago
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_t_minus_n(column, 2, pct)
 
     def is_t_minus_3(self, column: str, pct: float = 1.0):
-        """Validate that date is 3 days ago"""
+        """
+        Validate that date is 3 days ago
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_t_minus_n(column, 3, pct)
 
     def is_yesterday(self, column: str, pct: float = 1.0):
-        """Validate that date is yesterday"""
+        """
+        Validate that date is yesterday
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_t_minus_1(column, pct)
 
     def is_today(self, column: str, pct: float = 1.0):
-        """Validate that date is today"""
+        """
+        Validate that date is today
+        
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+        """
         return self.is_t_minus_n(column, 0, pct)
 
     def has_percentile(
         self, column: str, value: float, percentile: float, precision: int = 10000
     ):
-        """Validation of a column percentile value"""
+        """
+        Validation of a column percentile value using approximantion
+
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            percentile (float): Value between [0..1] i.e. `0.5` for median
+            precision (float): The precision to calculate percentiles
+        
+        """
         (
             Rule(
                 "has_percentile",
@@ -497,7 +768,14 @@ class Check:
     def is_inside_interquartile_range(
         self, column: str, value: List[float] = [0.25, 0.75], pct: float = 1.0
     ):
-        """Validates a number resides inside the Q3 - Q1 range of values"""
+        """
+        Validates a number resides inside the quartile(1) and quartile(3) of the range of values
+        
+        Args:
+            column (str): Column name in dataframe
+            value (List[number]): A number between 0 and 1 demarking the quartile
+            pct (float): The threshold percentage required to pass
+        """
         (
             Rule(
                 "is_inside_interquartile_range",
@@ -513,7 +791,14 @@ class Check:
     def has_max_by(
         self, column_source: str, column_target: str, value: Union[float, str]
     ):
-        """Validation of a column value based on another column maximum"""
+        """
+        Validation the correspondance of a column value based on another column maximum
+        
+        Args:
+            column_source (str): Column used to obtain the row with the max value
+            column_target (str): Column used to varify the matching value
+            value (str,number): The value to match against 
+        """
         (
             Rule(
                 "has_max_by",
@@ -528,7 +813,14 @@ class Check:
     def has_min_by(
         self, column_source: str, column_target: str, value: Union[float, str]
     ):
-        """Validation of a column value based on another column minimum"""
+        """
+        Validation the correspondance of a column value based on another column minimum
+        
+        Args:
+            column_source (str): Column used to obtain the row with the min value
+            column_target (str): Column used to varify the matching value
+            value (str,number): The value to match against 
+        """
         (
             Rule(
                 "has_min_by",
@@ -541,7 +833,14 @@ class Check:
         return self
 
     def has_correlation(self, column_left: str, column_right: str, value: float):
-        """Validates the correlation between 2 columns with some tolerance"""
+        """
+        Validates the correlation in a range of [0..1] between 2 columns
+        
+        Args:
+            column_left (str): Column name in dataframe
+            column_right (str): Column name in dataframe
+            value (float): Value to match the correlation
+        """
         (
             Rule(
                 "has_correlation",
@@ -554,17 +853,38 @@ class Check:
         return self
 
     def satisfies(self, column: str, predicate: str, pct: float = 1.0):
-        """Validation of a column satisfying a SQL-like predicate"""
+        """
+        Validation of a column satisfying a SQL-like predicate
+        
+        Args:
+            column (str): Column name in the dataframe
+            predicate (str): A predicate written in SQL-like syntax
+            pct (float): The threshold percentage required to pass
+        """
         Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def has_cardinality(self, column: str, value: int):
-        """Validate cardinality in column"""
+        """
+        Validates the number of distinct values in a column
+        
+        Args:
+            column (str): Column name in the dataframe
+            value (int): The number of expected distinct values on a column
+        """
         Rule("has_cardinality", column, value, CheckDataType.AGNOSTIC) >> self._rule
         return self
 
     def has_infogain(self, column: str, pct: float = 1.0):
-        """Validate cardinality > 1"""
+        """
+        Validate cardinality > 1. 
+        Particularly useful when validating categorical data for Machine Learning
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+
+        """
         (
             Rule(
                 method="has_infogain",
@@ -578,7 +898,18 @@ class Check:
         return self
 
     def has_entropy(self, column: str, value: float, tolerance: float = 0.01):
-        """Validation for entropy calculation on continuous values"""
+        """
+        Validation for entropy calculation on continuous variables/features on `log2`.
+        Useful in Machine Learning classifications to test imbalanced datasets with low entropy.
+        
+        Args:
+            column (str): Column name in the dataframe
+            value (float): The expected entropy value
+            tolerance (float): The tolerance/precision used when comparing the actual and expected value
+
+        Examples:
+
+        """
         (
             Rule(
                 "has_entropy",
@@ -592,52 +923,113 @@ class Check:
         return self
 
     def is_on_weekday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is in a Mon-Fri time range"""
+        """
+        Validates a datetime column is in a Mon-Fri time range
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_weekday", column, "Mon-Fri", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_weekend(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is in a Sat-Sun time range"""
+        """
+        Validates a datetime column is in a Sat-Sun time range
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_weekend", column, "Sat-Sun", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_monday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Mon"""
+        """
+        Validates a datetime column is on Monday
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_monday", column, "Mon", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_tuesday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Tue"""
+        """
+        Validates a datetime column is on Tuesday
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_tuesday", column, "Tue", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_wednesday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Wed"""
+        """
+        Validates a datetime column is on Wednesday
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_wednesday", column, "Wed", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_thursday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Thu"""
+        """
+        Validates a datetime column is on Thursday
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_thursday", column, "Thu", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_friday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Fri"""
+        """
+        Validates a datetime column is on Friday
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_friday", column, "Fri", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_saturday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Sat"""
+        """
+        Validates a datetime column is on Saturday
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_saturday", column, "Sat", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_sunday(self, column: str, pct: float = 1.0):
-        """Validates a datetime column is on Sun"""
+        """
+        Validates a datetime column is on Sunday
+        
+        Args:
+            column (str): Column name in the dataframe
+            pct (float): The threshold percentage required to pass
+        """
         Rule("is_on_sunday", column, "Sun", CheckDataType.DATE, pct) >> self._rule
         return self
 
     def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0):
-        """Validation of a datetime column between an hour interval"""
+        """
+        Validation of a datetime column between an hour interval
+        
+        Args:
+            column (str): Column name in the dataframe
+            value (Tuple[int,int]): A tuple indicating a 24hr day interval. i.e. (9,17) for 9am to 5pm
+            pct (float): The threshold percentage required to pass
+        """
         (
             Rule("is_on_schedule", column, value, CheckDataType.TIMESTAMP, pct)
             >> self._rule
@@ -647,7 +1039,19 @@ class Check:
     def is_daily(
         self, column: str, value: Union[None, List[int]] = None, pct: float = 1.0
     ):
-        """Validates that there is no missing dates using only week days in the date/timestamp column"""
+        """
+        Validates that there is no missing dates using only week days in the date/timestamp column.
+
+        An alternative day combination can be provided given that a user wants to validate only certain dates.
+        For example in PySpark to validate that time series are every Wednesday consecutively on a year
+        without any missing values, the value input should contain `[4]` as it represent the numeric 
+        equivalence of the day of week Wednesday.
+        
+        Args:
+            column (str): Column name in the dataframe
+            value (List[int]): A list of numbers describing the days of the week to consider. i.e. Pyspark uses [2, 3, 4, 5, 6] for Mon-Fri
+            pct (float): The threshold percentage required to pass
+        """
         (Rule("is_daily", column, value, CheckDataType.DATE, pct) >> self._rule)
         return self
 
@@ -659,7 +1063,68 @@ class Check:
         edges: List[Tuple[str]],
         pct: float = 1.0,
     ):
-        """Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation"""
+        """
+        Validates events in a group clause with order, followed a specific sequence. Similar to adjacency matrix validation.
+
+        Args:
+            column_group (str): The dataframe column used to group events
+            column_event (str): The state of the event within the group
+            column_order (List[date,number,str]): The order within the group, should be deterministic and without collisions.
+            edges (List[Tuple[str,str]]): The combinations of events expected in the data frame i.e `[("A","B"), ("B","C")]`
+
+
+        ???+ example "Example"
+                
+            Given the following fictitious dataset example:
+
+            | date       | ticket   | status      |
+            |------------|----------|-------------|
+            | 2024-01-01 | CASE-001 | New         |
+            | 2024-01-02 | CASE-001 | In Progress |
+            | 2024-01-03 | CASE-001 | Closed      |
+
+            You can validate that events for each ticket follow certain sequence by using:
+
+            ``` python
+            from cuallee import Check, CheckLevel
+            df = spark.createDataFrame(
+                 [
+                     ["2024-01-01", "CASE-001", "New"],
+                     ["2024-01-02", "CASE-001", "In Progress"],
+                     ["2024-01-03", "CASE-001", "Closed"],
+                 ],
+                 ["date", "ticket", "status"],
+             )
+
+            
+            check = Check(CheckLevel.WARNING, "WorkflowValidation")
+            check.has_workflow(
+                column_group="ticket", 
+                column_event="status", 
+                column_order="date", 
+                edges=[(None, "New"),("New", "In Progress"),("In Progress","Closed"), ("Closed", None)]
+            )
+
+            # Validate
+            check.validate(df).show(truncate=False)
+
+            # Result
+            +---+-------------------+------------------+-------+----------------------------+------------+------------------------------------------------------------------------------------+----+----------+---------+--------------+------+
+            |id |timestamp          |check             |level  |column                      |rule        |value                                                                               |rows|violations|pass_rate|pass_threshold|status|
+            +---+-------------------+------------------+-------+----------------------------+------------+------------------------------------------------------------------------------------+----+----------+---------+--------------+------+
+            |1  |2024-05-11 11:24:00|WorkflowValidation|WARNING|('ticket', 'status', 'date')|has_workflow|((None, 'New'), ('New', 'In Progress'), ('In Progress', 'Closed'), ('Closed', None))|3   |0         |1.0      |1.0           |PASS  |
+            +---+-------------------+------------------+-------+----------------------------+------------+------------------------------------------------------------------------------------+----+----------+---------+--------------+------+
+
+            ```        
+
+        The check validates that:
+
+        - Nothing preceds a `New` state
+        - `In Progress` follows the `New` event
+        - `Closed` follows the `In Progress` event
+        - Nothing follows after `Closed` state
+          
+        """
         (
             Rule(
                 "has_workflow",
@@ -673,7 +1138,12 @@ class Check:
         return self
 
     def validate(self, dataframe: Any):
-        """Compute all rules in this check for specific data frame"""
+        """
+        Compute all rules in this check for specific data frame
+        
+        Args:
+            dataframe (Union[pyspark,snowpark,pandas,polars,duckdb,bigquery]): A dataframe object
+        """
 
         # Stop execution if the there is no rules in the check
         assert not self.empty, "Check is empty. Try adding some rules?"

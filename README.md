@@ -35,7 +35,7 @@ Provider | API | Versions
 ![databricks](logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` & `spark-connect` |`3.5.x`, `3.4.0`, `3.3.x`, `3.2.x`
 ![bigquery](logos/bigquery.png?raw=true "BigQuery Client API")| `bigquery` | `3.4.1`
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.2`, `1.5.x`, `1.4.x`
-![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.9.2`,~~`0.8.0`~~, ~~`0.7.1`~~
+![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.10.2`,~~`0.9.2`~~,~~`0.8.0`~~, ~~`0.7.1`~~
 ![polars](logos/polars.svg?raw=true "Polars API")|`polars`| `0.19.6`
 ![daft](logos/daft.png?raw=true "Daft API")|`daft`| `0.2.19`
 

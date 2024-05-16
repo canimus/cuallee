@@ -65,7 +65,7 @@ pdf = [
   "fpdf2==2.7.8"
 ]
 daft = [
-  "getdaft == 0.2.19"
+  "getdaft == 0.2.24"
 ]
 
 [tool.ruff.lint]

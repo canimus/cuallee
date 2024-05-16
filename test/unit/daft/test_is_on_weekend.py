@@ -36,6 +36,8 @@ def test_coverage(check: Check):
     df = daft.from_pandas(pd_df)
     result = check.validate(df)
     assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
+
+    col_pass_rate = daft.col("pass_rate")
     assert (
-        result.select(daft.col("pass_rate").max() == 2 / 7).to_pandas().pass_rate.all()
+        result.agg(col_pass_rate.max()).select(col_pass_rate == 2 / 7).to_pandas().pass_rate.all()
     )

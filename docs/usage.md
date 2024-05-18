@@ -13,7 +13,7 @@ from pyspark.sql import SparkSession
 import pyspark.sql.types as T
 import pyspark.sql.functions as F
 
-# Cuallee
+# Cuallee v0.10.3
 from cuallee import Check, CheckLevel
 from cuallee.pyspark_validation import _field_type_filter
 ```

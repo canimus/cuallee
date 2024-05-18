@@ -29,3 +29,4 @@ build/
 .coverage
 app/
 creds.json
+**/.secrets

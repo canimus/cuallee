@@ -1,22 +1,16 @@
-FROM python:3.8.10
+FROM python:3.11
 
 RUN apt update -y
 RUN apt install wget -y
+RUN apt install openjdk-17-jdk -y
 
 WORKDIR /usr/src
+ENV PIP_ROOT_USER_ACTION=ignore
+RUN pip install pyspark==3.5.1
+RUN pip install cuallee==0.10.2
 
-RUN apt install openjdk-11-jdk -y
-RUN pip install pyspark==3.3.1
-RUN pip install cuallee==0.2.5
-RUN pip install colorama
-RUN pip install pyarrow
-RUN pip install fastparquet
-RUN pip install toolz
+RUN mkdir -p /data
+RUN wget https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet -P /data
+RUN wget https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-02.parquet -P /data
 
-COPY sparker.py .
-COPY sparker2.py .
-
-RUN mkdir -p /usr/src/data
-VOLUME /usr/src/data
-
-# ENTRYPOINT ["python", "/usr/src/sparker2.py"]
+RUN rm -rf /root/.cache/pip

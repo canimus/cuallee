@@ -78,9 +78,13 @@ class Compute(ComputeEngine):
     def is_unique(self, rule: Rule):
         """Validation for unique values in column"""
         predicate = None  # F.count_distinct(F.col(rule.column))
+        instruction = "count_distinct"
+        if rule.options and (rule.options.get("approximate", False)):
+            instruction = f"approx_{instruction}"
+
         self.compute_instruction = ComputeInstruction(
             predicate,
-            F.count_distinct(F.col(f"`{rule.column}`")),
+            operator.methodcaller(instruction, F.col(f"`{rule.column}`"))(F),
             ComputeMethod.SELECT,
         )
         return self.compute_instruction

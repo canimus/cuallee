@@ -1,1 +1,2 @@
-docker run -it -v $PWD/temp/taxi:/usr/src/data --rm --name pydeequ-perftest pydeequ-tester python /usr/src/sparker2.py
+echo "Running Performance Tests for Framework: PYDEEQU"
+docker run -it --rm -v $PWD:/usr/src --name cuallee-tester-pydeequ cuallee-tester-pydeequ python test_performance_pydeequ.py

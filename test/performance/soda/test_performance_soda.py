@@ -92,10 +92,10 @@ scan.add_sodacl_yaml_str(checks)
 config = """
 soda_cloud:
   host: cloud.soda.io
-  api_key_id: 2f16fd06-5c3f-4d72-995f-1a2740c2f180
-  api_key_secret: S6L13PXIEG4apS9rCgvlEBnoUZ13uO6kcLb8Q1oM7rLF0ZOS235uog
+  api_key_id: $soda_key
+  api_key_secret: $soda_secret
 """
-scan.add_configuration_yaml_str(config)
+scan.add_configuration_yaml_str(Template(config).substitute(soda_key=os.environ.get("SODA_KEY"), soda_secret=os.environ.get("SODA_SECRET")))
 
 
 

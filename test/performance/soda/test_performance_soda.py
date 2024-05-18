@@ -1,14 +1,25 @@
-# import Scan from Soda Core
+# pip install -i https://pypi.cloud.soda.io soda-spark-df
+# soda                                     1.4.10
+# soda-freshness                           0.0.5
+# soda-spark                               1.4.10
+# soda-spark-df                            1.4.10
+
 from soda.scan import Scan
 from pyspark.sql import SparkSession
-from cuallee.pyspark_validation import numeric_fields, timestamp_fields
+from datetime import datetime
+from string import Template
+import os
+
+assert os.environ.get("SODA_KEY"), "Please provide environment variable: SODA_KEY"
+assert os.environ.get("SODA_SECRET"), "Please provide environment variable: SODA_SECRET"
 
 spark = SparkSession.builder.config("spark.driver.memory", "16g").getOrCreate()
 
 
 # Create a Spark DataFrame, or use the Spark API to read data and create a DataFrame
-df = spark.read.parquet("data/*.parquet")
-
+df = spark.read.parquet("/data/*.parquet")
+df.cache()
+df.count()
 
 # Create a view that SodaCL uses as a dataset
 df.createOrReplaceTempView("my_df")
@@ -78,14 +89,29 @@ checks for my_df:
 # If you defined checks in a file accessible via Spark, you can use the scan.add_sodacl_yaml_file method to retrieve the checks
 scan.add_sodacl_yaml_str(checks)
 # Optionally, add a configuration file with Soda Cloud credentials
-# config = """
-# soda_cloud:
-#   api_key_id: xyz
-#   api_key_secret: xyz
-# """
-# scan.add_configuration_yaml_str(config)
+config = """
+soda_cloud:
+  host: cloud.soda.io
+  api_key_id: 2f16fd06-5c3f-4d72-995f-1a2740c2f180
+  api_key_secret: S6L13PXIEG4apS9rCgvlEBnoUZ13uO6kcLb8Q1oM7rLF0ZOS235uog
+"""
+scan.add_configuration_yaml_str(config)
 
+
+
+start = datetime.now()
 # Execute a scan
 scan.execute()
+
+end = datetime.now()
+
 # Check the Scan object for methods to inspect the scan result; the following prints all logs to console
 print(scan.get_logs_text())
+
+
+elapsed = end - start
+print("START:", start)
+print("END:", end)
+print("ELAPSED:", elapsed)
+print("FRAMEWORK: soda")
+spark.stop()

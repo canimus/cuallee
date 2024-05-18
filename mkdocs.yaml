@@ -4,7 +4,16 @@ nav:
     - Getting Started:
       - Installation: installation.md
       - Dependencies: dependencies.md
-      - Usage: usage.md
+      - Catalogue: catalogue.md
+    - Frameworks:
+      - Dataframes: frameworks/index.md
+      - Pandas: pandas/index.md
+      - PySpark: pyspark/index.md
+      - DuckDb: duckdb/index.md
+      - Polars: polars/index.md
+      - Snowpark: snowpark/index.md
+      - BigQuery: bigquery/index.md
+      - Daft: daft/index.md
     - Code Reference: 
       - Check: module/check.md
       - Rule: module/rule.md
@@ -68,6 +77,9 @@ markdown_extensions:
   - attr_list  
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 plugins:
   - search
   - mkdocstrings:
@@ -75,3 +87,5 @@ plugins:
         python:
           options:
             docstring_style: google
+extra_css:
+  - stylesheets/extra.css

@@ -284,7 +284,7 @@ class Check:
         
         Args:
             method (str): Check name
-            args (list): Parameters of the check
+            arg (list): Parameters of the check
         """
         return operator.methodcaller(method, *arg)(self)
 
@@ -534,14 +534,14 @@ class Check:
         Validation for string columns giving wrong signal about completeness due to empty strings. 
         
         Useful for reading CSV files and preventing empty strings being reported as valid records.
-        This is an `alias` implementation of the `has_pattern` rule using `^\S+$` as the pattern 
+        This is an `alias` implementation of the `has_pattern` rule using `not black space` as the pattern 
         Which validates the presence of non-empty characters between the begining and end of a string.
         
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        Rule("has_pattern", column, "^\S+$", CheckDataType.STRING, pct) >> self._rule
+        Rule("has_pattern", column, r"^\S+$", CheckDataType.STRING, pct) >> self._rule
         return self
 
     def has_min(self, column: str, value: float):

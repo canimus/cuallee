@@ -48,6 +48,28 @@ An additional argument is related to the rapid evolution of the data ecosystem [
 One last argument in favor of using a quality tool such as `cuallee` is the need to integrate quality procedures into the early stages of data product development. Whether in industry or academia, there is often a tendency to prioritize functional aspects over quality, leading to less time being dedicated to quality activities. By providing a clear, easy-to-use, and adaptable programming interface for data quality, teams can incorporate quality into their development process, promoting a proactive approach of building quality in rather than relying solely on testing to ensure quality.
 
 
+# Data Quality Frameworks
+Data platforms have diversified from file systems and relational databases, to full ecosystems including the concept of data lakes [@10.3389/fdata.2020.564115]. Modern platforms host a variety of data formats, beyond traditional tabular data, including semi-structured like `JSON` [@10.1145/2872427.2883029] or unstructured like audio or images.
+
+Operating with modern data platforms, requires a sophisticated data processing framework capable to handle multiple formats, and scalability. Apache Spark [@10.1145/2723372.2742797] has revolutionized the data flow paradigm by bringing computation to the data, reversing the omnipresent data to the computation, it has commoditized large scale data processing and it has grown in adoption.
+
+Apache Spark's growth can be attributed to its ease of use, versatility, and performance. It supports multiple programming languages, including Python, Scala, Java, and R, making it accessible to a wide range of developers. Moreover, Spark's ability to handle various data processing tasks —batch processing, real-time streaming, machine learning, and graph processing—within a unified framework has been a key factor in its widespread adoption [@oreilly2023technology].
+
+`cuallee` is powered by native data engines like Apache Spark. Compared to other data quality frameworks it brings substantial advantages in reduced complexity, less computation resources and the fastest time per validation.
+
+The following table (\autoref{tab:performance}) provides a summary of the performance comparisson:
+
+Framework | Checks Definition | Time
+ ------- | ----------- | ----
+`great_expectations` | `python` | `▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 66s`
+`soda` | `yaml` | `▇▇▇▇▇▇▇▇▇▇▇▇▇ 43s`
+`pydeequ` | `python` | `▇▇▇ 11s`
+`cuallee` | `python` | `▇▇ 7s`
+
+Table: Performance comparisson on popular data quality frameworks []{label="tab:performance"} \label{tab:performance}
+
+
+
 # Methods
 
 `cuallee`  employs a heuristic-based approach to define quality rules for each dataset. This prevents the inadvertent duplication of quality predicates, thus reducing the likelihood of human error in defining rules with identical predicates. Several studies have been conducted on the efficiency of these rules, including auto-validation and auto-definition using profilers [@10.1145/3580305.3599776].
@@ -118,6 +140,6 @@ Check | Description | DataType
 `Control.percentage_fill` | `% rows` not empty | _agnostic_
 `Control.percentage_empty` | `% rows` empty | _agnostic_
 
-Table: List and description of the currently available []{label="tab:checks"} \label{tab:checks}
+Table: List and description of the currently available checks []{label="tab:checks"} \label{tab:checks}
 
 # References

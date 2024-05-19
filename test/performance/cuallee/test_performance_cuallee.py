@@ -12,7 +12,7 @@ df = spark.read.parquet("/data/*.parquet")
 
 
 [check.is_complete(name) for name in df.columns]
-[check.is_unique(name) for name in df.columns]
+[check.is_unique(name, approximate=True) for name in df.columns]
 
 
 start = datetime.now()

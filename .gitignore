@@ -30,3 +30,4 @@ build/
 app/
 creds.json
 **/.secrets
+paper/jats/

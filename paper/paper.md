@@ -51,22 +51,29 @@ One last argument in favor of using a quality tool such as `cuallee` is the need
 # Data Quality Frameworks
 Data platforms have diversified from file systems and relational databases, to full ecosystems including the concept of data lakes [@10.3389/fdata.2020.564115]. Modern platforms host a variety of data formats, beyond traditional tabular data, including semi-structured like `JSON` [@10.1145/2872427.2883029] or unstructured like audio or images.
 
-Operating with modern data platforms, requires a sophisticated data processing framework capable to handle multiple formats, and scalability. Apache Spark [@10.1145/2723372.2742797] has revolutionized the data flow paradigm by bringing computation to the data, reversing the omnipresent data to the computation, it has commoditized large scale data processing and it has grown in adoption.
+Operating with modern data platforms, requires a versatile data processing framework capable to handle structured and unstructured data, supports data operations in various programming languages, fulfills the imperative and declarative form to data operations from practitioners and does it reliably for any size of data. Apache Spark [@10.1145/2723372.2742797] represents an exemplar framework due to the wide range of data processing capabilities —batch processing, real-time streaming, machine learning, and graph processing—within a unified framework commended and adopted [@oreilly2023technology] by the data industry.
 
-Apache Spark's growth can be attributed to its ease of use, versatility, and performance. It supports multiple programming languages, including Python, Scala, Java, and R, making it accessible to a wide range of developers. Moreover, Spark's ability to handle various data processing tasks —batch processing, real-time streaming, machine learning, and graph processing—within a unified framework has been a key factor in its widespread adoption [@oreilly2023technology].
+`cuallee` is powered by native data engines, including Apache Spark, and offers a robust structure that can be extended to new engines with fully open-source implementation guidelines and rigorous testing. `pydeequ` [@10.14778/3229863.3229867] is a pioneer in large-scale data quality frameworks and is fully open-source. However, its adoption is limited due to the smaller community of developers proficient in the `scala` programming language. 
 
-`cuallee` is powered by native data engines like Apache Spark. Compared to other data quality frameworks it brings substantial advantages in reduced complexity, less computation resources and the fastest time per validation.
+On the other hand, `great-expectations` and `soda` are commercial options that require registration and issuing of keys for cloud reporting capabilities. 
 
-The following table (\autoref{tab:performance}) provides a summary of the performance comparisson:
+`cuallee` provides a fully open-source data quality framework designed for both academia and industry practitioners, offering unparalleled performance compared to the aforementioned alternatives.
 
-Framework | Checks Definition | Time
+
+## Performance Benchmark
+A reproducible performance benchmark is available in the code repository [@cuallee_performance_tests].
+It consists of `38` checks over an open sourced data set [@nyc_tlc_trip_record_data] made of `19.8 million rows`. The validation performs `19` checks for __completeness__ and `19` checks for __uniqueness__ for each column of the dataset.
+
+The following table (\autoref{tab:performance}) provides a summary of the performance comparison:
+
+Framework | Definitions | Time
  ------- | ----------- | ----
-`great_expectations` | `python` | `▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 66s`
-`soda` | `yaml` | `▇▇▇▇▇▇▇▇▇▇▇▇▇ 43s`
-`pydeequ` | `python` | `▇▇▇ 11s`
-`cuallee` | `python` | `▇▇ 7s`
+`great_expectations==0.18.13` | `python` | `▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 66s`
+`soda==1.4.10` | `yaml` | `▇▇▇▇▇▇▇▇▇▇▇▇▇ 43s`
+`pydeequ==1.3.0` | `python` | `▇▇▇ 11s`
+`cuallee==0.10.3` | `python` | `▇▇ 7s`
 
-Table: Performance comparisson on popular data quality frameworks []{label="tab:performance"} \label{tab:performance}
+Table: Performance comparison on popular data quality frameworks []{label="tab:performance"} \label{tab:performance}
 
 
 

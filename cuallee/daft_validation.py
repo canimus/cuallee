@@ -262,20 +262,21 @@ class Compute:
         def entropy(probabilities: daft.Series):
             return [-sum(p * log2(p) for p in probabilities.to_pylist() if p > 0)]
 
+        # Step 1: Cast the column to string and perform groupby and count
         dataframe = (
             dataframe.with_column(
                 "label", daft.col(rule.column).cast(daft.DataType.string())
             )
             .groupby("label")
-            .count(rule.column)
-            .with_column(
-                "probabilities", daft.col(rule.column) / daft.col(rule.column).sum()
-            )
-        )
+            .count(rule.column))
 
-        return dataframe.select(entropy(daft.col("probabilities"))).to_pandas().iloc[
-            0, 0
-        ] == float(rule.value)
+        # Step 2: Calculate the total sum of counts separately
+        total_count = int(dataframe.select(daft.col(rule.column)).to_pandas()[rule.column].sum())
+
+        # Step 3: Calculate the probabilities column using the total sum of counts
+        dataframe = dataframe.with_column("probabilities", daft.col(rule.column) / total_count)
+
+        return dataframe.select(entropy(daft.col("probabilities"))).to_pandas().iloc[0, 0] == float(rule.value)
 
     def is_on_weekday(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         col_name = daft.col(rule.column)

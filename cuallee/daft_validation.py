@@ -29,7 +29,8 @@ class Compute:
             daft.col(col_name).not_null().cast(daft.DataType.int64())
             for col_name in col_names
         ]
-        return dataframe.select(*perdicate).sum(col_names).to_pandas().astype(int).sum().sum() / len(
+        col_names_list = [daft.col(col_name) for col_name in rule.column]
+        return dataframe.select(*perdicate).sum(col_names_list).to_pandas().astype(int).sum().sum() / len(
             col_names
         )
 

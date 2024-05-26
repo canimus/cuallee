@@ -37,7 +37,7 @@ Provider | API | Versions
 ![pandas](logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.2`, `1.5.x`, `1.4.x`
 ![duckdb](logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `0.10.2`,~~`0.9.2`~~,~~`0.8.0`~~, ~~`0.7.1`~~
 ![polars](logos/polars.svg?raw=true "Polars API")|`polars`| `0.19.6`
-![daft](logos/daft.png?raw=true "Daft API")|`daft`| `0.2.19`
+![daft](logos/daft.png?raw=true "Daft API")|`daft`| `0.2.24`, ~~`0.2.19`~~
 
  <sub>Logos are trademarks of their own brands.</sub>
 

@@ -62,7 +62,7 @@ cloud = [
   "msgpack == 1.0.8",
 ]
 pdf = [
-  "fpdf2==2.7.8"
+  "fpdf2==2.7.9"
 ]
 daft = [
   "getdaft == 0.2.24"

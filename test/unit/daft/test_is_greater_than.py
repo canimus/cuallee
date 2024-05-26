@@ -32,4 +32,7 @@ def test_coverage(check: Check):
     df = daft.from_pydict({"id": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]})
     result = check.validate(df)
     assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()
-    assert result.select(daft.col("pass_rate").max() == 0.5).to_pandas().pass_rate.all()
+    col_pass_rate = daft.col("pass_rate")
+    assert (
+        result.agg(col_pass_rate.max()).select(col_pass_rate == 0.50).to_pandas().pass_rate.all()
+    )

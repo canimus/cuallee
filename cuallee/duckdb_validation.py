@@ -19,6 +19,10 @@ class Compute:
         """Verify the absence of null values in a column"""
         return f"SUM(CAST({rule.column} IS NOT NULL AS INTEGER))"
 
+    def is_empty(self, rule: Rule) -> str:
+        """Verify the presence of null values in a column"""
+        return f"SUM(CAST({rule.column} IS NULL AS INTEGER))"
+
     def are_complete(self, rule: Rule) -> str:
         """Verify the abscence of null values on groups of columns"""
         return (

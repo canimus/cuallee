@@ -7,6 +7,7 @@ The following table contains the list of all available checks in `cuallee`:
 Check | Description | DataType
  ------- | ----------- | ----
 `is_complete` | Zero `nulls` | _agnostic_
+`is_empty` | All `nulls` | _agnostic_
 `is_unique` | Zero `duplicates` | _agnostic_
 `is_primary_key` | Zero `duplicates` | _agnostic_
 `are_complete` | Zero `nulls` on group of columns | _agnostic_

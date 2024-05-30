@@ -44,6 +44,16 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
+     def is_complete(self, rule: Rule):
+        """Verify the presence of null values in a column"""
+        predicate = f"{rule.column} IS NULL"
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            self._sum_predicate_to_integer(predicate),
+            ComputeMethod.SQL,
+        )
+        return self.compute_instruction
+
     def are_complete(self, rule: Rule):
         """Verify the absence of null values in a column"""
         predicate = [f"{c} IS NOT NULL" for c in rule.column]

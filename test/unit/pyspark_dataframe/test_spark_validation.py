@@ -34,6 +34,7 @@ def test_compute():
     assert hasattr(compute, "compute_instruction")
 
     assert hasattr(compute, "is_complete")
+    assert hasattr(compute, "is_empty")
     assert hasattr(compute, "are_complete")
     assert hasattr(compute, "is_unique")
     assert hasattr(compute, "are_unique")

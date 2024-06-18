@@ -35,6 +35,7 @@ def test_compute():
     assert hasattr(compute, "_single_value_rule")
     assert hasattr(compute, "_stats_fn_rule")
     assert hasattr(compute, "is_complete")
+    assert hasattr(compute, "is_empty")
     assert hasattr(compute, "are_complete")
     assert hasattr(compute, "is_unique")
     assert hasattr(compute, "are_unique")

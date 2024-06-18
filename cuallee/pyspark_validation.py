@@ -59,6 +59,16 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
+    def is_empty(self, rule: Rule):
+        """Validation for null values in column"""
+        predicate = F.col(f"`{rule.column}`").isNull().cast("integer")
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.sum(predicate),
+            ComputeMethod.OBSERVE,
+        )
+        return self.compute_instruction
+
     def are_complete(self, rule: Rule):
         """Validation for non-null values in a group of columns"""
         predicate = (

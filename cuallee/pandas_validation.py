@@ -14,6 +14,9 @@ class Compute:
     def is_complete(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].notnull().sum()
 
+    def is_empty(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
+        return dataframe.loc[:, rule.column].isnull().sum()
+
     def are_complete(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
         return dataframe.loc[:, rule.column].notnull().astype(int).sum().sum() / len(
             rule.column

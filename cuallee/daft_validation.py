@@ -23,6 +23,11 @@ class Compute:
         perdicate =col_name.not_null().cast(daft.DataType.int64())
         return dataframe.select(perdicate).sum(col_name).to_pandas().iloc[0, 0]
 
+    def is_empty(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
+        col_name = daft.col(rule.column)
+        perdicate =col_name.is_null().cast(daft.DataType.int64())
+        return dataframe.select(perdicate).sum(col_name).to_pandas().iloc[0, 0]
+
     def are_complete(self, rule: Rule, dataframe: daft.DataFrame) -> Union[bool, int]:
         col_names = rule.column
         perdicate = [

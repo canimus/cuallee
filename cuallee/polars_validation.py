@@ -33,6 +33,14 @@ class Compute:
             .to_series()
         )
 
+    def is_empty(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validate null"""
+        return Compute._result(
+            dataframe.select(pl.col(rule.column).is_null().cast(pl.Int8))
+            .sum()
+            .to_series()
+        )
+
     def are_complete(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate absence of null in group of columns"""
         return Compute._result(

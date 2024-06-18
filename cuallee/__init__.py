@@ -353,6 +353,18 @@ class Check:
         Rule("is_complete", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
         return self
 
+    def is_empty(self, column: str, pct: float = 1.0):
+        """
+        Validation for null values in column
+
+        Args:
+            column (str): Column name in dataframe
+            pct (float): The threshold percentage required to pass
+
+        """
+        Rule("is_empty", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
+        return self
+
     def are_complete(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """
         Validation for non-null values in a group of columns

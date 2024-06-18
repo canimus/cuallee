@@ -3,7 +3,7 @@ from cuallee import Check
 
 
 def test_positive(check: Check):
-    check.is_complete("id")
+    check.is_empty("id")
     df = daft.from_pydict({"id": [None, None], "id2": [None, None]})
     result = check.validate(df)
     assert result.select(daft.col("status").str.match("PASS")).to_pandas().status.all()

@@ -58,12 +58,14 @@ except (ModuleNotFoundError, ImportError):
 
 class CheckLevel(enum.Enum):
     """Level of verifications in cuallee"""
+
     WARNING = 0
     ERROR = 1
 
 
 class CheckDataType(enum.Enum):
     """Accepted data types in checks"""
+
     AGNOSTIC = 0
     NUMERIC = 1
     STRING = 2
@@ -74,6 +76,7 @@ class CheckDataType(enum.Enum):
 
 class CheckStatus(enum.Enum):
     """Validation result criteria"""
+
     PASS = "PASS"
     FAIL = "FAIL"
     NO_RUN = "NO_RUN"
@@ -82,6 +85,7 @@ class CheckStatus(enum.Enum):
 @dataclass
 class Rule:
     """Predicate definition holder"""
+
     method: str
     column: Union[str, List[str], Tuple[str, str]]
     value: Optional[Any]
@@ -189,6 +193,7 @@ class Rule:
 
 class ComputeEngine(Protocol):
     """An interface for validatiosn to adhere to"""
+
     def compute(self, rules: Dict[str, Rule]) -> bool:
         """Returns compute instructions for each rule"""
 
@@ -216,9 +221,9 @@ class Check:
             level (CheckLevel): [0-1] value to describe if its a WARNING or ERROR check
             name (str): Normally the name of the dataset being verified, or a name for this check
             execution_date (date): An automatically generated timestamp of the check in UTC
-            table_name (str): When using databases matches the table name of the source 
+            table_name (str): When using databases matches the table name of the source
             session (Session): When operating in Session enabled environments like Databricks or Snowflake
-        
+
         """
         self._rule: Dict[str, Rule] = {}
         # TODO: Should be a compute engine protocol
@@ -271,7 +276,7 @@ class Check:
     def _remove_rule_generic(self, key: str):
         """
         Remove a key from rules and compute dictionaries
-        
+
         Args:
             key (str): the blake2s key of the rule
         """
@@ -281,7 +286,7 @@ class Check:
     def add_rule(self, method: str, *arg):
         """
         Add a new rule to the Check class.
-        
+
         Args:
             method (str): Check name
             arg (list): Parameters of the check
@@ -291,7 +296,7 @@ class Check:
     def delete_rule_by_key(self, keys: Union[str, List[str]]):
         """
         Delete rules from check based on keys.
-        
+
         Args:
             keys (List[str]): a single or list of keys to remove from the check
         """
@@ -308,7 +313,7 @@ class Check:
     ):
         """
         Delete rule based on method(s) or column name(s) or coverage value(s).
-        
+
         Args:
             rule_attribute (str): Finds a rule with by: method, column or coverage
             values (List[str]): Deletes a rule that matches the rule_attribute equal to the value in this parameter
@@ -326,13 +331,13 @@ class Check:
 
     def adjust_rule_coverage(self, rule_index: int, rule_coverage: float):
         """
-        Adjust the ratio predicate/rows for a rule. 
+        Adjust the ratio predicate/rows for a rule.
         It is intended to lower or increase tolerance without having to rewrite the entire check
 
         Args:
             rule_index (int): The position of the rule in the check list
             rule_coverage (float): New value between [0..1] for tolerance
-        
+
         """
         target_rule = self.rules[rule_index]
         old_key = target_rule.key
@@ -368,7 +373,7 @@ class Check:
     def are_complete(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """
         Validation for non-null values in a group of columns
-        
+
         Args:
             column (List[str]): A tuple or list of column names in dataframe
             pct (float): The threshold percentage required to pass
@@ -379,19 +384,29 @@ class Check:
     def is_unique(self, column: str, pct: float = 1.0, approximate: bool = False):
         """
         Validation for unique values in column
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
             approximate (bool): A flag to speed up computation using an approximation through maximum relative std. dev.
         """
-        Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct, options={"approximate" : approximate}) >> self._rule
+        (
+            Rule(
+                "is_unique",
+                column,
+                "N/A",
+                CheckDataType.AGNOSTIC,
+                pct,
+                options={"approximate": approximate},
+            )
+            >> self._rule
+        )
         return self
 
     def is_primary_key(self, column: str, pct: float = 1.0):
         """
         Validation for unique values in column
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -402,7 +417,7 @@ class Check:
     def are_unique(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """
         Validation for unique values in a group of columns
-        
+
         Args:
             column (List[str]): A tuple or list of column names in dataframe
             pct (float): The threshold percentage required to pass
@@ -415,7 +430,7 @@ class Check:
     ):
         """
         Validation for unique values in a group of columns
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -426,7 +441,7 @@ class Check:
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
         """
         Validation for numeric greater than value
-        
+
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
@@ -438,7 +453,7 @@ class Check:
     def is_positive(self, column: str, pct: float = 1.0):
         """
         Validation for numeric greater than zero
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -448,7 +463,7 @@ class Check:
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """
         Validation for numeric greater or equal than value
-        
+
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
@@ -463,7 +478,7 @@ class Check:
     def is_in_millions(self, column: str, pct: float = 1.0):
         """
         Validates that a column has values greater than 1M (1e6)
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -473,7 +488,7 @@ class Check:
     def is_in_billions(self, column: str, pct: float = 1.0):
         """
         Validates that a column has values greater than 1B (1e9)
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -483,7 +498,7 @@ class Check:
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """
         Validation for numeric less than value
-        
+
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
@@ -495,7 +510,7 @@ class Check:
     def is_negative(self, column: str, pct: float = 1.0):
         """
         Validation for numeric less than zero
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -505,7 +520,7 @@ class Check:
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """
         Validation for numeric less or equal than value
-        
+
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
@@ -520,7 +535,7 @@ class Check:
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """
         Validation for numeric column equal than value
-        
+
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
@@ -532,7 +547,7 @@ class Check:
     def has_pattern(self, column: str, value: str, pct: float = 1.0):
         """
         Validation for string type column matching regex expression
-        
+
         Args:
             column (str): Column name in dataframe
             value (regex): A regular expression used to  match values in the `column`
@@ -543,12 +558,12 @@ class Check:
 
     def is_legit(self, column: str, pct: float = 1.0):
         """
-        Validation for string columns giving wrong signal about completeness due to empty strings. 
-        
+        Validation for string columns giving wrong signal about completeness due to empty strings.
+
         Useful for reading CSV files and preventing empty strings being reported as valid records.
-        This is an `alias` implementation of the `has_pattern` rule using `not black space` as the pattern 
+        This is an `alias` implementation of the `has_pattern` rule using `not black space` as the pattern
         Which validates the presence of non-empty characters between the begining and end of a string.
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -559,7 +574,7 @@ class Check:
     def has_min(self, column: str, value: float):
         """
         Validation of a column's minimum value
-        
+
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
@@ -570,7 +585,7 @@ class Check:
     def has_max(self, column: str, value: float):
         """
         Validation of a column's maximum value
-        
+
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
@@ -614,7 +629,7 @@ class Check:
     def is_between(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """
         Validation of a column between a range
-        
+
         Args:
             column (str): Column name in dataframe
             value (List[str,number,date]): The condition for the column to match
@@ -631,7 +646,7 @@ class Check:
     ):
         """
         Validation of column value not in set of given values
-        
+
         Args:
             column (str): Column name in dataframe
             value (List[str,number,date]): The condition for the column to match
@@ -647,7 +662,7 @@ class Check:
     def not_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
         """
         Vaidation of column value not in set of given values
-        
+
         Args:
             column (str): Column name in dataframe
             value (List[str,number,date]): The condition for the column to match
@@ -663,7 +678,7 @@ class Check:
     ):
         """
         Validation of column value in set of given values
-        
+
         Args:
             column (str): Column name in dataframe
             value (List[str,number,date]): The condition for the column to match
@@ -680,7 +695,7 @@ class Check:
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
         """
         Vaidation of column value in set of given values
-        
+
         Args:
             column (str): Column name in dataframe
             value (List[str,number,date]): The condition for the column to match
@@ -691,7 +706,7 @@ class Check:
     def is_t_minus_n(self, column: str, value: int, pct: float = 1.0):
         """
         Validate that date is `n` days before the current date
-        
+
         Args:
             column (str): Column name in dataframe
             value (List[str,number,date]): The number of days before the current date
@@ -713,7 +728,7 @@ class Check:
     def is_t_minus_2(self, column: str, pct: float = 1.0):
         """
         Validate that date is 2 days ago
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -723,7 +738,7 @@ class Check:
     def is_t_minus_3(self, column: str, pct: float = 1.0):
         """
         Validate that date is 3 days ago
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -733,7 +748,7 @@ class Check:
     def is_yesterday(self, column: str, pct: float = 1.0):
         """
         Validate that date is yesterday
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -743,7 +758,7 @@ class Check:
     def is_today(self, column: str, pct: float = 1.0):
         """
         Validate that date is today
-        
+
         Args:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
@@ -761,7 +776,7 @@ class Check:
             value (List[str,number,date]): The condition for the column to match
             percentile (float): Value between [0..1] i.e. `0.5` for median
             precision (float): The precision to calculate percentiles
-        
+
         """
         (
             Rule(
@@ -783,7 +798,7 @@ class Check:
     ):
         """
         Validates a number resides inside the quartile(1) and quartile(3) of the range of values
-        
+
         Args:
             column (str): Column name in dataframe
             value (List[number]): A number between 0 and 1 demarking the quartile
@@ -806,11 +821,11 @@ class Check:
     ):
         """
         Validation the correspondance of a column value based on another column maximum
-        
+
         Args:
             column_source (str): Column used to obtain the row with the max value
             column_target (str): Column used to varify the matching value
-            value (str,number): The value to match against 
+            value (str,number): The value to match against
         """
         (
             Rule(
@@ -828,11 +843,11 @@ class Check:
     ):
         """
         Validation the correspondance of a column value based on another column minimum
-        
+
         Args:
             column_source (str): Column used to obtain the row with the min value
             column_target (str): Column used to varify the matching value
-            value (str,number): The value to match against 
+            value (str,number): The value to match against
         """
         (
             Rule(
@@ -848,7 +863,7 @@ class Check:
     def has_correlation(self, column_left: str, column_right: str, value: float):
         """
         Validates the correlation in a range of [0..1] between 2 columns
-        
+
         Args:
             column_left (str): Column name in dataframe
             column_right (str): Column name in dataframe
@@ -868,7 +883,7 @@ class Check:
     def satisfies(self, column: str, predicate: str, pct: float = 1.0):
         """
         Validation of a column satisfying a SQL-like predicate
-        
+
         Args:
             column (str): Column name in the dataframe
             predicate (str): A predicate written in SQL-like syntax
@@ -880,7 +895,7 @@ class Check:
     def has_cardinality(self, column: str, value: int):
         """
         Validates the number of distinct values in a column
-        
+
         Args:
             column (str): Column name in the dataframe
             value (int): The number of expected distinct values on a column
@@ -890,9 +905,9 @@ class Check:
 
     def has_infogain(self, column: str, pct: float = 1.0):
         """
-        Validate cardinality > 1. 
+        Validate cardinality > 1.
         Particularly useful when validating categorical data for Machine Learning
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -914,7 +929,7 @@ class Check:
         """
         Validation for entropy calculation on continuous variables/features on `log2`.
         Useful in Machine Learning classifications to test imbalanced datasets with low entropy.
-        
+
         Args:
             column (str): Column name in the dataframe
             value (float): The expected entropy value
@@ -938,7 +953,7 @@ class Check:
     def is_on_weekday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is in a Mon-Fri time range
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -949,7 +964,7 @@ class Check:
     def is_on_weekend(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is in a Sat-Sun time range
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -960,7 +975,7 @@ class Check:
     def is_on_monday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is on Monday
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -971,7 +986,7 @@ class Check:
     def is_on_tuesday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is on Tuesday
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -982,7 +997,7 @@ class Check:
     def is_on_wednesday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is on Wednesday
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -993,7 +1008,7 @@ class Check:
     def is_on_thursday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is on Thursday
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -1004,7 +1019,7 @@ class Check:
     def is_on_friday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is on Friday
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -1015,7 +1030,7 @@ class Check:
     def is_on_saturday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is on Saturday
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -1026,7 +1041,7 @@ class Check:
     def is_on_sunday(self, column: str, pct: float = 1.0):
         """
         Validates a datetime column is on Sunday
-        
+
         Args:
             column (str): Column name in the dataframe
             pct (float): The threshold percentage required to pass
@@ -1037,7 +1052,7 @@ class Check:
     def is_on_schedule(self, column: str, value: Tuple[Any], pct: float = 1.0):
         """
         Validation of a datetime column between an hour interval
-        
+
         Args:
             column (str): Column name in the dataframe
             value (Tuple[int,int]): A tuple indicating a 24hr day interval. i.e. (9,17) for 9am to 5pm
@@ -1057,9 +1072,9 @@ class Check:
 
         An alternative day combination can be provided given that a user wants to validate only certain dates.
         For example in PySpark to validate that time series are every Wednesday consecutively on a year
-        without any missing values, the value input should contain `[4]` as it represent the numeric 
+        without any missing values, the value input should contain `[4]` as it represent the numeric
         equivalence of the day of week Wednesday.
-        
+
         Args:
             column (str): Column name in the dataframe
             value (List[int]): A list of numbers describing the days of the week to consider. i.e. Pyspark uses [2, 3, 4, 5, 6] for Mon-Fri
@@ -1087,7 +1102,7 @@ class Check:
 
 
         ???+ example "Example"
-                
+
             Given the following fictitious dataset example:
 
             | date       | ticket   | status      |
@@ -1109,12 +1124,12 @@ class Check:
                  ["date", "ticket", "status"],
              )
 
-            
+
             check = Check(CheckLevel.WARNING, "WorkflowValidation")
             check.has_workflow(
-                column_group="ticket", 
-                column_event="status", 
-                column_order="date", 
+                column_group="ticket",
+                column_event="status",
+                column_order="date",
                 edges=[(None, "New"),("New", "In Progress"),("In Progress","Closed"), ("Closed", None)]
             )
 
@@ -1128,7 +1143,7 @@ class Check:
             |1  |2024-05-11 11:24:00|WorkflowValidation|WARNING|('ticket', 'status', 'date')|has_workflow|((None, 'New'), ('New', 'In Progress'), ('In Progress', 'Closed'), ('Closed', None))|3   |0         |1.0      |1.0           |PASS  |
             +---+-------------------+------------------+-------+----------------------------+------------+------------------------------------------------------------------------------------+----+----------+---------+--------------+------+
 
-            ```        
+            ```
 
         The check validates that:
 
@@ -1136,7 +1151,7 @@ class Check:
         - `In Progress` follows the `New` event
         - `Closed` follows the `In Progress` event
         - Nothing follows after `Closed` state
-          
+
         """
         (
             Rule(
@@ -1153,7 +1168,7 @@ class Check:
     def validate(self, dataframe: Any):
         """
         Compute all rules in this check for specific data frame
-        
+
         Args:
             dataframe (Union[pyspark,snowpark,pandas,polars,duckdb,bigquery]): A dataframe object
         """

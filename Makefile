@@ -51,3 +51,6 @@ testers: # Generate all test functions on folder/
 	@echo "Created: $(folder)"
 	@for i in `ls -1 test/unit/pyspark_dataframe/*.py | cut -d"/" -f4`; do touch "$(folder)/$$i"; done
 	@python -c "print('To Test: 🏃')"
+
+loadenv:
+	@echo "for i in $`cat .env$`; do export $$i; done"

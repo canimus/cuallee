@@ -19,7 +19,6 @@ def test_negative(check: Check):
 
 def test_coverage(check: Check):
     check.is_empty("id2", 0.5)
-    df = pl.DataFrame({"id": [10, None], "id2": [300, 500]})
-
+    df = pl.DataFrame({"id": [10, None], "id2": [300, None]})
     result = check.validate(df).select(pl.col("status")) == "PASS"
     assert all(result.to_series().to_list())

@@ -44,7 +44,7 @@ class Compute(ComputeEngine):
         )
         return self.compute_instruction
 
-     def is_complete(self, rule: Rule):
+    def is_empty(self, rule: Rule):
         """Verify the presence of null values in a column"""
         predicate = f"{rule.column} IS NULL"
         self.compute_instruction = ComputeInstruction(

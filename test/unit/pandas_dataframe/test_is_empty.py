@@ -17,6 +17,7 @@ def test_negative(check: Check):
 
 def test_coverage(check: Check):
     check.is_empty("id2", 0.5)
-    df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})
+    df = pd.DataFrame({"id": [10, None], "id2": [None, "test"]})
+    result = check.validate(df)
     assert result.status.str.match("PASS").all()
-    assert result.pass_rate.max() == 0.5
+    

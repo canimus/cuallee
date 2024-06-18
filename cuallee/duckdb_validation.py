@@ -263,7 +263,7 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
     rows = first(
         connection.execute(f"select count(*) from '{check.table_name}'").fetchone()
     )
-    
+
     computation_basis = [
         {
             "id": index,

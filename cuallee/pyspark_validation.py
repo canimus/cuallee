@@ -16,7 +16,6 @@ from cuallee import Check, ComputeEngine, Rule
 import os
 
 try:
-    from pyspark.sql.connect.dataframe import DataFrame as SparkConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as SparkConnectSession
 
     global spark_connect
@@ -398,8 +397,9 @@ class Compute(ComputeEngine):
                             "product_prob", F.lit(0.0), lambda acc, x: acc + x
                         ).alias("p")
                         / F.col("log_labels")
-                        * -1
-                    , F.lit(0.0)).alias("entropy")
+                        * -1,
+                        F.lit(0.0),
+                    ).alias("entropy")
                 )
                 .select(
                     F.expr(

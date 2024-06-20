@@ -1,5 +1,5 @@
 ---
-title: 'cuallee: A python package for data quality checks across multiple DataFrame APIs'
+title: 'cuallee: A Python package for data quality checks across multiple DataFrame APIs'
 tags:
   - python
   - data quality

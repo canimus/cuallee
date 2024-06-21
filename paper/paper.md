@@ -49,7 +49,7 @@ One last argument in favor of using a quality tool such as `cuallee` is the need
 
 
 # Data Quality Frameworks
-Data platforms have diversified from file systems and relational databases, to full ecosystems including the concept of data lakes [@10.3389/fdata.2020.564115]. Modern platforms host a variety of data formats, beyond traditional tabular data, including semi-structured like `JSON` [@10.1145/2872427.2883029] or unstructured like audio or images.
+Data platforms have diversified from file systems and relational databases, to full ecosystems including the concept of data lakes. Modern platforms host a variety of data formats, beyond traditional tabular data, including semi-structured like `JSON` [@10.1145/2872427.2883029] or unstructured like audio or images.
 
 Operating with modern data platforms, requires a versatile data processing framework capable to handle structured and unstructured data, supports data operations in various programming languages, fulfills the imperative and declarative form to data operations from practitioners and does it reliably for any size of data. Apache Spark [@10.1145/2723372.2742797] represents an exemplar framework due to the wide range of data processing capabilities —batch processing, real-time streaming, machine learning, and graph processing—within a unified framework commended and adopted [@oreilly2023technology] by the data industry.
 

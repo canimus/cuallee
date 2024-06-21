@@ -6,7 +6,7 @@
 [![](https://img.shields.io/pypi/dm/cuallee.svg?style=popout-square)](https://pypi.org/project/cuallee/)
 [![License](https://img.shields.io/github/license/canimus/cuallee.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 [![status](https://joss.theoj.org/papers/db01d4f5a02a319fe2b4c49f68e3f859/status.svg)](https://joss.theoj.org/papers/db01d4f5a02a319fe2b4c49f68e3f859)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12206787.svg)](https://doi.org/10.5281/zenodo.12206787)
 
 <div align="center">
     <img src="logos/cuallee.png" width="250px" style="padding: 60px 20px" align="right"/>

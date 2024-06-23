@@ -354,6 +354,14 @@ In the desire to make it even more `user-friendly` we are aiming to make `cualle
 - [https://canimus.github.io/cuallee/](https://canimus.github.io/cuallee/)
 
 
+## Paper
+
+`cuallee` has been published in the Journal of Open Source Software
+```
+Vazquez et al., (2024). cuallee: A Python package for data quality checks across multiple DataFrame APIs. Journal of Open Source Software, 9(98), 6684, https://doi.org/10.21105/joss.06684
+```
+If you use `cuallee` please consider citing this work. [Citation](CITATION.cff)
+
 ## License
 Apache License 2.0
 Free for commercial use, modification, distribution, patent use, private use.

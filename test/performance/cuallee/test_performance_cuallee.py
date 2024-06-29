@@ -16,7 +16,7 @@ df = spark.read.parquet("/data/*.parquet")
 
 
 start = datetime.now()
-check.validate(df).show(n=int(len(df.columns)*2), truncate=False)
+check.validate(df).show(n=int(len(df.columns) * 2), truncate=False)
 end = datetime.now()
 elapsed = end - start
 print("START:", start)

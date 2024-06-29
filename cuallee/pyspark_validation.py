@@ -8,10 +8,10 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import Window as W
 from pyspark.sql import Column, DataFrame, Row
-from toolz import first, valfilter  # type: ignore
+from toolz import first, valfilter, last  # type: ignore
 
 import cuallee.utils as cuallee_utils
-from cuallee import Check, ComputeEngine, Rule
+from cuallee import Check, ComputeEngine, Rule, CustomComputeException
 
 import os
 
@@ -587,6 +587,32 @@ class Compute(ComputeEngine):
 
         return self.compute_instruction
 
+    def is_custom(self, rule: Rule):
+        """Validates dataframe by applying a custom function to the dataframe and resolving boolean values in the last column"""
+
+        predicate = None
+
+        def _execute(dataframe: DataFrame, key: str):
+            try:
+                assert isinstance(rule.value, Callable), "Please provide a Callable/Function for validation"
+                computed_frame = rule.value(dataframe)
+                assert isinstance(computed_frame, DataFrame), "Custom function does not return a PySpark DataFrame"
+                assert len(computed_frame.columns) >= 1, "Custom function should retun at least one column"
+                computed_column = last(computed_frame.columns)
+                return computed_frame.select(
+                    F.sum(F.col(f"`{computed_column}`").cast("integer")).alias(key)
+                )
+            
+            except Exception as err:
+                raise CustomComputeException(str(err)) 
+            
+
+
+        self.compute_instruction = ComputeInstruction(
+            predicate, _execute, ComputeMethod.TRANSFORM
+        )
+
+        return self.compute_instruction
 
 def _field_type_filter(
     dataframe: DataFrame,
@@ -769,6 +795,13 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         # TODO: Check should have options for compute engine
         spark = SparkSession.builder.getOrCreate()
 
+    def _value(x):
+        """ Removes verbosity for Callable values"""
+        if isinstance(x, Callable):
+            return "f(x)"
+        else:
+            return str(x)
+        
     # Compute the expression
     computed_expressions = compute(check._rule)
     if (int(spark.version.replace(".", "")[:3]) < 330) or (
@@ -807,7 +840,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
                 check.level.name,
                 str(rule.column),
                 str(rule.method),
-                str(rule.value),
+                _value(rule.value),
                 int(check.rows),
                 int(rule.violations),
                 float(rule.pass_rate),

@@ -4,7 +4,9 @@ from cuallee import Check, CheckLevel
 
 
 def test_positive(spark):
-    df = spark.createDataFrame([[None], [None], [None], [None], [None]], schema="id int")
+    df = spark.createDataFrame(
+        [[None], [None], [None], [None], [None]], schema="id int"
+    )
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_empty("id")
     rs = check.validate(df)
@@ -29,7 +31,6 @@ def test_negative(spark, data, violation, pass_rate):
     assert rs.first().status == "FAIL"
     assert rs.first().violations == violation
     assert rs.first().pass_threshold == 1.0
-    
 
 
 def test_parameters():
@@ -43,4 +44,3 @@ def test_coverage(spark):
     rs = check.validate(df)
     assert rs.first().status == "PASS"
     assert rs.first().pass_threshold == 0.1
-    

@@ -20,4 +20,3 @@ def test_coverage(check: Check):
     df = pd.DataFrame({"id": [10, None], "id2": [None, "test"]})
     result = check.validate(df)
     assert result.status.str.match("PASS").all()
-    

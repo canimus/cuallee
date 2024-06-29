@@ -11,7 +11,7 @@ def test_positive():
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_daily("trip_start_timestamp")
     rs = check.validate(df)
-    #assert rs.violations[1] > 1
+    # assert rs.violations[1] > 1
 
 
 def test_negative():
@@ -20,7 +20,7 @@ def test_negative():
     check.is_daily("trip_end_timestamp")
     rs = check.validate(df)
     assert rs.status.str.match("FAIL")[1]
-    #assert rs.violations[1] >= 1
+    # assert rs.violations[1] >= 1
     # assert rs.pass_rate[1] <= 208914146 / 208943621
 
 
@@ -34,8 +34,8 @@ def test_parameters(rule_value):
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_daily("trip_start_timestamp", rule_value)
     rs = check.validate(df)
-    #assert rs.status.str.match("FAIL")[1]
-    #assert rs.violations[1] > 0
+    # assert rs.status.str.match("FAIL")[1]
+    # assert rs.violations[1] > 0
 
 
 def test_coverage():
@@ -43,6 +43,6 @@ def test_coverage():
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_daily("trip_end_timestamp", pct=0.7)
     rs = check.validate(df)
-    #assert rs.status.str.match("PASS")[1]
-    #assert rs.pass_threshold[1] == 0.7
+    # assert rs.status.str.match("PASS")[1]
+    # assert rs.pass_threshold[1] == 0.7
     # assert rs.pass_rate[1] <= 208914146 / 208943621

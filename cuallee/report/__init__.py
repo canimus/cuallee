@@ -1,11 +1,12 @@
 from typing import List, Tuple
 from fpdf import FPDF
-#from datetime import datetime, timezone
+
+# from datetime import datetime, timezone
 
 
 def pdf(data: List[Tuple[str]], name: str = "cuallee.pdf"):
-    #today = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    #style = FontFace(fill_color="#AAAAAA")
+    # today = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    # style = FontFace(fill_color="#AAAAAA")
     pdf = FPDF(orientation="landscape", format="A4")
     pdf.add_page()
     pdf.set_font("Helvetica", size=6)

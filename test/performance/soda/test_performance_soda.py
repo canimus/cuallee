@@ -95,8 +95,11 @@ soda_cloud:
   api_key_id: $soda_key
   api_key_secret: $soda_secret
 """
-scan.add_configuration_yaml_str(Template(config).substitute(soda_key=os.environ.get("SODA_KEY"), soda_secret=os.environ.get("SODA_SECRET")))
-
+scan.add_configuration_yaml_str(
+    Template(config).substitute(
+        soda_key=os.environ.get("SODA_KEY"), soda_secret=os.environ.get("SODA_SECRET")
+    )
+)
 
 
 start = datetime.now()

@@ -12,7 +12,7 @@ def test_positive():
     rs = check.validate(df)
     # assert rs.status.str.match("PASS")[1]
     # assert rs.violations[1] == 0
-    #assert rs.pass_rate[1] == 1.0
+    # assert rs.pass_rate[1] == 1.0
 
 
 def test_negative():
@@ -20,9 +20,9 @@ def test_negative():
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_unique("taxi_id")
     rs = check.validate(df)
-    #assert rs.status.str.match("FAIL")[1]
-    #assert rs.violations[1] >= 102580503
-    #assert rs.pass_threshold[1] == 1.0
+    # assert rs.status.str.match("FAIL")[1]
+    # assert rs.violations[1] >= 102580503
+    # assert rs.pass_threshold[1] == 1.0
     # assert rs.pass_rate[1] == 9738 / 208943621
 
 
@@ -35,7 +35,7 @@ def test_coverage():
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_unique("taxi_id", 0.000007)
     rs = check.validate(df)
-    #assert rs.status.str.match("PASS")[1]
-    #assert rs.violations[1] >= 102580503
+    # assert rs.status.str.match("PASS")[1]
+    # assert rs.violations[1] >= 102580503
     # assert rs.pass_threshold[1] == 0.000007
     # assert rs.pass_rate[1] == 9738 / 208943621

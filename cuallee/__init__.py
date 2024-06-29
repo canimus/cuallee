@@ -7,7 +7,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from types import ModuleType
-from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union, Callable
 from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
@@ -55,6 +55,8 @@ try:
 except (ModuleNotFoundError, ImportError):
     logger.debug("KO: BigQuery")
 
+class CustomComputeException(Exception):
+    pass
 
 class CheckLevel(enum.Enum):
     """Level of verifications in cuallee"""
@@ -1163,6 +1165,21 @@ class Check:
             )
             >> self._rule
         )
+        return self
+
+    def is_custom(
+        self, column: Union[str, List[str]], fn: Callable = None, pct: float = 1.0
+    ):
+        """
+        Uses a user-defined function that receives the to-be-validated dataframe
+        and uses the last column of the transformed dataframe to summarize the check
+
+        Args:
+            column (str): Column(s) required for custom function
+            fn (Callable): A function that receives a dataframe as input and returns a dataframe with at least 1 column as result
+            pct (float): The threshold percentage required to pass
+        """
+        (Rule("is_custom", column, fn, CheckDataType.AGNOSTIC, pct) >> self._rule)
         return self
 
     def validate(self, dataframe: Any):

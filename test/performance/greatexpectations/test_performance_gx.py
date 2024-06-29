@@ -12,8 +12,12 @@ check = SparkDFDataset(df)
 
 start = datetime.now()
 
-check_unique = [check.expect_column_values_to_be_unique(name).success for name in df.columns]
-check_complete = [check.expect_column_values_to_not_be_null(name).success for name in df.columns]
+check_unique = [
+    check.expect_column_values_to_be_unique(name).success for name in df.columns
+]
+check_complete = [
+    check.expect_column_values_to_not_be_null(name).success for name in df.columns
+]
 
 end = datetime.now()
 print(check_unique + check_complete)

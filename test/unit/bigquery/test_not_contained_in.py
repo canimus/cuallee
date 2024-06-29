@@ -11,9 +11,9 @@ def test_positive():
     check = Check(CheckLevel.WARNING, "pytest")
     check.not_contained_in("payment_type", ["Dinero"])
     rs = check.validate(df)
-    #assert rs.status.str.match("PASS")[1]
-    #assert rs.violations[1] == 0
-    #assert rs.pass_rate[1] == 1.0
+    # assert rs.status.str.match("PASS")[1]
+    # assert rs.violations[1] == 0
+    # assert rs.pass_rate[1] == 1.0
 
 
 def test_negative():
@@ -114,8 +114,8 @@ def test_parameters(column_name, rule_value):
     check = Check(CheckLevel.WARNING, "pytest")
     check.not_contained_in(column_name, rule_value)
     rs = check.validate(df)
-    #assert rs.status.str.match("FAIL")[1]
-    #assert rs.pass_rate[1] <= 1.0
+    # assert rs.status.str.match("FAIL")[1]
+    # assert rs.pass_rate[1] <= 1.0
 
 
 def test_coverage():
@@ -123,6 +123,6 @@ def test_coverage():
     check = Check(CheckLevel.WARNING, "pytest")
     check.not_contained_in("payment_type", ("Dinero", "Metalico"), 0.7)
     rs = check.validate(df)
-    #assert rs.status.str.match("PASS")[1]
+    # assert rs.status.str.match("PASS")[1]
     # assert rs.violations[1] == 0
     # assert rs.pass_threshold[1] == 0.7

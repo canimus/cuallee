@@ -1179,6 +1179,7 @@ class Check:
             fn (Callable): A function that receives a dataframe as input and returns a dataframe with at least 1 column as result
             pct (float): The threshold percentage required to pass
         """
+        
         (Rule("is_custom", column, fn, CheckDataType.AGNOSTIC, pct) >> self._rule)
         return self
 

@@ -594,6 +594,7 @@ class Compute(ComputeEngine):
 
         def _execute(dataframe: DataFrame, key: str):
             try:
+                assert isinstance(rule.value, Callable), "Please provide a Callable/Function for validation"
                 computed_frame = rule.value(dataframe)
                 assert isinstance(computed_frame, DataFrame), "Custom function does not return a PySpark DataFrame"
                 assert len(computed_frame.columns) >= 1, "Custom function should retun at least one column"

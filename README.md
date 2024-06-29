@@ -239,6 +239,7 @@ Check | Description | DataType
 `is_on_schedule` | For date fields confirms time windows i.e. `9:00 - 17:00` | _timestamp_
 `is_daily` | Can verify daily continuity on date fields by default. `[2,3,4,5,6]` which represents `Mon-Fri` in PySpark. However new schedules can be used for custom date continuity | _date_
 `has_workflow` | Adjacency matrix validation on `3-column` graph, based on `group`, `event`, `order` columns.  | _agnostic_
+`is_custom` | User-defined custom `function` applied to dataframe for row-based validation.  | _agnostic_
 `satisfies` | An open `SQL expression` builder to construct custom checks | _agnostic_
 `validate` | The ultimate transformation of a check with a `dataframe` input for validation | _agnostic_
 

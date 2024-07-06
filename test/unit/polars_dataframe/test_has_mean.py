@@ -21,7 +21,7 @@ def test_negative(check: Check):
 @pytest.mark.parametrize("extra_value", [4, 4.0], ids=("int", "float"))
 def test_values(check: Check, extra_value):
     check.has_mean("id", extra_value)
-    df = pl.DataFrame({"id": [0, 1, 2, 3, 14] + [extra_value]})
+    df = pl.DataFrame({"id": [0, 1, 2, 3, 14] + [extra_value]}, strict=False)
     result = check.validate(df).select(pl.col("status")) == "PASS"
     assert all(result.to_series().to_list())
 

@@ -113,7 +113,7 @@ class Compute:
         """Conformance on column values to regular expression threshold"""
         return Compute._result(
             dataframe.select(
-                operator.gt(pl.col(rule.column).str.count_match(rule.value), 0).cast(
+                operator.gt(pl.col(rule.column).str.count_matches(rule.value), 0).cast(
                     pl.Int8
                 )
             )

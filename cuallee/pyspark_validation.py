@@ -594,25 +594,30 @@ class Compute(ComputeEngine):
 
         def _execute(dataframe: DataFrame, key: str):
             try:
-                assert isinstance(rule.value, Callable), "Please provide a Callable/Function for validation"
+                assert isinstance(
+                    rule.value, Callable
+                ), "Please provide a Callable/Function for validation"
                 computed_frame = rule.value(dataframe)
-                assert isinstance(computed_frame, DataFrame), "Custom function does not return a PySpark DataFrame"
-                assert len(computed_frame.columns) >= 1, "Custom function should retun at least one column"
+                assert isinstance(
+                    computed_frame, DataFrame
+                ), "Custom function does not return a PySpark DataFrame"
+                assert (
+                    len(computed_frame.columns) >= 1
+                ), "Custom function should retun at least one column"
                 computed_column = last(computed_frame.columns)
                 return computed_frame.select(
                     F.sum(F.col(f"`{computed_column}`").cast("integer")).alias(key)
                 )
-            
-            except Exception as err:
-                raise CustomComputeException(str(err)) 
-            
 
+            except Exception as err:
+                raise CustomComputeException(str(err))
 
         self.compute_instruction = ComputeInstruction(
             predicate, _execute, ComputeMethod.TRANSFORM
         )
 
         return self.compute_instruction
+
 
 def _field_type_filter(
     dataframe: DataFrame,
@@ -796,12 +801,12 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         spark = SparkSession.builder.getOrCreate()
 
     def _value(x):
-        """ Removes verbosity for Callable values"""
+        """Removes verbosity for Callable values"""
         if isinstance(x, Callable):
             return "f(x)"
         else:
             return str(x)
-        
+
     # Compute the expression
     computed_expressions = compute(check._rule)
     if (int(spark.version.replace(".", "")[:3]) < 330) or (

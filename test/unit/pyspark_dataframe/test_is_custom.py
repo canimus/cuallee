@@ -27,13 +27,12 @@ def test_negative(spark):
 def test_parameters(spark):
     df = spark.range(10)
     with pytest.raises(
-        CustomComputeException, match="Please provide a Callable/Function for validation"
+        CustomComputeException,
+        match="Please provide a Callable/Function for validation",
     ):
         check = Check(CheckLevel.WARNING, "pytest")
         check.is_custom("id", "wrong value")
         check.validate(df)
-        
-        
 
 
 def test_coverage(spark):

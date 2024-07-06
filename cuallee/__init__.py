@@ -12,7 +12,7 @@ from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.10.2"
+__version__ = "0.12.2"
 # Verify Libraries Available
 # ==========================
 try:
@@ -245,10 +245,12 @@ class Check:
         self.table_name = table_name
         try:
             from .iso.checks import ISO
+            from .bio.checks import BioChecks
 
             self.iso = ISO(self)
-        except (ModuleNotFoundError, ImportError):
-            logger.error("ISO module requires requests")
+            self.bio = BioChecks(self)
+        except (ModuleNotFoundError, ImportError) as err:
+            logger.error(f"Dependency modules missing: {str(err)}")
         self.session = session
 
     def __repr__(self):

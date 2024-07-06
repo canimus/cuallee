@@ -1,0 +1,23 @@
+amino_acid,3_letter_code,1_letter_code
+alanine,ala,A
+arginine,arg,R
+asparagine,asn,N
+aspartic acid,asp,D
+asparagine or aspartic acid,asx,B
+cysteine,cys,C
+glutamic acid,glu,E
+glutamine,gln,Q
+glutamine or glutamic acid,glx,Z
+glycine,gly,G
+histidine,his,H
+isoleucine,ile,I
+leucine,leu,L
+lysine,lys,K
+methionine,met,M
+phenylalanine,phe,F
+proline,pro,P
+serine,ser,S
+threonine,thr,T
+tryptophan,trp,W
+tyrosine,tyr,Y
+valine,val,V

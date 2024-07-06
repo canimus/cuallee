@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cuallee"
-version = "0.12.1"
+version = "0.12.2"
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
@@ -79,3 +79,4 @@ ignore = ["E731"]
 [project.urls]
 "Homepage" = "https://github.com/canimus/cuallee"
 "Bug Tracker" = "https://github.com/canimus/cuallee"
+

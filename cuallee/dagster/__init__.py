@@ -52,7 +52,7 @@ def yield_check_results(
 
     for item in results.itertuples():
         yield AssetCheckResult(
-            name=f"{item.method}.{item.column}",
+            check_name=f"{item.rule}.{item.column}",
             passed=(item.status == "PASS"),
             metadata={
                 "level": item.level,

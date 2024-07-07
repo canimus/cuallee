@@ -289,7 +289,7 @@ class Check:
         if key in self._rule:
             self._rule.pop(key)
 
-    def add_rule(self, method: str, *arg):
+    def add_rule(self, method: str, *arg, **kwargs):
         """
         Add a new rule to the Check class.
 
@@ -297,7 +297,7 @@ class Check:
             method (str): Check name
             arg (list): Parameters of the check
         """
-        return operator.methodcaller(method, *arg)(self)
+        return operator.methodcaller(method, *arg, **kwargs)(self)
 
     def delete_rule_by_key(self, keys: Union[str, List[str]]):
         """

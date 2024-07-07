@@ -12,7 +12,7 @@ from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.10.2"
+__version__ = "0.12.2"
 # Verify Libraries Available
 # ==========================
 try:
@@ -245,10 +245,12 @@ class Check:
         self.table_name = table_name
         try:
             from .iso.checks import ISO
+            from .bio.checks import BioChecks
 
             self.iso = ISO(self)
-        except (ModuleNotFoundError, ImportError):
-            logger.error("ISO module requires requests")
+            self.bio = BioChecks(self)
+        except (ModuleNotFoundError, ImportError) as err:
+            logger.error(f"Dependency modules missing: {str(err)}")
         self.session = session
 
     def __repr__(self):
@@ -287,7 +289,7 @@ class Check:
         if key in self._rule:
             self._rule.pop(key)
 
-    def add_rule(self, method: str, *arg):
+    def add_rule(self, method: str, *arg, **kwargs):
         """
         Add a new rule to the Check class.
 
@@ -295,7 +297,7 @@ class Check:
             method (str): Check name
             arg (list): Parameters of the check
         """
-        return operator.methodcaller(method, *arg)(self)
+        return operator.methodcaller(method, *arg, **kwargs)(self)
 
     def delete_rule_by_key(self, keys: Union[str, List[str]]):
         """

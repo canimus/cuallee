@@ -3,6 +3,7 @@ from cuallee import Check, CheckLevel
 import pandas as pd
 from typing import Iterator
 
+
 def test_make_checks():
     df = pd.DataFrame({"id": [1, 2, 3, 4, 5]})
     check = Check(CheckLevel.WARNING, "Dagster")

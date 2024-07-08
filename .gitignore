@@ -4,6 +4,7 @@
 .py311/
 .py3815/
 .py3812/
+.py312/
 
 # Cache
 **__pycache__/

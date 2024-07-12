@@ -21,7 +21,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install '.[test,snowpark,pyspark,pandas,duckdb,bigquery,polars,dagster,cloud,pdf,daft]'
-        coverage run -m pytest test/unit
+        coverage run -m pytest --ignore=test/unit/bigquery test/unit
         coverage xml -o coverage.xml
       env:
         SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}

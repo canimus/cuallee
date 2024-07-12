@@ -175,7 +175,7 @@ class Compute:
     def is_contained_in(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate set inclusion"""
         return Compute._result(
-            dataframe.select(pl.col(rule.column).is_in(rule.value).cast(pl.Int8)).sum()
+            dataframe.select(pl.col(rule.column).is_in(list(rule.value)).cast(pl.Int8)).sum()
         )
 
     def not_contained_in(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:

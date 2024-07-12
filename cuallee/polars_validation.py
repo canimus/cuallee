@@ -499,7 +499,7 @@ def summary(check: Check, dataframe: pl.DataFrame):
             "level": check.level.name,
             "column": str(rule.column),
             "rule": rule.method,
-            "value": rule.value,
+            "value": str(rule.value),
             "rows": rows,
             "violations": _calculate_violations(first(unified_results[hash_key]), rows),
             "pass_rate": _calculate_pass_rate(first(unified_results[hash_key]), rows),

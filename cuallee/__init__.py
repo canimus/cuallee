@@ -142,7 +142,7 @@ class Rule:
             self.name = self.method
 
     def __repr__(self):
-        return f"Rule(method:{self.name}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
+        return f"Rule(method:{self.name}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, ordinal:{self.ordinal}"
 
     def __rshift__(self, rule_dict: Dict[str, Any]) -> Dict[str, Any]:
         rule_dict[self.key] = self
@@ -300,7 +300,8 @@ class Check:
 
         Args:
             method (str): Check name
-            arg (list): Parameters of the check
+            arg (list): Parameters of the Rule
+            kwars (dict): Dictionary of options for the Rule
         """
         return operator.methodcaller(method, *arg, **kwargs)(self)
 

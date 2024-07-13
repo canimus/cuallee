@@ -19,8 +19,15 @@ class BioChecks:
         return self._check
 
     def is_protein(self, column: str, pct: float = 1.0, options: Dict[str, str] = {"name": "is_protein"}):
-        """Verifies that country codes are valid against the ISO standard 3166"""
+        """Verifies that a sequence contains only valid aminoacid 1-letter codes"""
         self._check.has_pattern(
             column, rf"^[{''.join(self._aminoacids['1_letter_code'].tolist())}]*$", pct, options=options
+        )
+        return self._check
+
+    def is_cds(self, column: str, pct: float = 1.0, options: Dict[str, str] = {"name": "is_cds"}):
+        """Verifies that a sequence contains the correct codons"""
+        self._check.satisfies(
+            column, f"({column} rlike '^ATG.*') and ({column} rlike '.*(TAA|TAG|TGA)$') and (length({column}) % 3 == 0)", pct, options=options
         )
         return self._check

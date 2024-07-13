@@ -44,7 +44,7 @@ def test_delete_rule_by_list_of_keys(spark):
     assert len(c._rule) == 3
 
     c.delete_rule_by_key(
-        "CC325931A3F6C6B4128FAD3C94A1D8DED7B696B0BB132241BCAB7570777A63CE"
+        "A4846EC1BEF648CE1D190492031AA5999A61EAEF0C13B250439569539FD3E83C"
     )
     assert len(c._rule) == 2
 

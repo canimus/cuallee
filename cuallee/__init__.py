@@ -12,7 +12,7 @@ from toolz import compose, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.12.4"
+__version__ = "0.12.5"
 # Verify Libraries Available
 # ==========================
 try:
@@ -142,7 +142,7 @@ class Rule:
             self.name = self.method
 
     def __repr__(self):
-        return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
+        return f"Rule(method:{self.name}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
 
     def __rshift__(self, rule_dict: Dict[str, Any]) -> Dict[str, Any]:
         rule_dict[self.key] = self
@@ -892,7 +892,7 @@ class Check:
         )
         return self
 
-    def satisfies(self, column: str, predicate: str, pct: float = 1.0):
+    def satisfies(self, column: str, predicate: str, pct: float = 1.0, options: Dict[str, str] = {}):
         """
         Validation of a column satisfying a SQL-like predicate
 
@@ -901,7 +901,7 @@ class Check:
             predicate (str): A predicate written in SQL-like syntax
             pct (float): The threshold percentage required to pass
         """
-        Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct) >> self._rule
+        Rule("satisfies", column, predicate, CheckDataType.AGNOSTIC, pct, options=options) >> self._rule
         return self
 
     def has_cardinality(self, column: str, value: int):

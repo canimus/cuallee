@@ -9,7 +9,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12206787.svg)](https://doi.org/10.5281/zenodo.12206787)
 
 <div align="center">
-    <img src="https://github.com/canimus/cuallee/blob/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/cuallee.png" width="250px" style="padding: 60px 20px" align="right"/>
+    <img src="https://raw.githubusercontent.com/canimus/cuallee/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/cuallee.png" width="250px" style="padding: 60px 20px" align="right"/>
 </div>
 
 Meaning `good` in Aztec ([Nahuatl](https://nahuatl.wired-humanities.org/content/cualli-0)), _pronounced: QUAL-E_

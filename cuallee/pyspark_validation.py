@@ -844,7 +844,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
                 check.name,
                 check.level.name,
                 str(rule.column),
-                str(rule.method),
+                str(rule.name),
                 _value(rule.value),
                 int(check.rows),
                 int(rule.violations),

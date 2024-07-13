@@ -341,7 +341,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
             "check": check.name,
             "level": check.level.name,
             "column": rule.column,
-            "rule": rule.method,
+            "rule": rule.name,
             "value": rule.value,
             "rows": rows,
             "violations": _calculate_violations(first(unified_results[hash_key]), rows),

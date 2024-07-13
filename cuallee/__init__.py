@@ -100,6 +100,7 @@ class Rule:
     violations: int = 0
     pass_rate: float = 0.0
     ordinal: int = 0
+    name: str = None
 
     @property
     def settings(self) -> dict:
@@ -134,6 +135,11 @@ class Rule:
             # All values can only be of one data type in a rule
             if len(Counter(map(type, self.value)).keys()) > 1:
                 raise ValueError("Data types in rule values are inconsistent")
+
+        if (self.options and isinstance(self.options, dict) and (rule_name := self.options.get("name"))):
+            self.name = rule_name
+        else:
+            self.name = self.method
 
     def __repr__(self):
         return f"Rule(method:{self.method}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, status:{self.status}"
@@ -230,7 +236,6 @@ class Check:
 
         """
         self._rule: Dict[str, Rule] = {}
-        # TODO: Should be a compute engine protocol
         self.compute_engine: ModuleType
 
         if isinstance(level, int):
@@ -417,7 +422,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
+        Rule("is_unique", column, "N/A", CheckDataType.AGNOSTIC, pct, options={"name" : "is_primary_key"}) >> self._rule
         return self
 
     def are_unique(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
@@ -441,7 +446,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct) >> self._rule
+        Rule("are_unique", column, "N/A", CheckDataType.AGNOSTIC, pct, options={"name" : "is_composite_key"}) >> self._rule
         return self
 
     def is_greater_than(self, column: str, value: float, pct: float = 1.0):
@@ -550,7 +555,7 @@ class Check:
         Rule("is_equal_than", column, value, CheckDataType.NUMERIC, pct) >> self._rule
         return self
 
-    def has_pattern(self, column: str, value: str, pct: float = 1.0):
+    def has_pattern(self, column: str, value: str, pct: float = 1.0, options: Dict[str, str] = {}):
         """
         Validation for string type column matching regex expression
 
@@ -559,7 +564,7 @@ class Check:
             value (regex): A regular expression used to  match values in the `column`
             pct (float): The threshold percentage required to pass
         """
-        Rule("has_pattern", column, value, CheckDataType.STRING, pct) >> self._rule
+        Rule("has_pattern", column, value, CheckDataType.STRING, pct, options=options) >> self._rule
         return self
 
     def is_legit(self, column: str, pct: float = 1.0):
@@ -574,7 +579,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        Rule("has_pattern", column, r"^\S+$", CheckDataType.STRING, pct) >> self._rule
+        Rule("has_pattern", column, r"^\S+$", CheckDataType.STRING, pct, options={"name" : "is_legit"}) >> self._rule
         return self
 
     def has_min(self, column: str, value: float):
@@ -681,6 +686,7 @@ class Check:
         column: str,
         value: Union[List, Tuple],
         pct: float = 1.0,
+        options : Dict[str, str] = {}
     ):
         """
         Validation of column value in set of given values
@@ -692,7 +698,7 @@ class Check:
         """
 
         (
-            Rule("is_contained_in", column, value, CheckDataType.AGNOSTIC, pct)
+            Rule("is_contained_in", column, value, CheckDataType.AGNOSTIC, pct, options=options)
             >> self._rule
         )
 
@@ -707,9 +713,9 @@ class Check:
             value (List[str,number,date]): The condition for the column to match
             pct (float): The threshold percentage required to pass
         """
-        return self.is_contained_in(column, value, pct)
+        return self.is_contained_in(column, value, pct, options={"name": "is_in"})
 
-    def is_t_minus_n(self, column: str, value: int, pct: float = 1.0):
+    def is_t_minus_n(self, column: str, value: int, pct: float = 1.0, options: Dict[str, str] = {"name": "is_t_minus_n"}):
         """
         Validate that date is `n` days before the current date
 
@@ -719,7 +725,7 @@ class Check:
             pct (float): The threshold percentage required to pass
         """
         yesterday = datetime.utcnow() - timedelta(days=value)
-        return self.is_in(column, tuple([yesterday.strftime("%Y-%m-%d")]), pct)
+        return self.is_contained_in(column, tuple([yesterday.strftime("%Y-%m-%d")]), pct, options=options)
 
     def is_t_minus_1(self, column: str, pct: float = 1.0):
         """
@@ -729,7 +735,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 1, pct)
+        return self.is_t_minus_n(column, 1, pct, options={"name": "is_t_minus_1"})
 
     def is_t_minus_2(self, column: str, pct: float = 1.0):
         """
@@ -739,7 +745,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 2, pct)
+        return self.is_t_minus_n(column, 2, pct, options={"name": "is_t_minus_2"})
 
     def is_t_minus_3(self, column: str, pct: float = 1.0):
         """
@@ -749,7 +755,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 3, pct)
+        return self.is_t_minus_n(column, 3, pct, options={"name": "is_t_minus_3"})
 
     def is_yesterday(self, column: str, pct: float = 1.0):
         """
@@ -759,7 +765,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_1(column, pct)
+        return self.is_t_minus_n(column, 1, pct, options={"name": "is_yesterday"})
 
     def is_today(self, column: str, pct: float = 1.0):
         """
@@ -769,7 +775,7 @@ class Check:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 0, pct)
+        return self.is_t_minus_n(column, 0, pct, options={"name": "is_today"})
 
     def has_percentile(
         self, column: str, value: float, percentile: float, precision: int = 10000
@@ -1172,7 +1178,7 @@ class Check:
         return self
 
     def is_custom(
-        self, column: Union[str, List[str]], fn: Callable = None, pct: float = 1.0
+        self, column: Union[str, List[str]], fn: Callable = None, pct: float = 1.0, options: Dict[str, str] = {}
     ):
         """
         Uses a user-defined function that receives the to-be-validated dataframe
@@ -1184,7 +1190,7 @@ class Check:
             pct (float): The threshold percentage required to pass
         """
 
-        (Rule("is_custom", column, fn, CheckDataType.AGNOSTIC, pct) >> self._rule)
+        (Rule("is_custom", column, fn, CheckDataType.AGNOSTIC, pct, options=options) >> self._rule)
         return self
 
     def validate(self, dataframe: Any):

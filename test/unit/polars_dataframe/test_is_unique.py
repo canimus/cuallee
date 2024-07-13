@@ -9,6 +9,11 @@ def test_positive(check: Check):
     result = check.validate(df).select(pl.col("status")) == "PASS"
     assert all(result.to_series().to_list())
 
+def test_drop_nulls(check: Check):
+    check.is_unique("id", ignore_nulls=True)
+    df = pl.DataFrame({"id": [10, 20, None, None, 30]})
+    result = check.validate(df).select(pl.col("status")) == "PASS"
+    assert all(result.to_series().to_list())
 
 def test_negative(check: Check):
     check.is_unique("id")

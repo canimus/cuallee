@@ -299,7 +299,7 @@ def summary(check: Check, dataframe: bigquery.table.Table):
             "check": check.name,
             "level": check.level.name,
             "column": rule.column,
-            "rule": rule.method,
+            "rule": rule.name,
             "value": rule.value,
             "rows": rows,
             "violations": _calculate_violations(query_result[f"KEY{hash_key}"], rows),

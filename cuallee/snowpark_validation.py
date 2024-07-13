@@ -835,7 +835,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         [
             Row(
                 index,
-                rule.method,
+                rule.name,
                 str(rule.column),
                 str(rule.value),
                 str(unified_results[hash_key]),

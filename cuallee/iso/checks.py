@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import os
 from operator import attrgetter as at
 from functools import lru_cache
+from typing import Dict
 
 
 @dataclass
@@ -51,16 +52,16 @@ class ISO:
         self._ccy = []
         self._countries = []
 
-    def iso_4217(self, column: str):
+    def iso_4217(self, column: str, pct: float = 1.0, options: Dict[str,str]={"name": "iso_4217"}):
         """It verifies a field against the international standard currency codes via code or number fields from ISO 4217"""
         self._ccy = _load_currencies()
-        self._check.is_in(column, self._ccy)
+        self._check.is_contained_in(column, self._ccy, pct, options=options)
         return self._check
 
-    def iso_3166(self, column: str):
+    def iso_3166(self, column: str, pct: float = 1.0, options: Dict[str,str]={"name": "iso_3166"}):
         """Verifies that country codes are valid against the ISO standard 3166"""
         self._countries = _load_countries()
-        self._check.is_in(column, self._countries)
+        self._check.is_contained_in(column, self._countries, pct, options=options)
         return self._check
 
     iso_currencies = iso_4217

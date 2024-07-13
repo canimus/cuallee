@@ -26,6 +26,7 @@ def standardize(check):
                 "ord": int(r.ordinal),
                 "col": str(r.column),
                 "met": str(r.method),
+                "nam": str(r.name),
                 "val": str(r.value),
                 "vio": int(r.violations),
                 "psr": float(r.pass_rate),

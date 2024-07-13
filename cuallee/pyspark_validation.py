@@ -802,10 +802,11 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
 
     def _value(x):
         """Removes verbosity for Callable values"""
-        if isinstance(x, Callable):
-            return "f(x)"
+        if isinstance(x.value, Callable):
+            if x.options and isinstance(x.options, dict):
+                return x.options.get("custom_value", "f(x)")
         else:
-            return str(x)
+            return str(x.value)
 
     # Compute the expression
     computed_expressions = compute(check._rule)
@@ -845,7 +846,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
                 check.level.name,
                 str(rule.column),
                 str(rule.name),
-                _value(rule.value),
+                _value(rule),
                 int(check.rows),
                 int(rule.violations),
                 float(rule.pass_rate),

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd  # type: ignore
 from toolz import first  # type: ignore
 from string import Template
+import re
 
 from cuallee import Check, Rule
 
@@ -106,7 +107,12 @@ class Compute:
         return f"CORR({rule.column[0]}, {rule.column[1]}) = {rule.value}"
 
     def satisfies(self, rule: Rule) -> str:
-        return f"SUM(CAST(({rule.value}) AS INTEGER))"
+        """Allows arbitrary SQL statement execution as rules"""
+
+        # Compatibility with other dataframe regular expression comparissons
+        expression = re.compile(re.escape("rlike"), re.IGNORECASE)
+        subquery = expression.sub('SIMILAR TO', rule.value)        
+        return f"SUM(CAST(({subquery}) AS INTEGER))"
 
     def has_entropy(self, rule: Rule) -> str:
         return f"ENTROPY({rule.column}) = {rule.value}"

@@ -52,9 +52,26 @@ class Compute:
 
     def is_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate absence of duplicates"""
-        return Compute._result(
-            dataframe.select(pl.col(rule.column).is_unique().cast(pl.Int8)).sum()
+        expr = pl.col(rule.column)
+        flag = False
+        if rule.options and isinstance(rule.options, dict):
+            flag = rule.options.get("ignore_nulls", False)
+        
+        if flag:
+            expr = expr.drop_nulls()
+            extra = Compute._result(
+                dataframe.select(pl.col(rule.column).is_null().cast(pl.Int8)).sum()
+            )
+        
+        expr = expr.is_unique().cast(pl.Int8)
+        base = Compute._result(
+            dataframe.select(expr).sum()
         )
+
+        if flag:
+            return base + extra
+        else:
+            return base
 
     def are_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate absence of duplicate in group of columns"""

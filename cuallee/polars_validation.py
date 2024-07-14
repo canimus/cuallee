@@ -56,17 +56,15 @@ class Compute:
         flag = False
         if rule.options and isinstance(rule.options, dict):
             flag = rule.options.get("ignore_nulls", False)
-        
+
         if flag:
             expr = expr.drop_nulls()
             extra = Compute._result(
                 dataframe.select(pl.col(rule.column).is_null().cast(pl.Int8)).sum()
             )
-        
+
         expr = expr.is_unique().cast(pl.Int8)
-        base = Compute._result(
-            dataframe.select(expr).sum()
-        )
+        base = Compute._result(dataframe.select(expr).sum())
 
         if flag:
             return base + extra

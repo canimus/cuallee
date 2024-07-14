@@ -52,13 +52,23 @@ class ISO:
         self._ccy = []
         self._countries = []
 
-    def iso_4217(self, column: str, pct: float = 1.0, options: Dict[str,str]={"name": "iso_4217"}):
+    def iso_4217(
+        self,
+        column: str,
+        pct: float = 1.0,
+        options: Dict[str, str] = {"name": "iso_4217"},
+    ):
         """It verifies a field against the international standard currency codes via code or number fields from ISO 4217"""
         self._ccy = _load_currencies()
         self._check.is_contained_in(column, self._ccy, pct, options=options)
         return self._check
 
-    def iso_3166(self, column: str, pct: float = 1.0, options: Dict[str,str]={"name": "iso_3166"}):
+    def iso_3166(
+        self,
+        column: str,
+        pct: float = 1.0,
+        options: Dict[str, str] = {"name": "iso_3166"},
+    ):
         """Verifies that country codes are valid against the ISO standard 3166"""
         self._countries = _load_countries()
         self._check.is_contained_in(column, self._countries, pct, options=options)

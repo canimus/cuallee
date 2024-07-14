@@ -111,7 +111,7 @@ class Compute:
 
         # Compatibility with other dataframe regular expression comparissons
         expression = re.compile(re.escape("rlike"), re.IGNORECASE)
-        subquery = expression.sub('SIMILAR TO', rule.value)        
+        subquery = expression.sub("SIMILAR TO", rule.value)
         return f"SUM(CAST(({subquery}) AS INTEGER))"
 
     def has_entropy(self, rule: Rule) -> str:

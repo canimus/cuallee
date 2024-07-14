@@ -801,11 +801,10 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
         spark = SparkSession.builder.getOrCreate()
 
     def _value(x):
-        """Removes verbosity for Callable values"""                
-        if x.options and isinstance(x.options, dict):
-                return x.options.get("custom_value", "f(x)")        
-        elif isinstance(x.value, Callable):
-            return "f(x)"
+        """Removes verbosity for Callable values"""
+        if isinstance(x.value, Callable):
+            if x.options and isinstance(x.options, dict):
+                return x.options.get("custom_value", "f(x)")
         else:
             return str(x.value)
 

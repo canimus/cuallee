@@ -1239,7 +1239,7 @@ class Check:
 
         The check validates that:
 
-        - Nothing preceds a `New` state
+        - Nothing preceeds a `New` state
         - `In Progress` follows the `New` event
         - `Closed` follows the `In Progress` event
         - Nothing follows after `Closed` state

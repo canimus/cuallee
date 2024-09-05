@@ -263,7 +263,9 @@ class Check:
         self.session = session
 
     def __repr__(self):
-        standard = f"Check(level:{self.level}, description:{self.name}, rules:{self.sum})"
+        standard = (
+            f"Check(level:{self.level}, description:{self.name}, rules:{self.sum})"
+        )
         if self.table_name:
             standard += f" / table:{self.table_name}"
         return standard

@@ -202,7 +202,7 @@ def test_timestamp_column_validation(spark):
 
 
 def test_bigint_rows(spark):
-    df = spark.range(2_500_000_000) # beyond 32-bit integer limit
+    df = spark.range(2_500_000_000)  # beyond 32-bit integer limit
     check = Check(CheckLevel.WARNING, "pytest")
     check.is_complete("id")
     rs = check.validate(df)

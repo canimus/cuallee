@@ -855,7 +855,7 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
             )
             for rule in check.rules
         ],
-        schema="id int, timestamp string, check string, level string, column string, rule string, value string, rows int, violations int, pass_rate double, pass_threshold double, status string",
+        schema="id int, timestamp string, check string, level string, column string, rule string, value string, rows bigint, violations bigint, pass_rate double, pass_threshold double, status string",
     )
 
     return result

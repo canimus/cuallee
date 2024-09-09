@@ -46,7 +46,7 @@ bigquery =[
   "pyarrow >= 11.0.0"
 ]
 duckdb = [
-  "duckdb==1.0.0"
+  "duckdb==1.1.0"
 ]
 polars = [
   "polars>=1.0.0"

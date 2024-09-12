@@ -224,7 +224,9 @@ class Check:
         self.session = session
 
     def __repr__(self):
-        standard = f"Check(level:{self.level}, desc:{self.name}, rules:{self.sum})"
+        standard = (
+            f"Check(level:{self.level}, description:{self.name}, rules:{self.sum})"
+        )
         if self.table_name:
             standard += f" / table:{self.table_name}"
         return standard
@@ -682,7 +684,7 @@ class Check:
 
     def not_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
         """
-        Vaidation of column value not in set of given values
+        Validation of column value not in set of given values
 
         Args:
             column (str): Column name in dataframe
@@ -723,7 +725,7 @@ class Check:
 
     def is_in(self, column: str, value: Tuple[str, int, float], pct: float = 1.0):
         """
-        Vaidation of column value in set of given values
+        Vaildation of column value in set of given values
 
         Args:
             column (str): Column name in dataframe
@@ -806,12 +808,12 @@ class Check:
         self, column: str, value: float, percentile: float, precision: int = 10000
     ):
         """
-        Validation of a column percentile value using approximantion
+        Validation of a column percentile value using approximation
 
         Args:
             column (str): Column name in dataframe
             value (List[str,number,date]): The condition for the column to match
-            percentile (float): Value between [0..1] i.e. `0.5` for median
+            percentile (float): Value between [0,1] i.e. `0.5` for median
             precision (float): The precision to calculate percentiles
 
         """
@@ -861,7 +863,7 @@ class Check:
 
         Args:
             column_source (str): Column used to obtain the row with the max value
-            column_target (str): Column used to varify the matching value
+            column_target (str): Column used to verify the matching value
             value (str,number): The value to match against
         """
         (
@@ -879,11 +881,11 @@ class Check:
         self, column_source: str, column_target: str, value: Union[float, str]
     ):
         """
-        Validation the correspondance of a column value based on another column minimum
+        Validation the correspondence of a column value based on another column minimum
 
         Args:
             column_source (str): Column used to obtain the row with the min value
-            column_target (str): Column used to varify the matching value
+            column_target (str): Column used to verify the matching value
             value (str,number): The value to match against
         """
         (
@@ -1200,7 +1202,7 @@ class Check:
 
         The check validates that:
 
-        - Nothing preceds a `New` state
+        - Nothing preceeds a `New` state
         - `In Progress` follows the `New` event
         - `Closed` follows the `In Progress` event
         - Nothing follows after `Closed` state

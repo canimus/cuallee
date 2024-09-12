@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cuallee"
 version = "0.14.0"
+
 authors = [
   { name="Herminio Vazquez", email="canimus@gmail.com"},
   { name="Virginie Grosboillot", email="vestalisvirginis@gmail.com" }
@@ -24,8 +25,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "black==24.4.2",
-  "ruff==0.5.2"
+  "black==24.8.0",
+  "ruff==0.6.4",
+  "pre-commit==3.8.0",
 ]
 pyspark = [
   "pyspark>=3.4.0"
@@ -56,7 +58,7 @@ test = [
   "pendulum >= 2.1.2"
 ]
 dagster = [
-  "dagster == 1.7.13"
+  "dagster == 1.8.4"
 ]
 cloud = [
   "msgpack == 1.0.8",
@@ -65,7 +67,7 @@ pdf = [
   "fpdf2==2.7.9"
 ]
 daft = [
-  "getdaft == 0.2.29"
+  "getdaft == 0.3.2"
 ]
 all = [
   "cuallee[dev,pyspark,pyspark_connect,snowpark,pandas,bigquery,duckdb,polars,test,dagster,cloud,pdf,daft]"

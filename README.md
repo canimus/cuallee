@@ -81,7 +81,7 @@ df = spark.sql(
                 interval 1 day)) as date
     """)
 assert (
-    check.is_between("date", "2022-01-01", "2022-01-10")
+    check.is_between("date", ("2022-01-01", "2022-01-10"))
     .validate(df)
     .first()
     .status == "PASS"

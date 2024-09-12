@@ -1,3 +1,4 @@
+import re
 import enum
 import hashlib
 import importlib
@@ -8,52 +9,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from types import ModuleType
 from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union, Callable
-from toolz import compose, valfilter  # type: ignore
+from toolz import compose, valfilter, first  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.13.1"
-# Verify Libraries Available
-# ==========================
-try:
-    from pandas import DataFrame as pandas_dataframe  # type: ignore
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: Pandas")
-
-try:
-    from polars.dataframe.frame import DataFrame as polars_dataframe  # type: ignore
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: Polars")
-
-try:
-    from pyspark.sql import DataFrame as pyspark_dataframe
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: PySpark")
-
-try:
-    from pyspark.sql.connect.dataframe import DataFrame as pyspark_connect_dataframe
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: PySpark Connect")
-
-try:
-    from snowflake.snowpark import DataFrame as snowpark_dataframe  # type: ignore
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: Snowpark")
-
-try:
-    from duckdb import DuckDBPyConnection as duckdb_dataframe  # type: ignore
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: DuckDB")
-
-try:
-    from google.cloud import bigquery
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: BigQuery")
-
-try:
-    from daft import DataFrame as daft_dataframe
-except (ModuleNotFoundError, ImportError):
-    logger.debug("KO: BigQuery")
+__version__ = "0.14.0"
 
 
 class CustomComputeException(Exception):
@@ -252,6 +212,7 @@ class Check:
         self.rows = -1
         self.config: Dict[str, str] = {}
         self.table_name = table_name
+        self.dtype = "cuallee.dataframe"
         try:
             from .iso.checks import ISO
             from .bio.checks import BioChecks
@@ -1291,49 +1252,26 @@ class Check:
         # Stop execution if the there is no rules in the check
         assert not self.empty, "Check is empty. Try adding some rules?"
 
-        # When dataframe is PySpark DataFrame API
-        if "pyspark_dataframe" in globals() and isinstance(
-            dataframe, pyspark_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
+        self.dtype = first(re.match(r".*'(.*)'", str(type(dataframe))).groups())
+        match self.dtype:
+            case self.dtype if "pyspark" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
+            case self.dtype if "pandas" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.pandas_validation")
+            case self.dtype if "snowpark" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
+            case self.dtype if "polars" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.polars_validation")
+            case self.dtype if "duckdb" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
+            case self.dtype if "bigquery" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
+            case self.dtype if "daft" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.daft_validation")
+            case _:
+                raise NotImplementedError(f"{self.dtype} is not yet implemented in cuallee")
 
-        elif "pyspark_connect_dataframe" in globals() and isinstance(
-            dataframe, pyspark_connect_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
-
-        # When dataframe is Pandas DataFrame API
-        elif "pandas_dataframe" in globals() and isinstance(
-            dataframe, pandas_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.pandas_validation")
-
-        # When dataframe is Snowpark DataFrame API
-        elif "snowpark_dataframe" in globals() and isinstance(
-            dataframe, snowpark_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
-
-        elif "duckdb_dataframe" in globals() and isinstance(
-            dataframe, duckdb_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
-
-        elif "bigquery" in globals() and isinstance(dataframe, bigquery.table.Table):
-            self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
-
-        elif "polars_dataframe" in globals() and isinstance(
-            dataframe, polars_dataframe
-        ):
-            self.compute_engine = importlib.import_module("cuallee.polars_validation")
-
-        elif "daft_dataframe" in globals() and isinstance(dataframe, daft_dataframe):
-            self.compute_engine = importlib.import_module("cuallee.daft_validation")
-
-        else:
-            raise Exception(
-                "Cuallee is not ready for this data structure. You can log a Feature Request in Github."
-            )
+        
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe

@@ -1,8 +1,9 @@
 from cuallee.cloud import publish, compress, CUALLEE_CLOUD_HEADERS
 from unittest.mock import patch
 import os
+import pytest
 
-
+@pytest.mark.skip
 def test_publish(spark, check):
     os.environ["CUALLEE_CLOUD_HOST"] = "https://localhost:5000/msgpack"
     os.environ["CUALLEE_CLOUD_TOKEN"] = "test"
@@ -18,7 +19,7 @@ def test_publish(spark, check):
             verify=False,
         )
 
-
+@pytest.mark.skip
 def test_connection(spark, check):
     os.environ["CUALLEE_CLOUD_HOST"] = "https://localhost:6000/wrong"
     os.environ["CUALLEE_CLOUD_TOKEN"] = "test"

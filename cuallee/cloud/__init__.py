@@ -49,7 +49,7 @@ def publish(check):
             os.getenv("CUALLEE_CLOUD_HOST"),
             data=compress(check),
             headers=CUALLEE_CLOUD_HEADERS,
-            verify=False,
+            verify=True,
         )
     except (ModuleNotFoundError, KeyError, ConnectionError) as error:
         logger.debug(f"Unable to send check to cuallee cloud: {str(error)}")

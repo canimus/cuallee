@@ -14,7 +14,7 @@
 
 Meaning `good` in Aztec ([Nahuatl](https://nahuatl.wired-humanities.org/content/cualli-0)), _pronounced: QUAL-E_
 
-This library provides an intuitive `API` to describe `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, `daft` and more.
+This library provides an intuitive `API` to describe data quality `checks` initially just for `PySpark` dataframes `v3.3.0`. And extended to `pandas`, `snowpark`, `duckdb`, `daft` and more.
 It is a replacement written in pure `python` of the `pydeequ` framework.
 
 I gave up in _deequ_ as after extensive use, the API is not user-friendly, the Python Callback servers produce additional costs in our compute clusters, and the lack of support to the newest version of PySpark.

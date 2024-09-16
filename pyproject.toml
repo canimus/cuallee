@@ -61,7 +61,7 @@ dagster = [
   "dagster == 1.8.5"
 ]
 cloud = [
-  "msgpack == 1.0.8",
+  "msgpack == 1.1.0",
 ]
 pdf = [
   "fpdf2==2.7.9"

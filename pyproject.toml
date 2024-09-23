@@ -58,7 +58,7 @@ test = [
   "pendulum >= 2.1.2"
 ]
 dagster = [
-  "dagster == 1.8.5"
+  "dagster == 1.8.8"
 ]
 cloud = [
   "msgpack == 1.0.8",

@@ -530,6 +530,7 @@ def summary(check: Check, dataframe: pl.DataFrame):
     pl.Config.set_tbl_cols(12)
     return pl.DataFrame(computation_basis)
 
+
 def ok(check: Check, dataframe: pl.DataFrame) -> bool:
     """True when all rules in the check pass validation"""
 

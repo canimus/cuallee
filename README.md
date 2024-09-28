@@ -160,9 +160,19 @@ check.validate(df).show(truncate=False)
 +---+-------------------+------------------+-------+-------------------------+------------+--------------------+----+----------+---------+--------------+------+
 
  ```
+### Assertions
+`[2024-09-28]` ✨ __New feature!__ Return a simple `true|false` as a unified result for your `check`
+```python
+import pandas as pd
+from cuallee import Check
+df = pd.DataFrame({"X":[1,2,3]})
+# .ok(dataframe) method of a check will call validate and then verify that all rules are PASS
+assert Check().is_complete("X").ok(df)
+```
+
 
 ### Controls
-`[2023-12-28]` ✨ __New feature!__ to simplify the entire validation of a dataframe in a particular dimension.
+Simplify the entire validation of a dataframe in a particular dimension.
 ```python
 import pandas as pd
 from cuallee import Control

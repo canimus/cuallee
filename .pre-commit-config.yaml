@@ -15,5 +15,5 @@ repos:
   hooks:
     # Run the linter.
     - id: ruff
-      args: ["--exclude", "test/", "--exclude", "*.py", "cuallee/"]
+      args: ["--exclude", "test/", "--exclude", "conftest.py", "cuallee"]
       types_or: ["python", "pyi"]

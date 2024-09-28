@@ -1,5 +1,4 @@
 import os
-import warnings
 import pytest
 from cuallee import Check, CheckLevel
 from pyspark.sql import SparkSession

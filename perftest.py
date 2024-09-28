@@ -1,4 +1,3 @@
-from os import truncate
 from cuallee import Check, CheckLevel
 from cuallee.pyspark_validation import numeric_fields, timestamp_fields
 from pyspark.sql import SparkSession

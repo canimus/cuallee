@@ -15,4 +15,4 @@ repos:
   hooks:
     # Run the linter.
     - id: ruff
-      args: ["--exclude", "test/", "--exclude", "*.py"]
+      args: ["--exclude", "test/", "--exclude", "*.py", "cuallee/"]

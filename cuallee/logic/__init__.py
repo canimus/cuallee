@@ -1,6 +1,5 @@
 from .. import Check
 from typing import Dict
-from toolz import compose
 
 class LogicCheck:
     """Performs logical inference on evaluated checks"""

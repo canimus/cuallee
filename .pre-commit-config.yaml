@@ -14,5 +14,5 @@ repos:
   rev: v0.6.8
   hooks:
   - id: ruff
-    args: ["--exclude", "^test/"]
+    args: ["-v", "--exclude", "^test/"]
     files: "^cuallee/.*\\.py$"

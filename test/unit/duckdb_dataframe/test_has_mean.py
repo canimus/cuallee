@@ -9,6 +9,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_mean("id", 4.5)
     df = pd.DataFrame({"id": np.arange(10)})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -16,6 +17,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_mean("id", 5)
     df = pd.DataFrame({"id": np.arange(10)})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -24,6 +26,7 @@ def test_values(check: Check, db: duckdb.DuckDBPyConnection, extra_value):
     check.has_mean("id", extra_value)
     df = pd.DataFrame({"id": [0, 1, 2, 3, 14] + [extra_value]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 

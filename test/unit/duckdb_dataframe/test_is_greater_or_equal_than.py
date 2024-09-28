@@ -9,6 +9,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_greater_or_equal_than("id", 0)
     df = pd.DataFrame({"id": np.arange(10)})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -16,6 +17,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_greater_or_equal_than("id", 5)
     df = pd.DataFrame({"id": np.arange(10)})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -24,6 +26,7 @@ def test_values(check: Check, db: duckdb.DuckDBPyConnection, extra_value):
     check.is_greater_or_equal_than("id", extra_value)
     df = pd.DataFrame({"id": [1, 2, 3, 4]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -31,6 +34,7 @@ def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_greater_or_equal_than("id", 4, 0.6)
     df = pd.DataFrame({"id": range(10)})
     check.table_name = "df"
+    db.register("df", df)
     result = check.validate(db)
     assert result.status.str.match("PASS").all()
     assert result.pass_rate.max() == 0.6

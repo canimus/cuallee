@@ -8,8 +8,9 @@ import pandas as pd  # type: ignore
 from toolz import first  # type: ignore
 from string import Template
 import re
+import textwrap
 
-from cuallee import Check, Rule
+from cuallee import Check, Rule, CheckStatus
 
 
 class Compute:
@@ -212,6 +213,20 @@ def compute(check: Check):
 
 
 def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
+    if isinstance(connection, dk.DuckDBPyRelation):
+        raise NotImplementedError(
+            textwrap.dedent(
+                """
+        Invalid DuckDb object, please pass a DuckDbPyConnection instead. And register your relation like:
+        conn = duckdb.connect()
+        check = Check(table_name="demo_table")
+        duckdb_relation_object = conn.sql("FROM range(10)")
+        conn.register(view_name=check.table_name, python_object=duckdb_relation_object)
+        check.is_complete("range").validate(conn)
+        """
+            )
+        )
+
     unified_columns = ",\n\t".join(
         [
             operator.methodcaller(rule.method, rule)(Compute(check.table_name))
@@ -291,3 +306,8 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
         for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
     ]
     return pd.DataFrame(computation_basis).reset_index(drop=True)
+
+
+def ok(check: Check, connection: dk.DuckDBPyConnection) -> bool:
+    """True when all rules in the check pass validation"""
+    return summary(check, connection).status.str.match(CheckStatus.PASS.value).all()

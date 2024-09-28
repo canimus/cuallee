@@ -22,7 +22,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         ``` py
         from pyspark.sql import SparkSession
         from cuallee import Check
-        
+
         spark = SparkSession.builder.getOrCreate()
         df = spark.range(10)
         check = Check()
@@ -32,7 +32,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df).show()
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         +---+-------------------+-------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
@@ -49,7 +49,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         ``` py
         from pyspark.sql import SparkSession
         from cuallee import Check
-        
+
         spark = SparkSession.builder.getOrCreate()
         df = spark.range(8).union(spark.createDataFrame([(None,), (None,)], schema="id int"))
         check = Check()
@@ -59,7 +59,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df).show()
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         +---+-------------------+-------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
@@ -69,8 +69,8 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         +---+-------------------+-------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
         ```
 
-        
-        
+
+
     === ":material-alert-circle:{ .kk } THRESHOLD"
 
         In this example, we validate reuse the data frame with empty values from the previous example, however we set our tolerance via the `pct` parameter on the rule `is_complete` to `0.8`. Producing now a `PASS` result on the check, regardless of the `2` present `null` values.
@@ -78,7 +78,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         ``` py
         from pyspark.sql import SparkSession
         from cuallee import Check
-        
+
         spark = SparkSession.builder.getOrCreate()
         df = spark.range(8).union(spark.createDataFrame([(None,), (None,)], schema="id int"))
         check = Check()
@@ -88,7 +88,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df).show()
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         +---+-------------------+-------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
@@ -97,6 +97,3 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         |  1|2024-05-18 16:53:56|cuallee.check|WARNING|    id|is_complete|  N/A|  10|         2|      0.8|           0.8|  PASS|
         +---+-------------------+-------------+-------+------+-----------+-----+----+----------+---------+--------------+------+
         ```
-
-        
-

@@ -4,7 +4,3 @@
     rendering:
         show_bases: False
         heading_level: 3
-
-
-
-        

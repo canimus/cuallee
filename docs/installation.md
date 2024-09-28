@@ -1,6 +1,6 @@
 # Installation
 
-`cuallee` is developed with a `functional` programming style. Classes are only defined for  compatibility and ease the migration process from `pydeeque`. 
+`cuallee` is developed with a `functional` programming style. Classes are only defined for  compatibility and ease the migration process from `pydeeque`.
 
 For better performance it requires `pyspark>=3.3.0` and the `Observation` API.
 
@@ -46,4 +46,3 @@ pip install cuallee[polars]
 pip install cuallee[snowpark]
 ```
 Alternatively, you can have your own versions of the frameworks installed separately in your environment and `cuallee` simply will rely in the version installed, considering it meets its minimum requirements and compatibility.
-

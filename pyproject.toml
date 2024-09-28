@@ -81,4 +81,3 @@ ignore = ["E731"]
 [project.urls]
 "Homepage" = "https://github.com/canimus/cuallee"
 "Bug Tracker" = "https://github.com/canimus/cuallee"
-

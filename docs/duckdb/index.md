@@ -60,7 +60,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         import pandas as pd
         import duckdb
         from cuallee import Check
-        
+
         conn = duckdb.connect(":memory:")
         df = pd.DataFrame({"id" : [1,2,3,4,5]})
         check = Check(table_name="df")
@@ -70,7 +70,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(conn)
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         id            timestamp          check    level column         rule value  rows  violations  pass_rate  pass_threshold status
@@ -81,11 +81,11 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
 
         In this example, we intentionally place 2 `null` values in the dataframe and that produces a `FAIL` check as result.
 
-        ``` py        
+        ``` py
         import pandas as pd
         import duckdb
         from cuallee import Check
-        
+
         conn = duckdb.connect(":memory:")
         df = pd.DataFrame({"id" : [1,2,3,None, None]})
         check = Check(table_name="df")
@@ -95,15 +95,15 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(conn)
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         id            timestamp          check    level column         rule value  rows  violations  pass_rate  pass_threshold status
          1  2024-05-18 16:33:55  cuallee.check  WARNING     id  is_complete   N/A     5           2        0.6             1.0   FAIL
         ```
 
-        
-        
+
+
     === ":material-alert-circle:{ .kk } THRESHOLD"
 
         In this example, we validate reuse the data frame with empty values from the previous example, however we set our tolerance via the `pct` parameter on the rule `is_complete` to `0.6`. Producing now a `PASS` result on the check, regardless of the `2` present `null` values.
@@ -112,7 +112,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         import pandas as pd
         import duckdb
         from cuallee import Check
-        
+
         conn = duckdb.connect(":memory:")
         df = pd.DataFrame({"id" : [1,2,3,None, None]})
         check = Check(table_name="df")
@@ -122,12 +122,9 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(conn)
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         id            timestamp          check    level column         rule value  rows  violations  pass_rate  pass_threshold status
          1  2024-05-18 16:33:55  cuallee.check  WARNING     id  is_complete   N/A     5           2        0.6             0.6   PASS
         ```
-
-        
-

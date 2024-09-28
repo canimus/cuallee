@@ -32,7 +32,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df)
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         ╭───────────────────┬────────┬───────┬─────────┬───────────┬────────────────┬───────┬─────────────┬────────┬─────────────────────┬───────┬────────────╮
@@ -61,7 +61,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df)
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         ╭───────────────────┬────────┬───────┬─────────┬───────────┬────────────────┬───────┬─────────────┬────────┬─────────────────────┬───────┬────────────╮
@@ -91,7 +91,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df)
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         ╭───────────────────┬────────┬───────┬─────────┬───────────┬────────────────┬───────┬─────────────┬────────┬─────────────────────┬───────┬────────────╮
@@ -102,4 +102,3 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         │ CompletePredicate ┆ id     ┆ 1     ┆ WARNING ┆ 0.6       ┆ 0.6            ┆ 5     ┆ is_complete ┆ PASS   ┆ 2024-05-18 21:24:15 ┆ N/A   ┆ 2          │
         ╰───────────────────┴────────┴───────┴─────────┴───────────┴────────────────┴───────┴─────────────┴────────┴─────────────────────┴───────┴────────────╯
         ```
-

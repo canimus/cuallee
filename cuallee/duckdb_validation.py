@@ -158,7 +158,7 @@ class Compute:
         template = Template(
             """
             distinct(select LIST_VALUE(count(B.$id),SUM(CAST(B.$id IS NULL AS INTEGER))::INTEGER) as r from (
-            select distinct(unnest(range(min($id)::TIMESTAMP, cast(date_add(max($id), INTERVAL 1 DAY) as TIMESTAMP), INTERVAL 1 DAY))) as w, 
+            select distinct(unnest(range(min($id)::TIMESTAMP, cast(date_add(max($id), INTERVAL 1 DAY) as TIMESTAMP), INTERVAL 1 DAY))) as w,
             extract(dow from w) as y from '$table'
             ) A LEFT JOIN '$table' B ON A.w = B.$id where A.y in $value)
         """.strip()

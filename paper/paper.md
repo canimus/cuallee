@@ -55,7 +55,7 @@ Operating with modern data platforms, requires a versatile data processing frame
 
 `cuallee` is powered by native data engines, including Apache Spark, and offers a robust structure that can be extended to new engines with fully open-source implementation guidelines and rigorous testing. `pydeequ` [@10.14778/3229863.3229867] is a pioneer in large-scale data quality frameworks and is fully open-source. However, its adoption is limited due to the smaller community of developers proficient in the `scala` programming language.
 
-On the other hand, `great-expectations` [@Gong_Great_Expectations] and `soda` [@soda_core] additionaly to an open-source platform also offer commercial options that require registration and issuing of keys for cloud reporting capabilities. 
+On the other hand, `great-expectations` [@Gong_Great_Expectations] and `soda` [@soda_core] additionaly to an open-source platform also offer commercial options that require registration and issuing of keys for cloud reporting capabilities.
 
 `cuallee` provides a fully open-source data quality framework designed for both academia and industry practitioners, offering unparalleled performance compared to the aforementioned alternatives.
 
@@ -83,7 +83,7 @@ Table: Performance comparison on popular data quality frameworks []{label="tab:p
 
 
 # Checks
-In `cuallee`, checks serve as the fundamental concept. These checks (\autoref{tab:checks}) are implemented by __rules__, which specify _quality predicates_. These predicates, when aggregated, form the criteria used to evaluate the quality of a dataset. Efforts to establish a universal quality metric [@10.1145/3529190.3529222] typically involve using statistics and combining dimensions to derive a single reference value that encapsulates overall quality attributes. 
+In `cuallee`, checks serve as the fundamental concept. These checks (\autoref{tab:checks}) are implemented by __rules__, which specify _quality predicates_. These predicates, when aggregated, form the criteria used to evaluate the quality of a dataset. Efforts to establish a universal quality metric [@10.1145/3529190.3529222] typically involve using statistics and combining dimensions to derive a single reference value that encapsulates overall quality attributes.
 
 Check | Description | DataType
  ------- | ----------- | ----

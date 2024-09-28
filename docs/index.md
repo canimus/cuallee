@@ -7,7 +7,7 @@ This `pure-python` implementation of unit tests for your data, will help you def
 
 ## Entities
 
-To better understand `cuallee` you will need to get familiar with the following 3 concepts: `Check`, `Rule` and `ComputeInstruction`. 
+To better understand `cuallee` you will need to get familiar with the following 3 concepts: `Check`, `Rule` and `ComputeInstruction`.
 
 | Entity      | Icon                                 | Description |
 | ----------- | :------------------------------------: | ----------- |
@@ -21,7 +21,7 @@ In principle, the only interface you need to be familiar with is the `Check` as 
 `cuallee` is designed to rapidly develop quality rules for your data.<br/>The process consists in the following :material-numeric-4-circle-outline: steps:
 ``` mermaid
 graph LR
-  
+
   A[Create Check] -.-> B[Add Rules];
   B[Add Rules] -.-> C[Load Data];
   C[Load Data] -.-> D[Validate DataFrame];

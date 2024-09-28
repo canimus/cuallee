@@ -355,3 +355,6 @@ def summary(check: Check, dataframe: pd.DataFrame):
         for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
     ]
     return pd.DataFrame(computation_basis)
+
+def ok(check: Check, dataframe: pd.DataFrame):
+    return summary(check, dataframe).status.str.match("PASS").all()

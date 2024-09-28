@@ -16,3 +16,4 @@ repos:
     # Run the linter.
     - id: ruff
       args: ["--exclude", "test/", "--exclude", "*.py", "cuallee/"]
+      types_or: ["python"]

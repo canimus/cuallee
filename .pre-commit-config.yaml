@@ -18,5 +18,5 @@ repos:
           # Exclude .py files in the root folder and test/ folder
           ["--exclude", "^test/"]
         # Include only files under the cuallee folder
-        files: "^cuallee/"
+        files: "^cuallee/.*.py"
         additional_dependencies: []  # Optional additional dependencies if needed

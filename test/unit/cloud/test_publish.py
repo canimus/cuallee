@@ -3,6 +3,7 @@ from unittest.mock import patch
 import os
 import pytest
 
+
 @pytest.mark.skip
 def test_publish(spark, check):
     os.environ["CUALLEE_CLOUD_HOST"] = "https://localhost:5000/msgpack"
@@ -18,6 +19,7 @@ def test_publish(spark, check):
             headers=CUALLEE_CLOUD_HEADERS,
             verify=False,
         )
+
 
 @pytest.mark.skip
 def test_connection(spark, check):

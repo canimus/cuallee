@@ -1260,29 +1260,40 @@ class Check:
         self.dtype = first(re.match(r".*'(.*)'", str(type(dataframe))).groups())
         match self.dtype:
             case self.dtype if "pyspark" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.pyspark_validation"
+                )
             case self.dtype if "pandas" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.pandas_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.pandas_validation"
+                )
             case self.dtype if "snowpark" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.snowpark_validation"
+                )
             case self.dtype if "polars" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.polars_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.polars_validation"
+                )
             case self.dtype if "duckdb" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.duckdb_validation"
+                )
             case self.dtype if "bigquery" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.bigquery_validation"
+                )
             case self.dtype if "daft" in self.dtype:
                 self.compute_engine = importlib.import_module("cuallee.daft_validation")
             case _:
-                raise NotImplementedError(f"{self.dtype} is not yet implemented in cuallee")
-
-        
+                raise NotImplementedError(
+                    f"{self.dtype} is not yet implemented in cuallee"
+                )
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
 
-        
         if ok:
             result = self.compute_engine.ok(self, dataframe)
         else:

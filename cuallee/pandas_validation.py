@@ -1,5 +1,5 @@
 from typing import Dict, Union, List
-from cuallee import Check, Rule
+from cuallee import Check, Rule, CheckStatus
 import pandas as pd  # type: ignore
 import operator
 import numpy as np
@@ -356,5 +356,7 @@ def summary(check: Check, dataframe: pd.DataFrame):
     ]
     return pd.DataFrame(computation_basis)
 
-def ok(check: Check, dataframe: pd.DataFrame):
-    return summary(check, dataframe).status.str.match("PASS").all()
+
+def ok(check: Check, dataframe: pd.DataFrame) -> bool:
+    """True when all rules in the check pass validation"""
+    return summary(check, dataframe).status.str.match(CheckStatus.PASS.value).all()

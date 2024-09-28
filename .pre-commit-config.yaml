@@ -2,8 +2,8 @@ repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.1.0
     hooks:
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
 -   repo: https://github.com/psf/black
     rev: 24.8.0
     hooks:
@@ -13,10 +13,6 @@ repos:
   # Ruff version.
   rev: v0.6.8
   hooks:
-      - id: ruff
-        args: 
-          # Exclude .py files in the root folder and test/ folder
-          ["--exclude", "^test/"]
-        # Include only files under the cuallee folder
-        files: "^cuallee/.*.py"
-        additional_dependencies: []  # Optional additional dependencies if needed
+  - id: ruff
+    args: ["--exclude", "^test/"]
+    files: "^cuallee/.*.py"

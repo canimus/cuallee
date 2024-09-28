@@ -9,6 +9,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_pattern("id", r"^H.*")
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -16,6 +17,7 @@ def test_is_legit(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_legit("id")
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -23,6 +25,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_pattern("id", r"^H.*")
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Villain"]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -30,6 +33,7 @@ def test_is_not_legit(check: Check, db: duckdb.DuckDBPyConnection):
     check.is_legit("id")
     df = pd.DataFrame({"id": ["Herminio", "Hola", ""]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -40,6 +44,7 @@ def test_values(check: Check, db: duckdb.DuckDBPyConnection, pattern):
     check.has_pattern("id", pattern)
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Heroe"]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -47,6 +52,7 @@ def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_pattern("id", r"^H.*", 0.75)
     df = pd.DataFrame({"id": ["Herminio", "Hola", "Villain", "Heroe"]})
     check.table_name = "df"
+    db.register("df", df)
     result = check.validate(db)
     assert result.status.str.match("PASS").all()
     assert result.pass_rate.max() == 0.75

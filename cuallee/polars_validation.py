@@ -5,8 +5,9 @@ from typing import Dict, List, Union
 import numpy as np
 import polars as pl  # type: ignore
 from toolz import compose, first  # type: ignore
-
-from cuallee import Check, Rule
+from toolz.curried import map as map_curried
+from cuallee import Check, Rule, CheckStatus
+from functools import partial
 
 
 class Compute:
@@ -528,3 +529,15 @@ def summary(check: Check, dataframe: pl.DataFrame):
     ]
     pl.Config.set_tbl_cols(12)
     return pl.DataFrame(computation_basis)
+
+def ok(check: Check, dataframe: pl.DataFrame) -> bool:
+    """True when all rules in the check pass validation"""
+
+    _all_pass = compose(
+        all,
+        map_curried(partial(operator.eq, CheckStatus.PASS.value)),
+        operator.methodcaller("to_list"),
+        operator.methodcaller("to_series"),
+        operator.methodcaller("select", "status"),
+    )
+    return _all_pass(summary(check, dataframe))

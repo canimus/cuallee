@@ -11,6 +11,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
         {"id": pd.date_range(start="2022-01-01", end="2022-02-01", freq="D")}
     )
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -20,6 +21,7 @@ def test_parameters(check: Check, db: duckdb.DuckDBPyConnection):
         {"id": pd.date_range(start="2022-01-01", end="2022-02-01", freq="D")}
     )
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -31,6 +33,7 @@ def test_violations(check: Check, db: duckdb.DuckDBPyConnection):
     df = pd.concat([df, pd.DataFrame({"id": [pd.Timestamp("2022-12-01")]})])
 
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -45,6 +48,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
         }
     )
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -59,6 +63,7 @@ def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
         }
     )
     check.table_name = "df"
+    db.register("df", df)
     result = check.validate(db)
     assert result.status.str.match("PASS").all()
     assert result.pass_rate.max() == 0.6

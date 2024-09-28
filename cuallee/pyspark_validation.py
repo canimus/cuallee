@@ -1,17 +1,17 @@
 import enum
 import operator
 from dataclasses import dataclass
-from functools import reduce
+from functools import reduce, partial
 from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import Window as W
 from pyspark.sql import Column, DataFrame, Row
-from toolz import first, valfilter, last  # type: ignore
-
+from toolz import first, valfilter, last, compose
+from toolz.curried import map as map_curried
 import cuallee.utils as cuallee_utils
-from cuallee import Check, ComputeEngine, Rule, CustomComputeException
+from cuallee import Check, ComputeEngine, Rule, CustomComputeException, CheckStatus
 
 import os
 
@@ -598,7 +598,9 @@ class Compute(ComputeEngine):
                     rule.value, Callable
                 ), "Please provide a Callable/Function for validation"
                 computed_frame = rule.value(dataframe)
-                assert "pyspark" in str(type(computed_frame)), "Custom function does not return a PySpark DataFrame"
+                assert "pyspark" in str(
+                    type(computed_frame)
+                ), "Custom function does not return a PySpark DataFrame"
                 assert (
                     len(computed_frame.columns) >= 1
                 ), "Custom function should retun at least one column"
@@ -857,3 +859,16 @@ def summary(check: Check, dataframe: DataFrame) -> DataFrame:
     )
 
     return result
+
+
+def ok(check: Check, dataframe: DataFrame) -> bool:
+    """True when all rules in the check pass validation"""
+
+    _all_pass = compose(
+        all,
+        map_curried(partial(operator.eq, CheckStatus.PASS.value)),
+        map_curried(operator.attrgetter("status")),
+        operator.methodcaller("collect"),
+        operator.methodcaller("select", "status"),
+    )
+    return _all_pass(summary(check, dataframe))

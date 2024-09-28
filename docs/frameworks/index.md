@@ -4,7 +4,7 @@ To begin your journey with `cuallee` is important to denote what is the data str
 
 
 ???+ info "DataFrame"
-    Is a two-dimensional, size-mutable, and potentially heterogeneous tabular data structure with labeled axes (rows and columns) in Python, provided by the pandas library. It is one of the most commonly used data structures for data manipulation and analysis in Python. 
+    Is a two-dimensional, size-mutable, and potentially heterogeneous tabular data structure with labeled axes (rows and columns) in Python, provided by the pandas library. It is one of the most commonly used data structures for data manipulation and analysis in Python.
 
 ### Key Features of a DataFrame:
 

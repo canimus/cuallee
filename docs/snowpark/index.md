@@ -22,7 +22,7 @@ The following environment variables are required and used during runtime from `c
 
 
 !!! warning "Cost Associated"
-    Be aware that running `cuallee` checks in `snowpark` incurs into cloud costs. 
+    Be aware that running `cuallee` checks in `snowpark` incurs into cloud costs.
 
 
 ## In SnowFlake
@@ -58,7 +58,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
             "database": os.getenv("SF_DATABASE"),
             "schema": os.getenv("SF_SCHEMA"),
         }
-        
+
         snowpark = Session.builder.configs(settings).create()
         df = snowpark.range(10)
         check = Check()
@@ -68,7 +68,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df).show()
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
             "database": os.getenv("SF_DATABASE"),
             "schema": os.getenv("SF_SCHEMA"),
         }
-        
+
         snowpark = Session.builder.configs(settings).create()
         df = snowpark.range(8).union_all(snowpark.create_dataframe([[None], [None]], ["ID"]))
         check = Check()
@@ -106,7 +106,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df).show()
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         ---------------------------------------------------------------------------------------------------------------------------------------------------------------
         ```
 
-        
-        
+
+
     === ":material-alert-circle:{ .kk } THRESHOLD"
 
         In this example, we validate reuse the data frame with empty values from the previous example, however we set our tolerance via the `pct` parameter on the rule `is_complete` to `0.8`. Producing now a `PASS` result on the check, regardless of the `2` present `null` values.
@@ -136,7 +136,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
             "database": os.getenv("SF_DATABASE"),
             "schema": os.getenv("SF_SCHEMA"),
         }
-        
+
         snowpark = Session.builder.configs(settings).create()
         df = snowpark.range(8).union_all(snowpark.create_dataframe([[None], [None]], ["ID"]))
         check = Check()
@@ -146,7 +146,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         check.validate(df).show()
         ```
 
-        :material-export: __output:__ 
+        :material-export: __output:__
 
         ``` markdown
         ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -155,6 +155,3 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         |1     |2024-05-18 20:47:28  |cuallee.check  |WARNING  |ID        |is_complete  |N/A      |10      |2.0           |0.8          |0.8               |PASS      |
         ---------------------------------------------------------------------------------------------------------------------------------------------------------------
         ```
-
-        
-

@@ -8,6 +8,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_complete(("id", "id2"))
     df = pd.DataFrame({"id": [10, 20], "id2": [300, 500]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -15,6 +16,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_complete(("id", "id2"))
     df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -25,6 +27,7 @@ def test_parameters(check: Check, db: duckdb.DuckDBPyConnection, rule_column):
     check.are_complete(rule_column)
     df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})
     check.table_name = "df"
+    db.register("df", df)
     result = check.validate(db)
     assert result.status.str.match("FAIL").all()
 
@@ -33,5 +36,6 @@ def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
     check.are_complete(("id", "id2"), 0.75)
     df = pd.DataFrame({"id": [10, None], "id2": [300, 500]})
     check.table_name = "df"
+    db.register("df", df)
     result = check.validate(db)
     assert result.status.str.match("PASS").all()

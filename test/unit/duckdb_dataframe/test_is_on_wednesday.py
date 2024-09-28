@@ -10,6 +10,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
         {"id": pd.Series([lu.now().next(lu.WEDNESDAY).date()], dtype="datetime64[ns]")}
     )
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -19,6 +20,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
         {"id": pd.Series([lu.now().next(lu.MONDAY).date()], dtype="datetime64[ns]")}
     )
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -31,6 +33,7 @@ def test_coverage(check: Check, db: duckdb.DuckDBPyConnection):
         .reset_index(drop=True)
     )
     check.table_name = "df"
+    db.register("df", df)
     result = check.validate(db)
     assert result.status.str.match("PASS").all()
     assert result.pass_rate.max() == 1 / 7

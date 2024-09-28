@@ -1,5 +1,5 @@
 from typing import Dict, Union, List
-from cuallee import Check, Rule
+from cuallee import Check, Rule, CheckStatus
 import pandas as pd  # type: ignore
 import operator
 import numpy as np
@@ -355,3 +355,8 @@ def summary(check: Check, dataframe: pd.DataFrame):
         for index, (hash_key, rule) in enumerate(check._rule.items(), 1)
     ]
     return pd.DataFrame(computation_basis)
+
+
+def ok(check: Check, dataframe: pd.DataFrame) -> bool:
+    """True when all rules in the check pass validation"""
+    return summary(check, dataframe).status.str.match(CheckStatus.PASS.value).all()

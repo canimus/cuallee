@@ -13,7 +13,7 @@ from toolz import compose, valfilter, first  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.14.1"
+__version__ = "0.15.0"
 
 
 class CustomComputeException(Exception):
@@ -176,6 +176,9 @@ class ComputeEngine(Protocol):
 
     def summary(self, check: Any, dataframe: Any) -> Any:
         """Computes all predicates and expressions for check summary"""
+
+    def ok(self, check: Any, dataframe: Any) -> Any:
+        """Return True or False after validation of a dataframe"""
 
 
 class Check:
@@ -1243,7 +1246,7 @@ class Check:
         )
         return self
 
-    def validate(self, dataframe: Any):
+    def validate(self, dataframe: Any, ok: bool = False):
         """
         Compute all rules in this check for specific data frame
 
@@ -1257,29 +1260,49 @@ class Check:
         self.dtype = first(re.match(r".*'(.*)'", str(type(dataframe))).groups())
         match self.dtype:
             case self.dtype if "pyspark" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.pyspark_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.pyspark_validation"
+                )
             case self.dtype if "pandas" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.pandas_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.pandas_validation"
+                )
             case self.dtype if "snowpark" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.snowpark_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.snowpark_validation"
+                )
             case self.dtype if "polars" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.polars_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.polars_validation"
+                )
             case self.dtype if "duckdb" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.duckdb_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.duckdb_validation"
+                )
             case self.dtype if "bigquery" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.bigquery_validation")
+                self.compute_engine = importlib.import_module(
+                    "cuallee.bigquery_validation"
+                )
             case self.dtype if "daft" in self.dtype:
                 self.compute_engine = importlib.import_module("cuallee.daft_validation")
             case _:
-                raise NotImplementedError(f"{self.dtype} is not yet implemented in cuallee")
-
-        
+                raise NotImplementedError(
+                    f"{self.dtype} is not yet implemented in cuallee"
+                )
 
         assert self.compute_engine.validate_data_types(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
 
-        return self.compute_engine.summary(self, dataframe)
+        if ok:
+            result = self.compute_engine.ok(self, dataframe)
+        else:
+            result = self.compute_engine.summary(self, dataframe)
+        return result
+
+    def ok(self, dataframe: Any) -> bool:
+        """True when all checks passed"""
+        return self.validate(dataframe, ok=True)
 
 
 class Control:

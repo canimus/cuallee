@@ -2,7 +2,7 @@
 
 The following table contains the list of all available checks in `cuallee`:
 
-## :material-check-all: Checks 
+## :material-check-all: Checks
 
 Check | Description | DataType
  ------- | ----------- | ----
@@ -110,4 +110,3 @@ Check | Description | DataType
     |  1|2023-05-14 18:28:02|ISO Compliant|WARNING|   ccy|is_contained_in|{'BHD', 'CRC', 'M...|   5|       0.0|      1.0|           1.0|  PASS|
     +---+-------------------+-------------+-------+------+---------------+--------------------+----+----------+---------+--------------+------+
     ```
-

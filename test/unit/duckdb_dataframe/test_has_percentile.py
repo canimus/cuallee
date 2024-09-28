@@ -9,6 +9,7 @@ def test_positive(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_percentile("id", 6.75, 0.75)
     df = pd.DataFrame({"id": np.arange(10)})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 
@@ -16,6 +17,7 @@ def test_negative(check: Check, db: duckdb.DuckDBPyConnection):
     check.has_percentile("id", 4.75, 0.75)
     df = pd.DataFrame({"id": np.arange(10)})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("FAIL").all()
 
 
@@ -26,6 +28,7 @@ def test_values(check: Check, db: duckdb.DuckDBPyConnection, elements):
     check.has_percentile("id", elements[2], 0.5)
     df = pd.DataFrame({"id": elements})
     check.table_name = "df"
+    db.register("df", df)
     assert check.validate(db).status.str.match("PASS").all()
 
 

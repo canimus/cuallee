@@ -3,7 +3,7 @@ black: # Format code
 	@black test
 
 clean: # Remove workspace files
-	@find . -name "__pycache__" -exec rm -rf {} + 
+	@find . -name "__pycache__" -exec rm -rf {} +
 	@rm -rf ./.pytest_cache
 	@rm -rf ./htmlcov
 	@rm -rf dist/

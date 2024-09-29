@@ -6,7 +6,7 @@ import duckdb
 import pytest
 from pyspark.sql import SparkSession
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 logger = logging.getLogger(__name__)
 

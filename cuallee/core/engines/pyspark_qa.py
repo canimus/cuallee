@@ -126,6 +126,7 @@ class Compute:
 
 def _spark_search(check: Check):
     """Determine if is spark or spark_connect"""
+    from pyspark.sql import SparkSession
 
     # Search for client using spark_connect
     if "SPARK_REMOTE" in os.environ:
@@ -137,9 +138,7 @@ def _spark_search(check: Check):
                 .getOrCreate()
             )
         except (ModuleNotFoundError, ImportError, AttributeError):
-            spark_connect = importlib.import_module("pyspark.sql.session")
-        finally:
-            SparkSession = getattr(spark_connect, "SparkSession")
+            pass
 
     elif spark_in_session := valfilter(
         lambda x: isinstance(x, SparkSession), globals()
@@ -155,10 +154,6 @@ def _spark_search(check: Check):
         spark = builder.getOrCreate()
 
     return spark
-
-
-def compute(self, rules):
-    pass
 
 
 def validate_data_types(rules, dataframe):

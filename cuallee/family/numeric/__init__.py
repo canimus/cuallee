@@ -45,7 +45,7 @@ class NumericCheck:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_greater_than(column, 0, pct)
+        return self.is_greater_than(column, 0, pct, options={"name": "is_positive"})
 
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """
@@ -58,6 +58,28 @@ class NumericCheck:
         """
         (
             Rule("is_greater_or_equal_than", column, value, RuleDataType.NUMERIC, pct)
+            >> self._rule
+        )
+        return self
+
+    def ge(self, column: str, value: float, pct: float = 1.0):
+        """
+        Validation for numeric greater or equal than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_greater_or_equal_than",
+                column,
+                value,
+                RuleDataType.NUMERIC,
+                pct,
+                options={"name": "ge"},
+            )
             >> self._rule
         )
         return self
@@ -94,6 +116,28 @@ class NumericCheck:
         Rule("is_less_than", column, value, RuleDataType.NUMERIC, pct) >> self._rule
         return self
 
+    def lt(self, column: str, value: float, pct: float = 1.0):
+        """
+        Validation for numeric less than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_less_than",
+                column,
+                value,
+                RuleDataType.NUMERIC,
+                pct,
+                options={"name": "lt"},
+            )
+            >> self._rule
+        )
+        return self
+
     def is_negative(self, column: str, pct: float = 1.0):
         """
         Validation for numeric less than zero
@@ -102,7 +146,7 @@ class NumericCheck:
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_less_than(column, 0, pct)
+        return self.is_less_than(column, 0, pct, options={"name": "is_negative"})
 
     def is_less_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """
@@ -119,6 +163,28 @@ class NumericCheck:
         )
         return self
 
+    def le(self, column: str, value: float, pct: float = 1.0):
+        """
+        Validation for numeric less or equal than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_less_or_equal_than",
+                column,
+                value,
+                RuleDataType.NUMERIC,
+                pct,
+                options={"name": "le"},
+            )
+            >> self._rule
+        )
+        return self
+
     def is_equal_than(self, column: str, value: float, pct: float = 1.0):
         """
         Validation for numeric column equal than value
@@ -129,4 +195,26 @@ class NumericCheck:
             pct (float): The threshold percentage required to pass
         """
         Rule("is_equal_than", column, value, RuleDataType.NUMERIC, pct) >> self._rule
+        return self
+
+    def eq(self, column: str, value: float, pct: float = 1.0):
+        """
+        Validation for numeric column equal than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (number): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_equal_than",
+                column,
+                value,
+                RuleDataType.NUMERIC,
+                pct,
+                options={"name": "eq"},
+            )
+            >> self._rule
+        )
         return self

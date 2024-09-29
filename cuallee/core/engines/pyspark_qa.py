@@ -3,12 +3,12 @@ import importlib
 import operator
 import os
 from dataclasses import dataclass
-from functools import partial
+from functools import partial, reduce
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pyspark.sql.functions as F
 from pyspark.sql import Column, DataFrame, Row
-from toolz import compose, first, valfilter
+from toolz import compose, first, valfilter, valmap
 from toolz.curried import map as map_curried
 
 from ..check import Check, CheckStatus
@@ -33,13 +33,10 @@ class ComputeInstruction:
 
 def _replace_observe_compute(computed_expressions: dict) -> dict:
     """Replace observe based check with select"""
-    select_only_expressions = {}
-    for k, v in computed_expressions.items():
-        instruction = v
-        if instruction.compute_method.name == ComputeMethod.OBSERVE.name:
-            instruction.compute_method = ComputeMethod.SELECT
-        select_only_expressions[k] = instruction
-    return select_only_expressions
+    return valmap(
+        lambda v: ComputeMethod.SELECT if v == ComputeMethod.OBSERVE else v,
+        computed_expressions,
+    )
 
 
 def _compute_observe_method(
@@ -123,6 +120,22 @@ class Compute:
         )
         return self.compute_instruction
 
+    def are_complete(self, rule: Rule):
+        """Validation for non-null values in a group of columns"""
+        predicate = (
+            reduce(
+                operator.add,
+                [F.col(f"`{c}`").isNotNull().cast("integer") for c in rule.column],
+            )
+            == len(rule.column)
+        ).cast("integer")
+        self.compute_instruction = ComputeInstruction(
+            predicate,
+            F.sum(predicate),
+            ComputeMethod.SELECT,
+        )
+        return self.compute_instruction
+
 
 def _spark_search(check: Check):
     """Determine if is spark or spark_connect"""
@@ -156,6 +169,15 @@ def _spark_search(check: Check):
     return spark
 
 
+def _spark_without_observe(spark) -> bool:
+    major, minor, _ = map(int, spark.version.split("."))
+    with_observe = False
+    if not all(map(lambda x: x > 3, [major, minor])) or ("connect" in str(type(spark))):
+        with_observe = True
+
+    return with_observe
+
+
 def validate_data_types(rules, dataframe):
     return True
 
@@ -165,14 +187,9 @@ def summary(check: Check, dataframe: Any):
     computed_expressions = {
         k: operator.methodcaller(v.method, v)(Compute()) for k, v in check._rule.items()
     }
-    try:
-        major, minor, _ = map(int, spark.version.split("."))
-        if not all(map(lambda x: x > 3, [major, minor])) or (
-            "connect" in str(type(spark))
-        ):
-            computed_expressions = _replace_observe_compute(computed_expressions)
-    except Exception:
-        pass
+
+    if _spark_without_observe:
+        computed_expressions = _replace_observe_compute(computed_expressions)
 
     rows, observation_result = _compute_observe_method(computed_expressions, dataframe)
     select_result = _compute_select_method(computed_expressions, dataframe)

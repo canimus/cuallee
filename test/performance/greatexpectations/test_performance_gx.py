@@ -1,8 +1,9 @@
 # pip install great-expectations==0.18.13
 
+from datetime import datetime
+
 from great_expectations.dataset import SparkDFDataset
 from pyspark.sql import SparkSession
-from datetime import datetime
 
 spark = SparkSession.builder.config("spark.driver.memory", "16g").getOrCreate()
 

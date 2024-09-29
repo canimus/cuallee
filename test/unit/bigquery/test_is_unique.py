@@ -1,5 +1,4 @@
 import pandas as pd
-
 from google.cloud import bigquery
 
 from cuallee import Check, CheckLevel

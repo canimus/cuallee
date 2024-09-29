@@ -1,7 +1,8 @@
+from datetime import date, datetime
+
 import pytest
 import snowflake.snowpark.functions as F  # type: ignore
 
-from datetime import date, datetime
 from cuallee import Check, CheckLevel
 
 

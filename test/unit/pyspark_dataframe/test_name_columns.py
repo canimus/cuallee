@@ -1,7 +1,9 @@
-from pyspark.sql import SparkSession
-import pyspark.sql.functions as F
-from cuallee import Check, CheckLevel
 import inspect
+
+import pyspark.sql.functions as F
+from pyspark.sql import SparkSession
+
+from cuallee import Check, CheckLevel
 
 
 def test_column_names_with_dots(spark: SparkSession, check: Check):

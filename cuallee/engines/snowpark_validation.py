@@ -1,29 +1,19 @@
 import enum
-import os
 import operator
+import os
+from dataclasses import dataclass
+from functools import reduce
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+
 import snowflake.snowpark.functions as F  # type: ignore
 import snowflake.snowpark.types as T  # type: ignore
 import snowflake.snowpark.window as W  # type: ignore
-
-from typing import (
-    Union,
-    Dict,
-    Type,
-    Callable,
-    Iterable,
-    Optional,
-    Any,
-    Tuple,
-    List,
-)
-from dataclasses import dataclass
-from snowflake.snowpark import DataFrame, Column, Session, Row
+from snowflake.snowpark import Column, DataFrame, Row, Session
 from snowflake.snowpark.session import Session as SnowSession
-from toolz import valfilter, first  # type: ignore
-from functools import reduce
+from toolz import first, valfilter  # type: ignore
 
-from cuallee import Check, Rule
 import cuallee.utils as cuallee_utils
+from cuallee import Check, Rule
 
 
 class ComputeMethod(enum.Enum):

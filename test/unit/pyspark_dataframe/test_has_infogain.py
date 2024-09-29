@@ -1,6 +1,6 @@
-import pytest
-import pyspark.sql.functions as F  # type: ignore
 import pandas as pd
+import pyspark.sql.functions as F  # type: ignore
+import pytest
 
 from cuallee import Check, CheckLevel
 

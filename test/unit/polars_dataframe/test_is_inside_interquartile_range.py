@@ -1,5 +1,6 @@
-from cuallee import Check
 import polars as pl
+
+from cuallee import Check
 
 
 def test_positive(check: Check):

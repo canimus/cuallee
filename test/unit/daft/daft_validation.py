@@ -1,11 +1,10 @@
-import daft
 import operator
-import numpy as np
-
-from typing import Union
-from toolz import first
 from numbers import Number
-from typing import Dict, List
+from typing import Dict, List, Union
+
+import daft
+import numpy as np
+from toolz import first
 
 from cuallee import Check, Rule
 

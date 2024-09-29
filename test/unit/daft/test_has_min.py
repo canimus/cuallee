@@ -1,6 +1,6 @@
 import daft
-import pytest
 import numpy as np
+import pytest
 
 from cuallee import Check
 

@@ -1,9 +1,11 @@
-from typing import Set, Union, List
-from .core.rule import Rule, RuleDataType
-from .core.check import Check
 import inspect
+from typing import List, Set, Union
+
 from rich import print as rich_print
-from toolz import valmap, keyfilter, groupby
+from toolz import groupby, keyfilter, valmap
+
+from .core.check import Check
+from .core.rule import Rule, RuleDataType
 
 
 def get_column_set(columns: Union[str, List[str]]) -> List[str]:

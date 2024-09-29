@@ -4,11 +4,12 @@
 # soda-spark                               1.4.10
 # soda-spark-df                            1.4.10
 
-from soda.scan import Scan
-from pyspark.sql import SparkSession
+import os
 from datetime import datetime
 from string import Template
-import os
+
+from pyspark.sql import SparkSession
+from soda.scan import Scan
 
 assert os.environ.get("SODA_KEY"), "Please provide environment variable: SODA_KEY"
 assert os.environ.get("SODA_SECRET"), "Please provide environment variable: SODA_SECRET"

@@ -1,4 +1,5 @@
 from typing import List, Tuple
+
 from fpdf import FPDF
 
 # from datetime import datetime, timezone

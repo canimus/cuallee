@@ -1,7 +1,9 @@
-from dagster import asset_check, AssetCheckResult, AssetCheckSpec, AssetCheckSeverity
-from cuallee import Check, CheckLevel
+from typing import Iterator, List
+
 import pandas as pd
-from typing import List, Iterator
+from dagster import AssetCheckResult, AssetCheckSeverity, AssetCheckSpec, asset_check
+
+from cuallee import Check, CheckLevel
 
 
 def make_dagster_checks(

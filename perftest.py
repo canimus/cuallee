@@ -1,8 +1,10 @@
+from datetime import datetime
+
+import pyspark.sql.functions as F
+from pyspark.sql import SparkSession
+
 from cuallee import Check, CheckLevel
 from cuallee.pyspark_validation import numeric_fields, timestamp_fields
-from pyspark.sql import SparkSession
-import pyspark.sql.functions as F
-from datetime import datetime
 
 
 def quiet_logs(sc):

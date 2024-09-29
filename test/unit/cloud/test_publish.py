@@ -1,7 +1,9 @@
-from cuallee.cloud import publish, compress, CUALLEE_CLOUD_HEADERS
-from unittest.mock import patch
 import os
+from unittest.mock import patch
+
 import pytest
+
+from cuallee.cloud import CUALLEE_CLOUD_HEADERS, compress, publish
 
 
 @pytest.mark.skip

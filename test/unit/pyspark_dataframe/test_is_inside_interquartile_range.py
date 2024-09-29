@@ -1,10 +1,8 @@
-import pytest
+import pandas as pd
 import pyspark.sql.functions as F
+import pytest
 
 from cuallee import Check, CheckLevel
-
-
-import pandas as pd
 
 
 def test_positive(spark):

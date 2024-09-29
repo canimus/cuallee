@@ -1,15 +1,16 @@
-import re
 import enum
 import hashlib
 import importlib
 import logging
 import operator
+import re
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from types import ModuleType
-from typing import Any, Dict, List, Literal, Optional, Protocol, Tuple, Union, Callable
-from toolz import compose, valfilter, first  # type: ignore
+from typing import Any, Callable, Dict, List, Literal, Optional, Protocol, Tuple, Union
+
+from toolz import compose, first, valfilter  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
@@ -217,8 +218,8 @@ class Check:
         self.table_name = table_name
         self.dtype = "cuallee.dataframe"
         try:
-            from .iso.checks import ISO
             from .bio.checks import BioChecks
+            from .iso.checks import ISO
 
             self.iso = ISO(self)
             self.bio = BioChecks(self)

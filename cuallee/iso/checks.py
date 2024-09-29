@@ -1,10 +1,11 @@
-import xml.etree.ElementTree as ET
-import requests
-from dataclasses import dataclass
 import os
-from operator import attrgetter as at
+import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from functools import lru_cache
+from operator import attrgetter as at
 from typing import Dict
+
+import requests
 
 
 @dataclass

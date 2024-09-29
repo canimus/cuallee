@@ -1,19 +1,19 @@
 import enum
 import operator
+import os
 from dataclasses import dataclass
-from functools import reduce, partial
+from functools import partial, reduce
 from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql import Window as W
 from pyspark.sql import Column, DataFrame, Row
-from toolz import first, valfilter, last, compose
+from pyspark.sql import Window as W
+from toolz import compose, first, last, valfilter
 from toolz.curried import map as map_curried
-import cuallee.utils as cuallee_utils
-from cuallee import Check, ComputeEngine, Rule, CustomComputeException, CheckStatus
 
-import os
+import cuallee.utils as cuallee_utils
+from cuallee import Check, CheckStatus, ComputeEngine, CustomComputeException, Rule
 
 try:
     from pyspark.sql.connect.session import SparkSession as SparkConnectSession

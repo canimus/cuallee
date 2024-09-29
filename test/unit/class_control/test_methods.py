@@ -1,5 +1,6 @@
-from cuallee import Control
 import pandas as pd
+
+from cuallee import Control
 
 
 def test_has_completeness():

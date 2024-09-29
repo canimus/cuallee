@@ -1,8 +1,9 @@
+from datetime import date, datetime
+
+import numpy as np
 import pytest
 
-from datetime import datetime, date
 from cuallee import Check, CheckLevel
-import numpy as np
 
 
 def test_positive(spark):

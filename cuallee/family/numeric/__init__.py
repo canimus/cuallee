@@ -1,6 +1,7 @@
-from cuallee.core.rule import Rule, RuleDataType
-from typing import Dict
 from abc import ABC, abstractmethod
+from typing import Dict
+
+from cuallee.core.rule import Rule, RuleDataType
 
 
 class NumericCheck(ABC):

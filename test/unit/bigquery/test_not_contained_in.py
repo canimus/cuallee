@@ -1,6 +1,5 @@
-import pytest
 import pandas as pd
-
+import pytest
 from google.cloud import bigquery
 
 from cuallee import Check, CheckLevel

@@ -1,8 +1,9 @@
+from datetime import date, datetime, timedelta
+
 import polars as pl
-from cuallee import Check
 import pytest
-from datetime import datetime, timedelta
-from datetime import date
+
+from cuallee import Check
 
 
 def test_positive(check: Check):

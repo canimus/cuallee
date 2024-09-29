@@ -1,7 +1,7 @@
 import pytest
 import snowflake.snowpark.functions as F  # type: ignore
-
 from snowflake.snowpark import Row  # type: ignore
+
 from cuallee import Check, CheckLevel
 
 

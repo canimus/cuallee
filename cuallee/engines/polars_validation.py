@@ -1,4 +1,5 @@
 import operator
+from functools import partial
 from numbers import Number
 from typing import Dict, List, Union
 
@@ -6,8 +7,8 @@ import numpy as np
 import polars as pl  # type: ignore
 from toolz import compose, first  # type: ignore
 from toolz.curried import map as map_curried
-from cuallee import Check, Rule, CheckStatus
-from functools import partial
+
+from cuallee import Check, CheckStatus, Rule
 
 
 class Compute:

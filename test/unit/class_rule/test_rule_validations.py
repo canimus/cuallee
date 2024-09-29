@@ -1,5 +1,6 @@
 import pytest
-from cuallee import Rule, CheckDataType
+
+from cuallee import CheckDataType, Rule
 
 
 def test_negative_coverage():

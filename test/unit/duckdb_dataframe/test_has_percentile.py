@@ -1,8 +1,9 @@
-import pandas as pd
-import numpy as np
-from cuallee import Check
-import pytest
 import duckdb
+import numpy as np
+import pandas as pd
+import pytest
+
+from cuallee import Check
 
 
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):

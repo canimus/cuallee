@@ -1,6 +1,7 @@
 import pandas as pd
-from cuallee import Check
 import pendulum as lu
+
+from cuallee import Check
 
 
 def test_positive(check: Check):

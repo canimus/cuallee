@@ -1,7 +1,9 @@
-import polars as pl
-from cuallee import Check
-import pytest
 from datetime import date
+
+import polars as pl
+import pytest
+
+from cuallee import Check
 
 
 def test_positive(check: Check):

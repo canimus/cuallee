@@ -1,10 +1,10 @@
 import daft
-import pytest
 import pandas as pd
-from pyspark.sql import DataFrame
+import pytest
 from google.cloud import bigquery
-from cuallee import Check, CheckLevel
+from pyspark.sql import DataFrame
 
+from cuallee import Check, CheckLevel
 
 # __ SPARK DATAFRAME TESTS __
 

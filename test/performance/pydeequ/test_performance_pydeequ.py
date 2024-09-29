@@ -1,9 +1,9 @@
-from pyspark.sql import SparkSession
-import pyspark.sql.functions as F
-
-from pydeequ.checks import Check, CheckLevel
-from pydeequ.verification import VerificationSuite, VerificationResult
 from datetime import datetime
+
+import pyspark.sql.functions as F
+from pydeequ.checks import Check, CheckLevel
+from pydeequ.verification import VerificationResult, VerificationSuite
+from pyspark.sql import SparkSession
 
 spark = (
     SparkSession.builder.config("spark.jars", "/libs/deequ-2.0.7-spark-3.5.jar")

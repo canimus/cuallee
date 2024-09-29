@@ -1,8 +1,8 @@
-import pytest
 import pandas as pd
+import pytest
 from pyspark.sql import DataFrame
-from cuallee import Check, CheckLevel
 
+from cuallee import Check, CheckLevel
 
 # __ SPARK DATAFRAME TESTS __
 

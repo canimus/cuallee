@@ -1,6 +1,6 @@
-import pytest
-import polars as pl
 import duckdb
+import polars as pl
+import pytest
 
 
 def test_is_dna(check, db: duckdb.DuckDBPyConnection):

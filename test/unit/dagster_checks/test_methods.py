@@ -1,7 +1,9 @@
-from cuallee.dagster import make_dagster_checks, make_check_specs, yield_check_results
-from cuallee import Check, CheckLevel
-import pandas as pd
 from typing import Iterator
+
+import pandas as pd
+
+from cuallee import Check, CheckLevel
+from cuallee.dagster import make_check_specs, make_dagster_checks, yield_check_results
 
 
 def test_make_checks():

@@ -4,9 +4,12 @@ from datetime import datetime, timezone
 from types import ModuleType
 from typing import Any, Dict, Union
 
+from toolz import valfilter  # type: ignore
+
 from ..family.generic import GenericCheck
 from ..family.numeric import NumericCheck
-from toolz import valfilter  # type: ignore
+from ..family.stats import StatsCheck
+from ..family.string import StringCheck
 
 
 class CheckLevel(enum.Enum):
@@ -18,7 +21,7 @@ class CheckLevel(enum.Enum):
     ERR = 1
 
 
-class Check(GenericCheck, NumericCheck):
+class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
     def __init__(
         self,
         level: Union[CheckLevel, int] = 0,

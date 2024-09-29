@@ -1,13 +1,15 @@
-from typing import Dict, Union, List
-from cuallee import Check, Rule, CheckStatus
-import pandas as pd  # type: ignore
 import operator
-import numpy as np
 import re
-from toolz import first  # type: ignore
-from numbers import Number
-from cuallee import utils as cuallee_utils
 from itertools import repeat
+from numbers import Number
+from typing import Dict, List, Union
+
+import numpy as np
+import pandas as pd  # type: ignore
+from toolz import first  # type: ignore
+
+from cuallee import Check, CheckStatus, Rule
+from cuallee import utils as cuallee_utils
 
 
 class Compute:

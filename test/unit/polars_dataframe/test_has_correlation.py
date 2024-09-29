@@ -1,8 +1,8 @@
+import numpy as np
+import polars as pl
 import pytest
 
 from cuallee import Check
-import polars as pl
-import numpy as np
 
 
 def test_positive(check: Check):

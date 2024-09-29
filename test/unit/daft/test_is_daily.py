@@ -1,7 +1,7 @@
+from datetime import datetime, timedelta
+
 import daft
 import pandas as pd
-
-from datetime import datetime, timedelta
 
 from cuallee import Check
 

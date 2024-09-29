@@ -1,7 +1,9 @@
-import polars as pl
-from cuallee import Check
-import pendulum as lu
 from datetime import date
+
+import pendulum as lu
+import polars as pl
+
+from cuallee import Check
 
 
 def test_positive(check: Check):

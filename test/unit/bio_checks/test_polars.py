@@ -1,5 +1,5 @@
-import pytest
 import polars as pl
+import pytest
 
 
 def test_is_dna(check):

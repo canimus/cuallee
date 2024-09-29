@@ -1,10 +1,12 @@
-import os
-import pytest
-from cuallee import Check, CheckLevel
-from pyspark.sql import SparkSession
-from pathlib import Path
 import logging
+import os
+from pathlib import Path
+
 import duckdb
+import pytest
+from pyspark.sql import SparkSession
+
+from cuallee import Check, CheckLevel
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +90,10 @@ def bq_client():
     if Path("temp/key.json").exists() == True:
         credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     else:
-        from google.oauth2 import service_account
-        import os
         import json
+        import os
+
+        from google.oauth2 import service_account
 
         with open("key.json", "w") as writer:
             json.dump(json.loads(os.getenv("GOOGLE_KEY")), writer)

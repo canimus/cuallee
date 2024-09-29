@@ -1,8 +1,10 @@
-import pandas as pd
-from cuallee import Check
-import pytest
 from datetime import datetime, timedelta
+
 import duckdb
+import pandas as pd
+import pytest
+
+from cuallee import Check
 
 
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):

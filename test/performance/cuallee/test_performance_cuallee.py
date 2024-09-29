@@ -1,9 +1,10 @@
-from os import truncate
-from cuallee import Check, CheckLevel
-
-from pyspark.sql import SparkSession
-import pyspark.sql.functions as F
 from datetime import datetime
+from os import truncate
+
+import pyspark.sql.functions as F
+from pyspark.sql import SparkSession
+
+from cuallee import Check, CheckLevel
 
 spark = SparkSession.builder.config("spark.driver.memory", "16g").getOrCreate()
 

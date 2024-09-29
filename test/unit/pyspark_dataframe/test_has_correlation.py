@@ -1,8 +1,8 @@
-import pytest
 import numpy as np
 import pandas as pd
-
 import pyspark.sql.functions as F
+import pytest
+
 from cuallee import Check, CheckLevel
 
 

@@ -1,16 +1,16 @@
 import operator
+import re
+import textwrap
 from functools import reduce
 from numbers import Number
+from string import Template
 
 import duckdb as dk
 import numpy as np
 import pandas as pd  # type: ignore
 from toolz import first  # type: ignore
-from string import Template
-import re
-import textwrap
 
-from cuallee import Check, Rule, CheckStatus
+from cuallee import Check, CheckStatus, Rule
 
 
 class Compute:

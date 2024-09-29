@@ -1,17 +1,15 @@
-import daft
 import operator
 import statistics
+from itertools import groupby
+from math import log2
+from numbers import Number
+from operator import itemgetter
+from typing import Dict, List, Union
+
+import daft
 import numpy as np
 import pandas as pd
-
-from math import log2
 from toolz import first
-from typing import Union
-from numbers import Number
-from typing import Dict, List
-
-from itertools import groupby
-from operator import itemgetter
 
 from cuallee import Check, Rule
 

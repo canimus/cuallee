@@ -1,6 +1,7 @@
-from cuallee import Check
 import pandas as pd
 import pytest
+
+from cuallee import Check
 
 
 def test_positive(check: Check):

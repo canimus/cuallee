@@ -1,7 +1,7 @@
+import pyspark.sql.functions as F
 import pytest
 
 from cuallee import Check, CheckLevel, CustomComputeException
-import pyspark.sql.functions as F
 
 
 def test_positive(spark):

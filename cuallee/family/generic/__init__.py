@@ -1,6 +1,7 @@
-from cuallee.core.rule import Rule, RuleDataType
-from typing import Union, List, Tuple
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Tuple, Union
+
+from cuallee.core.rule import Rule, RuleDataType
 
 
 class GenericCheck(ABC):
@@ -126,6 +127,27 @@ class GenericCheck(ABC):
                 pct,
                 options={"name": "is_composite_key"},
             )
+            >> self._rule
+        )
+        return self
+
+    def is_between(
+        self,
+        column: str,
+        value: Union[List[Any], Tuple[Any, Any]],
+        pct: float = 1.0,
+        options: Dict = {},
+    ):
+        """
+        Validation of a column between a range
+
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule("is_between", column, value, RuleDataType.AGNOSTIC, pct, options)
             >> self._rule
         )
         return self

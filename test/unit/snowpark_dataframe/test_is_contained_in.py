@@ -1,6 +1,7 @@
+from datetime import date, datetime
+
 import pytest
 
-from datetime import datetime, date
 from cuallee import Check, CheckLevel
 
 

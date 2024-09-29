@@ -1,13 +1,15 @@
 import enum
-import operator
-import pandas as pd  # type: ignore
-from dataclasses import dataclass
-from typing import Dict, List, Union
-from string import Template
-from toolz import valfilter  # type: ignore
-from google.cloud import bigquery
-from cuallee import Check, ComputeEngine, Rule
 import logging
+import operator
+from dataclasses import dataclass
+from string import Template
+from typing import Dict, List, Union
+
+import pandas as pd  # type: ignore
+from google.cloud import bigquery
+from toolz import valfilter  # type: ignore
+
+from cuallee import Check, ComputeEngine, Rule
 
 logger = logging.getLogger("cuallee")
 

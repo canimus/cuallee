@@ -1,6 +1,7 @@
+import pandas as pd
 import pytest
 import snowflake.snowpark.functions as F  # type: ignore
-import pandas as pd
+
 from cuallee import Check, CheckLevel
 
 

@@ -1,7 +1,9 @@
-from .. import Check
-import pandas as pd
 from pathlib import Path
 from typing import Dict
+
+import pandas as pd
+
+from .. import Check
 
 
 class BioChecks:

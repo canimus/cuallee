@@ -1,6 +1,7 @@
 import duckdb
-from cuallee import Check
 import pytest
+
+from cuallee import Check
 
 
 def test_positive(check: Check, db: duckdb.DuckDBPyConnection):

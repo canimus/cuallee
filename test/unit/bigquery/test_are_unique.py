@@ -1,5 +1,4 @@
 import pytest
-
 from google.cloud import bigquery
 
 from cuallee import Check, CheckLevel

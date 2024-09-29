@@ -1,10 +1,12 @@
 import enum
+import importlib
 import operator
+import re
 from datetime import datetime, timezone
 from types import ModuleType
 from typing import Any, Dict, Union
 
-from toolz import valfilter  # type: ignore
+from toolz import first, valfilter
 
 from ..family.generic import GenericCheck
 from ..family.numeric import NumericCheck
@@ -21,6 +23,14 @@ class CheckLevel(enum.Enum):
     ERR = 1
 
 
+class CheckStatus(enum.Enum):
+    """Validation result criteria"""
+
+    PASS = "PASS"
+    FAIL = "FAIL"
+    NO_RUN = "NO_RUN"
+
+
 class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
     def __init__(
         self,
@@ -30,6 +40,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
         execution_date: datetime = datetime.now(timezone.utc),
         table_name: str = None,
         session: Any = None,
+        config: Dict = {},
     ):
         """
         A container of data quality rules.
@@ -53,7 +64,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
         self.name = name
         self.date = execution_date
         self.rows = -1
-        self.config: Dict[str, str] = {}
+        self.config = config
         self.table_name = table_name
         self.dtype = "cuallee.dataframe"
         self.session = session
@@ -86,6 +97,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
                 "name": self.name,
                 "rules": self.sum,
                 "table": self.table_name,
+                "config": self.config,
             },
         )
 
@@ -101,3 +113,57 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
             kwargs (dict): Dictionary of options for the Rule
         """
         return operator.methodcaller(method, *args, **kwargs)(self)
+
+    def validate(self, dataframe: Any, ok: bool = False):
+        """
+        Compute all rules in this check for specific data frame
+
+        Args:
+            dataframe (Union[pyspark,snowpark,pandas,polars,duckdb,bigquery]): A dataframe object
+        """
+
+        # Stop execution if the there is no rules in the check
+        assert not self.empty, "Check is empty. Try adding some rules?"
+
+        self.dtype = first(re.match(r".*'(.*)'", str(type(dataframe))).groups())
+        match self.dtype:
+            case self.dtype if "pyspark" in self.dtype:
+                self.compute_engine = importlib.import_module(
+                    "cuallee.core.engines.pyspark_qa"
+                )
+            case self.dtype if "pandas" in self.dtype:
+                self.compute_engine = importlib.import_module(
+                    "cuallee.core.engines.pandas_qa"
+                )
+            case self.dtype if "snowpark" in self.dtype:
+                self.compute_engine = importlib.import_module(
+                    "cuallee.snowpark_validation"
+                )
+            case self.dtype if "polars" in self.dtype:
+                self.compute_engine = importlib.import_module(
+                    "cuallee.polars_validation"
+                )
+            case self.dtype if "duckdb" in self.dtype:
+                self.compute_engine = importlib.import_module(
+                    "cuallee.duckdb_validation"
+                )
+            case self.dtype if "bigquery" in self.dtype:
+                self.compute_engine = importlib.import_module(
+                    "cuallee.bigquery_validation"
+                )
+            case self.dtype if "daft" in self.dtype:
+                self.compute_engine = importlib.import_module("cuallee.daft_validation")
+            case _:
+                raise NotImplementedError(
+                    f"{self.dtype} is not yet implemented in cuallee"
+                )
+
+        assert self.compute_engine.validate_data_types(
+            self.rules, dataframe
+        ), "Invalid data types between rules and dataframe"
+
+        if ok:
+            result = self.compute_engine.ok(self, dataframe)
+        else:
+            result = self.compute_engine.summary(self, dataframe)
+        return result

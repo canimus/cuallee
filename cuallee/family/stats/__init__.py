@@ -19,17 +19,15 @@ class StatsCheck(ABC):
             column (str): Column name in dataframe
             value (number): The condition for the column to match
         """
-        if tolerance == 0.0:
-            Rule("has_min", column, value, RuleDataType.NUMERIC) >> self._rule
-        else:
-            (
-                Rule(
-                    "is_between",
-                    column,
-                    [value - tolerance, value + tolerance],
-                    RuleDataType.NUMERIC,
-                    options={"name": "has_min[tolerance]"},
-                )
-                >> self._rule
+
+        (
+            Rule(
+                "has_min",
+                column,
+                value,
+                RuleDataType.NUMERIC,
+                options={"tolerance": tolerance},
             )
+            >> self._rule
+        )
         return self

@@ -56,4 +56,4 @@ loadenv:
 	@echo "for i in $`cat .env$`; do export $$i; done"
 
 inventory:
-	@python -c "from cuallee.utils import inventory; inventory()"
+	@python -c "from cuallee.core.utils import inventory; inventory()"

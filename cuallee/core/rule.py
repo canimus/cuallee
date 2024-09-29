@@ -90,6 +90,7 @@ class Rule:
                 "value": self.value,
                 "data_type": self.data_type.name,
                 "coverage": self.coverage,
+                "options": self.options,
             },
         )
 

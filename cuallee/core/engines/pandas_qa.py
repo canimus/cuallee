@@ -8,8 +8,9 @@ import numpy as np
 import pandas as pd  # type: ignore
 from toolz import first  # type: ignore
 
-from cuallee import Check, CheckStatus, Rule
-from cuallee import utils as cuallee_utils
+from .. import utils as cuallee_utils
+from ..check import Check, CheckStatus
+from ..rule import Rule
 
 
 class Compute:

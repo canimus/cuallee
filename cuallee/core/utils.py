@@ -4,8 +4,8 @@ from typing import List, Set, Union
 from rich import print as rich_print
 from toolz import groupby, keyfilter, valmap
 
-from .core.check import Check
-from .core.rule import Rule, RuleDataType
+from .check import Check
+from .rule import Rule, RuleDataType
 
 
 def get_column_set(columns: Union[str, List[str]]) -> List[str]:

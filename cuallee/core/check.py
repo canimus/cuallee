@@ -88,13 +88,13 @@ class Check(GenericCheck, NumericCheck):
 
         return f"Check{_attrs}"
 
-    def add_rule(self, method: str, *arg, **kwargs):
+    def add_rule(self, method: str, *args, **kwargs):
         """
         Add a new rule to the Check class.
 
         Args:
             method (str): Check name
-            arg (list): Parameters of the Rule
-            kwars (dict): Dictionary of options for the Rule
+            args (list): Parameters of the Rule
+            kwargs (dict): Dictionary of options for the Rule
         """
-        return operator.methodcaller(method, *arg, **kwargs)(self)
+        return operator.methodcaller(method, *args, **kwargs)(self)

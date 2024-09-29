@@ -54,3 +54,6 @@ testers: # Generate all test functions on folder/
 
 loadenv:
 	@echo "for i in $`cat .env$`; do export $$i; done"
+
+inventory:
+	@python -c "from cuallee.utils import inventory; inventory()"

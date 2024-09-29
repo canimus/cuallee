@@ -1,5 +1,9 @@
 from typing import Set, Union, List
-from cuallee import Rule, CheckDataType
+from .core.rule import Rule, RuleDataType
+from .core.check import Check
+import inspect
+from rich import print as rich_print
+from toolz import valmap, keyfilter, groupby
 
 
 def get_column_set(columns: Union[str, List[str]]) -> List[str]:
@@ -18,24 +22,24 @@ def get_column_set(columns: Union[str, List[str]]) -> List[str]:
 
 def get_numeric_rules(rules: List[Rule]) -> List[Rule]:
     """Based on a rule list it returns all matching data type: NUMERIC"""
-    return list(filter(lambda x: x.data_type.name == CheckDataType.NUMERIC.name, rules))
+    return list(filter(lambda x: x.data_type.name == RuleDataType.NUMERIC.name, rules))
 
 
 def get_date_rules(rules: List[Rule]) -> List[Rule]:
     """Based on a rule list it returns all matching data type: DATE"""
-    return list(filter(lambda x: x.data_type.name == CheckDataType.DATE.name, rules))
+    return list(filter(lambda x: x.data_type.name == RuleDataType.DATE.name, rules))
 
 
 def get_timestamp_rules(rules: List[Rule]) -> List[Rule]:
     """Based on a rule list it returns all matching data type: TIMESTAMP"""
     return list(
-        filter(lambda x: x.data_type.name == CheckDataType.TIMESTAMP.name, rules)
+        filter(lambda x: x.data_type.name == RuleDataType.TIMESTAMP.name, rules)
     )
 
 
 def get_string_rules(rules: List[Rule]) -> List[Rule]:
     """Based on a rule list it returns all matching data type: STRING"""
-    return list(filter(lambda x: x.data_type.name == CheckDataType.STRING.name, rules))
+    return list(filter(lambda x: x.data_type.name == RuleDataType.STRING.name, rules))
 
 
 def get_rule_columns(rules: List[Rule]) -> List[str]:
@@ -59,3 +63,17 @@ def match_columns(
         dataframe_columns = map(str.casefold, on_dataframe)
 
     return set(rule_columns).difference(dataframe_columns)
+
+
+def inventory():
+    """Consolidates all types of checks in cuallee"""
+    methods = inspect.getmembers(Check, predicate=inspect.isfunction)
+    rich_print(
+        keyfilter(
+            lambda x: "core.check" not in x,
+            groupby(
+                lambda x: x[0],
+                valmap(lambda x: (x.__module__, x.__name__), dict(methods)).values(),
+            ),
+        )
+    )

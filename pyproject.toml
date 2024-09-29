@@ -28,6 +28,7 @@ dev = [
   "black==24.8.0",
   "ruff==0.6.8",
   "pre-commit==3.8.0",
+  "rich == 13.8.1",
 ]
 pyspark = [
   "pyspark>=3.4.0"

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import enum
 import hashlib
 from collections import Counter
+from toolz import valfilter
 
 
 class RuleDataType(enum.Enum):
@@ -79,9 +80,23 @@ class Rule:
             self.data_type = RuleDataType(self.data_type)
 
     def __repr__(self):
-        return f"Rule(method:{self.name}, column:{self.column}, value:{self.value}, data_type:{self.data_type}, coverage:{self.coverage}, ordinal:{self.ordinal}"
+        _attrs = valfilter(
+            lambda x: x is not None,
+            {
+                "ordinal": self.ordinal,
+                "method": self.name,
+                "column": self.column,
+                "value": self.value,
+                "data_type": self.data_type.name,
+                "coverage": self.coverage,
+            },
+        )
+
+        return f"Rule{_attrs}"
 
     def __rshift__(self, rule_dict: Dict[str, Any]) -> Dict[str, Any]:
+        ordinal = len(rule_dict.keys())
+        self.ordinal = ordinal + 1
         rule_dict[self.key] = self
         return rule_dict
 

@@ -2,6 +2,7 @@ from cuallee.core.rule import Rule, RuleDataType
 from typing import Dict
 from abc import ABC, abstractmethod
 
+
 class NumericCheck(ABC):
     """Functionality for numeric and algebra operations"""
 

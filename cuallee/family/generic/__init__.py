@@ -3,14 +3,14 @@ from typing import Union, List, Tuple
 from abc import ABC, abstractmethod
 
 
-
 class GenericCheck(ABC):
     """Functionality for completeness and uniqueness validations"""
+
     @abstractmethod
     def __init__(self) -> None:
         """Restrict use of GenericCheck as it misses rule container"""
         pass
-    
+
     def is_complete(self, column: str, pct: float = 1.0):
         """
         Validation for non-null values in column

@@ -6,7 +6,7 @@ from typing import Any, Dict, Union
 
 from ..family.generic import GenericCheck
 from ..family.numeric import NumericCheck
-from toolz import valfilter # type: ignore
+from toolz import valfilter  # type: ignore
 
 
 class CheckLevel(enum.Enum):

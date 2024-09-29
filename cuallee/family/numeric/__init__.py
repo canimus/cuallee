@@ -1,9 +1,14 @@
 from cuallee.core.rule import Rule, RuleDataType
 from typing import Dict
+from abc import ABC, abstractmethod
 
-
-class NumericCheck:
+class NumericCheck(ABC):
     """Functionality for numeric and algebra operations"""
+
+    @abstractmethod
+    def __init__(self) -> None:
+        """Restrict use of NumericCheck as it misses rule container"""
+        pass
 
     def is_greater_than(
         self, column: str, value: float, pct: float = 1.0, options: Dict[str, str] = {}

@@ -6,7 +6,7 @@ from typing import Any, Dict, Union
 
 from ..family.generic import GenericCheck
 from ..family.numeric import NumericCheck
-from toolz import valfilter
+from toolz import valfilter # type: ignore
 
 
 class CheckLevel(enum.Enum):
@@ -80,7 +80,7 @@ class Check(GenericCheck, NumericCheck):
             lambda x: x is not None,
             {
                 "level": self.level.name,
-                "description": self.name,
+                "name": self.name,
                 "rules": self.sum,
                 "table": self.table_name,
             },

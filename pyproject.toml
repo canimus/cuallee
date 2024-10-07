@@ -27,7 +27,7 @@ dependencies = [
 dev = [
   "black==24.8.0",
   "ruff==0.6.8",
-  "pre-commit==3.8.0",
+  "pre-commit==4.0.0",
 ]
 pyspark = [
   "pyspark>=3.4.0"

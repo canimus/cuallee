@@ -2,7 +2,7 @@ from typing import Iterator
 
 import pandas as pd
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 from cuallee.dagster import make_check_specs, make_dagster_checks, yield_check_results
 
 

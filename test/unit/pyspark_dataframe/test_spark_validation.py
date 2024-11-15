@@ -8,8 +8,8 @@ import pytest
 from pyspark.sql import DataFrame, SparkSession
 from toolz import valfilter  # type: ignore
 
-from cuallee import Check, CheckLevel
-from cuallee import pyspark_validation as PSV
+from cuallee.core.check import Check, CheckLevel
+from cuallee.core.engines import pyspark_qa as PSV
 
 
 def test_compute_method():

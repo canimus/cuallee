@@ -3,7 +3,7 @@ from datetime import date, datetime
 import pyspark.sql.functions as F
 import pytest
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 
 def test_positive(spark):

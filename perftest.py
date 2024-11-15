@@ -3,7 +3,7 @@ from datetime import datetime
 import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 from cuallee.pyspark_validation import numeric_fields, timestamp_fields
 
 

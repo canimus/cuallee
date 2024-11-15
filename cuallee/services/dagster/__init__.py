@@ -3,7 +3,7 @@ from typing import Iterator, List
 import pandas as pd
 from dagster import AssetCheckResult, AssetCheckSeverity, AssetCheckSpec, asset_check
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 
 def make_dagster_checks(

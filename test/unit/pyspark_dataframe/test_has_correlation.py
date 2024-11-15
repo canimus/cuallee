@@ -3,7 +3,7 @@ import pandas as pd
 import pyspark.sql.functions as F
 import pytest
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 
 @pytest.mark.parametrize("type", ["integer", "double"], ids=["int", "float"])

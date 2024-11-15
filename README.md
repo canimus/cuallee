@@ -52,7 +52,7 @@ pip install cuallee
 The most common checks for data integrity validations are `completeness` and `uniqueness` an example of this dimensions shown below:
 
 ```python
-from cuallee import Check, CheckLevel # WARN:0, ERR: 1
+from cuallee.core.check import Check, CheckLevel # WARN:0, ERR: 1
 
 # Nulls on column Id
 check = Check(CheckLevel.WARNING, "Completeness")
@@ -136,7 +136,7 @@ Besides the common `citizen-like` checks, `cuallee` offers out-of-the-box real-l
 
  ```python
 import pyspark.sql.functions as F
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 data = pd.DataFrame({
     "name":["herminio", "herminio", "virginie", "virginie"],

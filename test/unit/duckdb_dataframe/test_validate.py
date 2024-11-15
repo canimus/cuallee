@@ -1,6 +1,6 @@
 import duckdb
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 from cuallee.duckdb_validation import compute
 
 

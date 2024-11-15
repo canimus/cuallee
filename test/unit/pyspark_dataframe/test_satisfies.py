@@ -4,7 +4,7 @@ import pytest
 # from pyspark.sql.utils import AnalysisException
 from pyspark.errors.exceptions.captured import AnalysisException
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 
 def test_positive(spark):

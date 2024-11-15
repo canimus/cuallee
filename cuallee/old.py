@@ -1173,7 +1173,7 @@ class Check:
             You can validate that events for each ticket follow certain sequence by using:
 
             ``` python
-            from cuallee import Check, CheckLevel
+            from cuallee.core.check import Check, CheckLevel
             df = spark.createDataFrame(
                  [
                      ["2024-01-01", "CASE-001", "New"],

@@ -2,7 +2,7 @@ import pyspark.sql.functions as F
 import pytest
 from pyspark.sql import Row
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 
 def test_positive(spark):

@@ -4,7 +4,7 @@ import pytest
 from google.cloud import bigquery
 from pyspark.sql import DataFrame
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 # __ SPARK DATAFRAME TESTS __
 

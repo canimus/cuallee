@@ -4,7 +4,7 @@ from os import truncate
 import pyspark.sql.functions as F
 from pyspark.sql import SparkSession
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 spark = SparkSession.builder.config("spark.driver.memory", "16g").getOrCreate()
 

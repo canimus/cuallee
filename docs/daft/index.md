@@ -22,7 +22,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         ``` py
         import daft
         import numpy as np
-        from cuallee import Check, CheckLevel
+        from cuallee.core.check import Check, CheckLevel
 
         df = daft.from_pydict({"id": np.arange(10)})
         check = Check(CheckLevel.WARNING, "CompletePredicate")
@@ -51,7 +51,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         ``` python
         import daft
         import numpy as np
-        from cuallee import Check, CheckLevel
+        from cuallee.core.check import Check, CheckLevel
 
         df = daft.from_pydict({"id": [1,2,3,None,None]})
         check = Check(CheckLevel.WARNING, "CompletePredicate")
@@ -81,7 +81,7 @@ It validates the _completeness_ attribute of a data set. It confirms that a colu
         ``` python
         import daft
         import numpy as np
-        from cuallee import Check, CheckLevel
+        from cuallee.core.check import Check, CheckLevel
 
         df = daft.from_pydict({"id": [1,2,3,None,None]})
         check = Check(CheckLevel.WARNING, "CompletePredicate")

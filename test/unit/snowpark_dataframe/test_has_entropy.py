@@ -1,6 +1,6 @@
 import pytest
 
-from cuallee import Check, CheckLevel
+from cuallee.core.check import Check, CheckLevel
 
 
 @pytest.mark.parametrize(

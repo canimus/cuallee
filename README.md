@@ -64,6 +64,9 @@ check = Check(CheckLevel.WARNING, "Completeness")
 ).show() # Returns a pyspark.sql.DataFrame
 ```
 
+>[!IMPORTANT]
+> A new version of the `validate` output is currently under construction.
+
 ### Dates
 
 Perhaps one of the most useful features of `cuallee` is its extensive number of checks for `Date` and `Timestamp` values. Including, validation of ranges, set operations like inclusion, or even a verification that confirms `continuity on dates` using the `is_daily` check function.

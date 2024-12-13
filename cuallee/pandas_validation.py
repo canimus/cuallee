@@ -1,4 +1,4 @@
-from typing import Dict, Union, List
+from typing import Callable, Dict, Union, List
 from cuallee import Check, Rule, CheckStatus
 import pandas as pd  # type: ignore
 import operator
@@ -7,6 +7,7 @@ import re
 from toolz import first  # type: ignore
 from numbers import Number
 from cuallee import utils as cuallee_utils
+from cuallee import CustomComputeException
 from itertools import repeat
 
 
@@ -234,6 +235,27 @@ class Compute:
             )
 
         return workflow(dataframe.loc[:, rule.column])
+
+    def is_custom(self, rule: Rule, dataframe: pd.DataFrame) -> Union[bool, int]:
+        """Validates dataframe by applying a custom function and returning the sum of boolean results."""
+        try:
+            assert isinstance(
+                rule.value, Callable
+            ), "Please provide a Callable/Function for validation"
+            result = rule.value(dataframe)
+            if isinstance(result, pd.DataFrame):
+                assert (
+                    len(result.columns) >= 1
+                ), "Custom function should return at least one column"
+                result = result.iloc[:, -1]
+            elif isinstance(result, pd.Series):
+                pass
+            else:
+                result = pd.Series(result)
+
+            return result.astype(bool).astype(int).sum()
+        except Exception as err:
+            raise CustomComputeException(str(err))
 
 
 def compute(rules: Dict[str, Rule]):

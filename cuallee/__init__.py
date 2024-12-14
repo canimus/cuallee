@@ -13,7 +13,7 @@ from toolz import compose, valfilter, first  # type: ignore
 from toolz.curried import map as map_curried
 
 logger = logging.getLogger("cuallee")
-__version__ = "0.15.1"
+__version__ = "0.15.2"
 
 
 class CustomComputeException(Exception):

@@ -67,7 +67,7 @@ pdf = [
   "fpdf2==2.8.1"
 ]
 daft = [
-  "getdaft == 0.3.4"
+  "getdaft == 0.3.15"
 ]
 all = [
   "cuallee[dev,pyspark,pyspark_connect,snowpark,pandas,bigquery,duckdb,polars,test,dagster,cloud,pdf,daft]"

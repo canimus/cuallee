@@ -32,18 +32,8 @@ class GenericEngine(ABC):
         pass
 
     @abstractmethod
-    def is_primary_key(self, rule: Rule):
-        """Abstract method for is_primary_key validation"""
-        pass
-
-    @abstractmethod
     def are_unique(self, rule: Rule):
         """Abstract method for are_unique validation"""
-        pass
-
-    @abstractmethod
-    def is_composite_key(self, rule: Rule):
-        """Abstract method for is_composite_key validation"""
         pass
 
     @abstractmethod

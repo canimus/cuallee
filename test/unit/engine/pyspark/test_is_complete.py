@@ -1,18 +1,23 @@
+import pytest
+
+from cuallee.core.check import Check, CheckLevel
+
 from .. import CualleeTestCase
 
 
 class TestCase(CualleeTestCase):
-    def test_pass(self):
+    def test_pass(self, spark, check):
+        check.is_complete("id")
+        assert check.validate(spark.range(10), ok=True)
+
+    def test_fail(self, check):
         assert True
 
-    def test_fail(self):
+    def test_exception(self, check):
         assert True
 
-    def test_exception(self):
+    def test_parameter(self, check):
         assert True
 
-    def test_parameter(self):
-        assert True
-
-    def test_coverage(self):
+    def test_coverage(self, check):
         assert True

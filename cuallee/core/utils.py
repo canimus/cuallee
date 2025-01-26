@@ -10,7 +10,9 @@ from .rule import Rule, RuleDataType
 
 def get_column_set(columns: Union[str, List[str]]) -> List[str]:
     """Flatten nested column structure into a list of column names"""
-    return [col] if isinstance(columns, str) else [c for col in columns for c in (get_column_set(col) if isinstance(col, list) else [col])]
+    if isinstance(columns, str):
+        return [columns]
+    return [c for col in columns for c in (get_column_set(col) if isinstance(col, list) else [col])]
 
 
 def get_rules(rules: List[Rule], data_type: RuleDataType = None) -> List[Rule]:

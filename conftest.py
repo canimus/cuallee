@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Generator
 
 import duckdb
 import pytest
@@ -77,7 +78,7 @@ def snowpark():
 
 
 @pytest.fixture(scope="function")
-def db() -> duckdb.DuckDBPyConnection:
+def db() -> Generator[duckdb.DuckDBPyConnection, None, None]:
     try:
         conn = duckdb.connect(":memory:")
         conn.execute("CREATE TABLE TEMP AS SELECT UNNEST(RANGE(10)) AS ID")

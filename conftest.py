@@ -28,9 +28,7 @@ def spark():
         logger = logging.getLogger("py4j")
         logger.setLevel(logging.ERROR)
         spark_session = (
-            SparkSession
-            .builder
-            .config("spark.driver.memory", "2g")
+            SparkSession.builder.config("spark.driver.memory", "2g")
             .config("spark.security.manager.allow", "true")
             .getOrCreate()
         )

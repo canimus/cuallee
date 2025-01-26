@@ -12,7 +12,11 @@ def get_column_set(columns: Union[str, List[str]]) -> List[str]:
     """Flatten nested column structure into a list of column names"""
     if isinstance(columns, str):
         return [columns]
-    return [c for col in columns for c in (get_column_set(col) if isinstance(col, list) else [col])]
+    return [
+        c
+        for col in columns
+        for c in (get_column_set(col) if isinstance(col, list) else [col])
+    ]
 
 
 def get_rules(rules: List[Rule], data_type: RuleDataType = None) -> List[Rule]:
@@ -50,15 +54,26 @@ def get_rule_columns(rules: List[Rule]) -> List[str]:
     return get_column_set([r.column for r in rules])
 
 
-def match_columns(on_rule: List[Rule], on_dataframe: List[str], case_sensitive: bool = True) -> Set[str]:
+def match_columns(
+    on_rule: List[Rule], on_dataframe: List[str], case_sensitive: bool = True
+) -> Set[str]:
     """Check if rule columns exist in dataframe"""
     rule_cols = set(get_column_set([r.column for r in on_rule]))
     df_cols = on_dataframe if case_sensitive else map(str.casefold, on_dataframe)
-    return (rule_cols if case_sensitive else set(map(str.casefold, rule_cols))).difference(df_cols)
+    return (
+        rule_cols if case_sensitive else set(map(str.casefold, rule_cols))
+    ).difference(df_cols)
 
 
 def inventory() -> None:
     """List all available checks in cuallee"""
     methods = dict(inspect.getmembers(Check, predicate=inspect.isfunction))
-    rich_print(keyfilter(lambda x: "core.check" not in x, 
-               groupby(lambda x: x[0], valmap(lambda x: (x.__module__, x.__name__), methods).values())))
+    rich_print(
+        keyfilter(
+            lambda x: "core.check" not in x,
+            groupby(
+                lambda x: x[0],
+                valmap(lambda x: (x.__module__, x.__name__), methods).values(),
+            ),
+        )
+    )

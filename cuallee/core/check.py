@@ -28,14 +28,7 @@ class CheckStatus(enum.Enum):
     NO_RUN = "NO_RUN"
 
 
-ENGINES = [
-    "pyspark",
-    "pandas",
-    "snowpark",
-    "polars",
-    "duckdb",
-    "bigquery",
-    "daft"]
+ENGINES = ["pyspark", "pandas", "snowpark", "polars", "duckdb", "bigquery", "daft"]
 
 
 class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
@@ -134,8 +127,12 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
 
         self.compute_engine = importlib.import_module(f"cuallee.engine.{engine_key}")
 
-        assert self.compute_engine.validate_data_types(self.rules, dataframe), \
-            "Invalid data types between rules and dataframe"
+        assert self.compute_engine.validate_data_types(
+            self.rules, dataframe
+        ), "Invalid data types between rules and dataframe"
 
-        return self.compute_engine.ok(self, dataframe) if ok \
+        return (
+            self.compute_engine.ok(self, dataframe)
+            if ok
             else self.compute_engine.summary(self, dataframe)
+        )

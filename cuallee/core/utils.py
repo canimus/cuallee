@@ -14,8 +14,8 @@ def get_column_set(columns: Union[str, List[str]]) -> List[str]:
 
 
 def get_rules(rules: List[Rule], data_type: RuleDataType = None) -> List[Rule]:
-    """Get rules optionally filtered by data type"""
-    return rules if data_type is None else [rule for rule in rules if rule.data_type == data_type]
+    """Filter rules by data type. Returns all rules if data_type is None."""
+    return [rule for rule in rules if data_type is None or rule.data_type == data_type]
 
 
 def get_rules_by_type(rules: List[Rule], rule_type: RuleDataType) -> List[Rule]:
@@ -49,16 +49,14 @@ def get_rule_columns(rules: List[Rule]) -> List[str]:
 
 
 def match_columns(on_rule: List[Rule], on_dataframe: List[str], case_sensitive: bool = True) -> Set[str]:
-    """Check if rule columns exist in dataframe, with optional case sensitivity"""
+    """Check if rule columns exist in dataframe"""
     rule_cols = set(get_column_set([r.column for r in on_rule]))
-    if not case_sensitive:
-        return set(map(str.casefold, rule_cols)).difference(map(str.casefold, on_dataframe))
-    return rule_cols.difference(on_dataframe)
+    df_cols = on_dataframe if case_sensitive else map(str.casefold, on_dataframe)
+    return (rule_cols if case_sensitive else set(map(str.casefold, rule_cols))).difference(df_cols)
 
 
-def inventory():
+def inventory() -> None:
     """List all available checks in cuallee"""
     methods = dict(inspect.getmembers(Check, predicate=inspect.isfunction))
-    method_info = valmap(lambda x: (x.__module__, x.__name__), methods)
-    grouped = groupby(lambda x: x[0], method_info.values())
-    rich_print(keyfilter(lambda x: "core.check" not in x, grouped))
+    rich_print(keyfilter(lambda x: "core.check" not in x, 
+               groupby(lambda x: x[0], valmap(lambda x: (x.__module__, x.__name__), methods).values())))

@@ -3,7 +3,6 @@ import importlib
 import operator
 import re
 from datetime import datetime, timezone
-from types import ModuleType
 from typing import Any, Dict, Union
 
 from toolz import first, valfilter
@@ -17,10 +16,8 @@ from ..family.string import StringCheck
 class CheckLevel(enum.Enum):
     """Level of verifications in cuallee"""
 
-    WARNING = 0
-    WARN = 0
-    ERROR = 1
-    ERR = 1
+    WARNING = WARN = 0
+    ERROR = ERR = 1
 
 
 class CheckStatus(enum.Enum):
@@ -29,6 +26,16 @@ class CheckStatus(enum.Enum):
     PASS = "PASS"
     FAIL = "FAIL"
     NO_RUN = "NO_RUN"
+
+
+ENGINES = [
+    "pyspark",
+    "pandas",
+    "snowpark",
+    "polars",
+    "duckdb",
+    "bigquery",
+    "daft"]
 
 
 class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
@@ -53,14 +60,9 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
             session (Session): When operating in Session enabled environments like Databricks or Snowflake
 
         """
-        self._rule: Dict = {}
-        self.compute_engine: ModuleType
-
-        if isinstance(level, int):
-            # When the user is lazy and wants to do WARN=0, or ERR=1
-            level = CheckLevel(level)
-
-        self.level = level
+        self._rule = {}
+        self.compute_engine = None
+        self.level = CheckLevel(level) if isinstance(level, int) else level
         self.name = name
         self.date = execution_date
         self.rows = -1
@@ -72,7 +74,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
     @property
     def sum(self):
         """Total number of rules in Check"""
-        return len(self._rule.keys())
+        return len(self._rule)
 
     @property
     def rules(self):
@@ -90,8 +92,8 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
         return len(self.rules) == 0
 
     def __repr__(self):
-        _attrs = valfilter(
-            lambda x: x is not None,
+        attrs = valfilter(
+            None.__ne__,
             {
                 "level": self.level.name,
                 "name": self.name,
@@ -100,8 +102,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
                 "config": self.config,
             },
         )
-
-        return f"Check{_attrs}"
+        return f"Check{attrs}"
 
     def add_rule(self, method: str, *args, **kwargs):
         """
@@ -126,44 +127,15 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
         assert not self.empty, "Check is empty. Try adding some rules?"
 
         self.dtype = first(re.match(r".*'(.*)'", str(type(dataframe))).groups())
-        match self.dtype:
-            case self.dtype if "pyspark" in self.dtype:
-                self.compute_engine = importlib.import_module(
-                    "cuallee.core.engines.pyspark_qa"
-                )
-            case self.dtype if "pandas" in self.dtype:
-                self.compute_engine = importlib.import_module(
-                    "cuallee.core.engines.pandas_qa"
-                )
-            case self.dtype if "snowpark" in self.dtype:
-                self.compute_engine = importlib.import_module(
-                    "cuallee.snowpark_validation"
-                )
-            case self.dtype if "polars" in self.dtype:
-                self.compute_engine = importlib.import_module(
-                    "cuallee.polars_validation"
-                )
-            case self.dtype if "duckdb" in self.dtype:
-                self.compute_engine = importlib.import_module(
-                    "cuallee.duckdb_validation"
-                )
-            case self.dtype if "bigquery" in self.dtype:
-                self.compute_engine = importlib.import_module(
-                    "cuallee.bigquery_validation"
-                )
-            case self.dtype if "daft" in self.dtype:
-                self.compute_engine = importlib.import_module("cuallee.daft_validation")
-            case _:
-                raise NotImplementedError(
-                    f"{self.dtype} is not yet implemented in cuallee"
-                )
+        engine_key = next((k for k in ENGINES if k in self.dtype), None)
 
-        assert self.compute_engine.validate_data_types(
-            self.rules, dataframe
-        ), "Invalid data types between rules and dataframe"
+        if not engine_key:
+            raise NotImplementedError(f"{self.dtype} is not yet implemented in cuallee")
 
-        if ok:
-            result = self.compute_engine.ok(self, dataframe)
-        else:
-            result = self.compute_engine.summary(self, dataframe)
-        return result
+        self.compute_engine = importlib.import_module(f"cuallee.engine.{engine_key}")
+
+        assert self.compute_engine.validate_data_types(self.rules, dataframe), \
+            "Invalid data types between rules and dataframe"
+
+        return self.compute_engine.ok(self, dataframe) if ok \
+            else self.compute_engine.summary(self, dataframe)

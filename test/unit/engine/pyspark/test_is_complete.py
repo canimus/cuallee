@@ -7,6 +7,10 @@ from .. import CualleeTestCase
 
 class TestCase(CualleeTestCase):
     def test_pass(self, spark, check):
+        data = self.get_data()
+        with open("test.data", "w") as writer:
+            writer.write(data)
+
         check.is_complete("id")
         assert check.validate(spark.range(10), ok=True)
 

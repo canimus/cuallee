@@ -1,3 +1,4 @@
+import inspect
 from abc import ABC, abstractmethod
 
 
@@ -28,3 +29,9 @@ class CualleeTestCase(ABC):
     def test_coverage(self):
         """Test case for coverage calculation"""
         pass
+
+    def get_data(self):
+        """Get data for test using the caller's file location"""
+        caller_frame = inspect.currentframe().f_back
+        caller_file = caller_frame.f_globals["__file__"]
+        return caller_file

@@ -27,11 +27,7 @@ class ComputeInstruction:
 
 def has_observe(spark) -> bool:
     major, minor, _ = map(int, spark.version.split("."))
-    with_observe = False
-    if not all(map(lambda x: x > 3, [major, minor])) or ("connect" in str(type(spark))):
-        with_observe = True
-
-    return with_observe
+    return (major, minor) >= (3, 3) and ("connect" not in str(type(spark)))
 
 
 def make_backwards_compatible(computed_expressions: dict) -> dict:

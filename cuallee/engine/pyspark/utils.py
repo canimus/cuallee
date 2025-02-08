@@ -107,8 +107,8 @@ def compute_transformations(
     }
 
 
-def find_spark(config: Dict) -> Union[SparkSession, Any]:
-    """Determine if Spark or Spark Connect should be used."""
+def find_spark_connect():
+    """Uses SPARK_REMOTE environment variable to connect to a spark connect instance"""
 
     # Try using Spark Connect if SPARK_REMOTE is set
     if "SPARK_REMOTE" in os.environ:
@@ -119,6 +119,11 @@ def find_spark(config: Dict) -> Union[SparkSession, Any]:
             ).getOrCreate()
         except (ModuleNotFoundError, ImportError, AttributeError):
             pass  # Fallback to regular SparkSession
+
+
+def find_spark(config: Dict) -> Union[SparkSession, Any]:
+    """Determine if Spark or Spark Connect should be used."""
+    find_spark_connect()
 
     # Check if there's an existing Spark session in global scope
     spark_in_session = valfilter(lambda x: isinstance(x, SparkSession), globals())

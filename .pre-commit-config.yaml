@@ -1,4 +1,25 @@
 repos:
+- repo: local
+  hooks:
+  - id: radon-cc
+    name: radon cyclomatic complexity
+    entry: bash -c "radon cc --min B cuallee/engine/pyspark | wc -l | grep -qi '^0$'"
+    language: system
+    pass_filenames: false
+- repo: local
+  hooks:
+  - id: radon-mi
+    name: radon maintenance index
+    entry: bash -c "radon mi --min B cuallee | wc -l | grep -qi '^0$'"
+    language: system
+    pass_filenames: false
+- repo: local
+  hooks:
+  - id: radon-hal-diff
+    name: radon difficulty
+    entry: bash -c "radon hal cuallee | grep difficulty | cut -d':' -f2 | tr -d ' ' | sort -n | xargs -I {} echo '{} > 11' | bc | sort -n | tail -1 | grep -qi '^0$'"
+    language: system
+    pass_filenames: false
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
   hooks:

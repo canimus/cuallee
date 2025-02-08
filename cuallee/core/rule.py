@@ -15,7 +15,8 @@ class RuleDataType(enum.Enum):
     STRING = 2
     DATE = 3
     TIMESTAMP = 4
-    DUO = 5
+    ARRAY = 5
+    MAP = 6
 
 
 @dataclass

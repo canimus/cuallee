@@ -5,7 +5,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Tuple, Union
 
-from pyspark.sql import Column, DataFrame
+from pyspark.sql import Column, DataFrame, SparkSession
 from toolz import first, valfilter, valmap
 
 
@@ -107,33 +107,27 @@ def compute_transformations(
     }
 
 
-def find_spark(config: Dict):
-    """Determine if is spark or spark_connect"""
-    from pyspark.sql import SparkSession
+def find_spark(config: Dict) -> Union[SparkSession, Any]:
+    """Determine if Spark or Spark Connect should be used."""
 
-    # Search for client using spark_connect
+    # Try using Spark Connect if SPARK_REMOTE is set
     if "SPARK_REMOTE" in os.environ:
         try:
             spark_connect = importlib.import_module("pyspark.sql.connect.session")
-            spark = (
-                getattr(spark_connect, "SparkSession")
-                .builder.remote(os.getenv("SPARK_REMOTE"))
-                .getOrCreate()
-            )
+            return spark_connect.SparkSession.builder.remote(
+                os.getenv("SPARK_REMOTE")
+            ).getOrCreate()
         except (ModuleNotFoundError, ImportError, AttributeError):
-            pass
+            pass  # Fallback to regular SparkSession
 
-    elif spark_in_session := valfilter(
-        lambda x: isinstance(x, SparkSession), globals()
-    ):
-        # Obtain the first spark session available in the globals
-        spark = first(spark_in_session.values())
-    else:
-        builder = SparkSession.builder
-        # Retrieve config settings from check
-        if config and isinstance(config, dict) and len(config.keys()):
-            for k, v in config.items():
-                builder.config(k, v)
-        spark = builder.getOrCreate()
+    # Check if there's an existing Spark session in global scope
+    spark_in_session = valfilter(lambda x: isinstance(x, SparkSession), globals())
+    if spark_in_session:
+        return first(spark_in_session.values())
 
-    return spark
+    # Create a new Spark session with optional config
+    builder = SparkSession.builder
+    for k, v in (config or {}).items():
+        builder.config(k, v)
+
+    return builder.getOrCreate()

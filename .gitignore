@@ -33,5 +33,6 @@ app/
 creds.json
 **/.secrets
 paper/jats/
+coverage.xml
 
 cuallee/engine/pyspark2.py

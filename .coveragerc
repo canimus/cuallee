@@ -1,3 +1,2 @@
 [run]
-source=./cuallee
-omit = cuallee/bigquery_validation.py
+source = cuallee

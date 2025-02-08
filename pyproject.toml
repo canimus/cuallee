@@ -79,7 +79,7 @@ all = [
 ignore = ["E731"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=cuallee --import-mode=importlib"
+addopts = "--cov=cuallee --cov=cuallee/core --cov=cuallee/engine --cov=cuallee/family --import-mode=importlib --cov-report=xml"
 testpaths = ["test"]
 python_files = ["test_*.py"]
 filterwarnings = [

@@ -81,7 +81,7 @@ class TestCheck:
         mock_dataframe.__class__.__module__ = f"some_module.{engine}"
 
         mock_engine = Mock()
-        mock_engine.validate_data_types.return_value = True
+        mock_engine.dtypes.return_value = True
         mock_engine.summary.return_value = "summary_result"
         mock_engine.ok.return_value = "ok_result"
 
@@ -120,7 +120,7 @@ class TestCheck:
         mock_dataframe.__class__.__module__ = "pandas"
 
         mock_engine = Mock()
-        mock_engine.validate_data_types.return_value = False
+        mock_engine.dtypes.return_value = False
 
         check._rule = {"key": "rule"}  # Add mock rule
 

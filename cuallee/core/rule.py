@@ -2,9 +2,9 @@ import enum
 import hashlib
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from toolz import valfilter
+from toolz import valfilter  # type: ignore
 
 
 class RuleDataType(enum.Enum):
@@ -33,7 +33,7 @@ class Rule:
     violations: int = 0
     pass_rate: float = 0.0
     ordinal: int = 0
-    name: str = None
+    name: Union[str, None] = None
 
     @property
     def settings(self) -> dict:
@@ -154,3 +154,11 @@ class Rule:
         self.evaluate_violations(result, rows)
         self.evaluate_pass_rate(rows)
         self.evaluate_status()
+
+    def format_value(self):
+        """Removes verbosity for Callable values"""
+        if isinstance(self.value, Callable):
+            if self.options and isinstance(self.options, dict):
+                return self.options.get("custom_value", "f(x)")
+        else:
+            return str(self.value)

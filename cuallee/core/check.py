@@ -114,6 +114,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
 
         Args:
             dataframe (Union[pyspark,snowpark,pandas,polars,duckdb,bigquery]): A dataframe object
+            ok (bool): A boolean flag to return a boolean instead of a dataframe with the outcome of the check
         """
 
         # Stop execution if the there is no rules in the check
@@ -127,7 +128,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
 
         self.compute_engine = importlib.import_module(f"cuallee.engine.{engine_key}")
 
-        assert self.compute_engine.validate_data_types(
+        assert self.compute_engine.dtypes(
             self.rules, dataframe
         ), "Invalid data types between rules and dataframe"
 

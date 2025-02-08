@@ -10,7 +10,7 @@ class GenericCheck(ABC):
     @abstractmethod
     def __init__(self) -> None:
         """Restrict use of GenericCheck as it misses rule container"""
-        pass
+        self._rule = set()
 
     def is_complete(self, column: str, pct: float = 1.0):
         """

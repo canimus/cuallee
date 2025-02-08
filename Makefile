@@ -42,6 +42,9 @@ type: # Verify static types
 unit: # Run unit test
 	@pytest test/unit
 
+commit: # Run pre-commit
+	@pre-commit run --all-files
+
 twine: # Upload to python index
 	@twine upload dist/*
 

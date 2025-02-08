@@ -61,3 +61,33 @@ def are_unique(rule: Rule):
         F.count_distinct(*[F.col(c) for c in rule.column]),
         ComputeMethod.SELECT,
     )
+
+
+def is_between(rule: Rule):
+    """Validation of a column between a range"""
+    predicate = F.col(f"`{rule.column}`").between(*rule.value).cast("integer")
+    return ComputeInstruction(
+        predicate,
+        F.sum(predicate),
+        ComputeMethod.OBSERVE,
+    )
+
+
+def is_contained_in(rule: Rule):
+    """Validation of column value in set of given values"""
+    predicate = F.col(f"`{rule.column}`").isin(list(rule.value)).cast("integer")
+    return ComputeInstruction(
+        predicate,
+        F.sum(predicate),
+        ComputeMethod.OBSERVE,
+    )
+
+
+def not_contained_in(rule: Rule):
+    """Validation of column value not in set of given values"""
+    predicate = ~F.col(f"`{rule.column}`").isin(list(rule.value))
+    return ComputeInstruction(
+        predicate,
+        F.sum(predicate.cast("long")),
+        ComputeMethod.OBSERVE,
+    )

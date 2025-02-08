@@ -14,6 +14,8 @@ clean: # Remove workspace files
 	@rm -rf .mypy_cache
 	@rm -rf .coverage
 	@rm -rf .DS_Store
+	@rm -rf test.data
+	@rm -rf coverage.xml
 
 	@rm -rf spark-warehouse
 	@python -c "print('Cleaning: 👌')"

@@ -21,8 +21,8 @@ clean: # Remove workspace files
 	@python -c "print('Cleaning: 👌')"
 
 cov: # Run test and coverage
-	coverage run -m pytest test/unit
-	coverage xml -o coverage.xml
+	@pytest test/unit
+	@coverage report
 
 flake: # Lint code
 	@flake8 --ignore=E501,W503,E731,E722 --max-cognitive-complexity=30 cuallee

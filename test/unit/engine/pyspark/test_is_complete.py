@@ -3,7 +3,8 @@ from .base import PysparkTestCase
 
 class TestCase(PysparkTestCase):
     def test_pass(self, spark, check):
-        assert True
+        check.is_complete("id")
+        assert check.validate(spark.range(10), ok=True)
 
     def test_fail(self, check):
         assert True

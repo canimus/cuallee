@@ -12,6 +12,7 @@ clean: # Remove workspace files
 	@rm -rf build/
 	@rm -rf __blobstorage__
 	@rm -rf .mypy_cache
+	@rm -rf .ruff_cache
 	@rm -rf .coverage
 	@rm -rf .DS_Store
 	@rm -rf test.data

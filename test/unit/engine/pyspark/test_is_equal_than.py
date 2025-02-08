@@ -1,7 +1,7 @@
-from .. import CualleeTestCase
+from .base import PysparkTestCase
 
 
-class TestCase(CualleeTestCase):
+class TestCase(PysparkTestCase):
     def test_pass(self):
         assert True
 

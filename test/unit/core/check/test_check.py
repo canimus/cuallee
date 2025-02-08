@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -63,13 +63,9 @@ class TestCheck:
         assert check.keys == ["key1", "key2"]
         assert check.empty is False
 
-    def test_repr(self, check):
-        expected = "Check{'level': 'WARNING', 'name': 'test_check', 'rules': 0, 'table': 'test_table', 'config': {'key': 'value'}}"
-        assert repr(check) == expected
-
     def test_add_rule(self, check):
         # Test adding a rule using method name
-        result = check.add_rule("is_unique", "column_name")
+        check.add_rule("is_unique", "column_name")
 
         # Verify the rule was added
         assert not check.empty

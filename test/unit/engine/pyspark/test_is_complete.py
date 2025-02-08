@@ -1,11 +1,7 @@
-import pytest
-
-from cuallee.core.check import Check, CheckLevel
-
-from .. import CualleeTestCase
+from .base import PysparkTestCase
 
 
-class TestCase(CualleeTestCase):
+class TestCase(PysparkTestCase):
     def test_pass(self, spark, check):
         data = self.get_data()
         with open("test.data", "w") as writer:

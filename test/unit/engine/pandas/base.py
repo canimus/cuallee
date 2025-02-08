@@ -1,9 +1,20 @@
 import inspect
+import logging
 from abc import ABC, abstractmethod
 
+import pytest
 
-class CualleeTestCase(ABC):
+from cuallee.core.check import Check, CheckLevel
+
+logger = logging.getLogger(__name__)
+
+
+class PandasTestCase(ABC):
     """Base class defining required test methods for validation rules"""
+
+    @pytest.fixture(scope="function")
+    def check(self):
+        return Check(CheckLevel.WARNING, "PandasCheck")
 
     @abstractmethod
     def test_pass(self):

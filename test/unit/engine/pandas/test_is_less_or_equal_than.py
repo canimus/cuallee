@@ -1,7 +1,7 @@
-from .. import CualleeTestCase
+from .base import PandasTestCase
 
 
-class TestCase(CualleeTestCase):
+class TestCase(PandasTestCase):
     def test_pass(self):
         assert True
 

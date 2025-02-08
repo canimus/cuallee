@@ -80,11 +80,12 @@ ignore = ["E731"]
 
 [tool.pytest.ini_options]
 addopts = "--cov=cuallee --import-mode=importlib"
-testpaths = ["tests"]
+testpaths = ["test"]
 python_files = ["test_*.py"]
 filterwarnings = [
-    "ignore:NotImplemented should not be used in a boolean context:DeprecationWarning:toolz.*:",
-    "ignore::DeprecationWarning:toolz.dicttoolz:",
+    "error",
+    "ignore::UserWarning",
+    'ignore:function ham\(\) is deprecated:DeprecationWarning',
 ]
 
 [project.urls]

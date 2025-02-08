@@ -6,17 +6,6 @@ import pytest
 from cuallee.core.check import ENGINES, Check, CheckLevel, CheckStatus
 
 
-def test_check_level_values():
-    assert CheckLevel.WARNING.value == CheckLevel.WARN.value == 0
-    assert CheckLevel.ERROR.value == CheckLevel.ERR.value == 1
-
-
-def test_check_status_values():
-    assert CheckStatus.PASS.value == "PASS"
-    assert CheckStatus.FAIL.value == "FAIL"
-    assert CheckStatus.NO_RUN.value == "NO_RUN"
-
-
 class TestCheck:
     @pytest.fixture
     def check(self):
@@ -26,6 +15,15 @@ class TestCheck:
             table_name="test_table",
             config={"key": "value"},
         )
+
+    def test_check_level_values(self):
+        assert CheckLevel.WARNING.value == CheckLevel.WARN.value == 0
+        assert CheckLevel.ERROR.value == CheckLevel.ERR.value == 1
+
+    def test_check_status_values(self):
+        assert CheckStatus.PASS.value == "PASS"
+        assert CheckStatus.FAIL.value == "FAIL"
+        assert CheckStatus.NO_RUN.value == "NO_RUN"
 
     def test_init_with_int_level(self):
         check = Check(level=0)

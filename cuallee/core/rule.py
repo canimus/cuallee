@@ -17,6 +17,7 @@ class RuleDataType(enum.Enum):
     TIMESTAMP = 4
     ARRAY = 5
     MAP = 6
+    DUO = 7
 
 
 @dataclass
@@ -26,7 +27,7 @@ class Rule:
     method: str
     column: Union[str, List[str], Tuple[str, str]]
     value: Optional[Any]
-    data_type: RuleDataType
+    data_type: Union[RuleDataType, List[RuleDataType]]
     coverage: float = 1.0
     options: Union[List[Tuple], Iterable[tuple[Any, Any]], None] = None
     status: Union[str, None] = None

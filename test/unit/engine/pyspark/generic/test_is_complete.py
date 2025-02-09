@@ -3,11 +3,12 @@ from ..base import PysparkTestCase
 
 class TestCase(PysparkTestCase):
     def test_pass(self, spark, check):
-        check.is_complete("id")
-        assert check.validate(spark.range(10), ok=True)
+        check.is_complete("id_1")
+        assert check.validate(self.get_data(spark), ok=True)
 
-    def test_fail(self, check):
-        assert True
+    def test_fail(self, spark, check):
+        check.is_complete("id_3")
+        assert not check.validate(self.get_data(spark), ok=True)
 
     def test_exception(self, check):
         assert True

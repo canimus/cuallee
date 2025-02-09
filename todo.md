@@ -739,7 +739,7 @@
 `is_above` +test @polars #numeric
 `is_above` +test @pyspark #numeric
 `is_above` +test @snowpark #numeric
-`is_after_than` +family #numeric
+`is_after_than` +family #numeric {cm:2025-02-09}
 `is_after_than` +engine @bigquery #numeric
 `is_after_than` +engine @duckdb #numeric
 `is_after_than` +engine @pandas #numeric
@@ -752,7 +752,7 @@
 `is_after_than` +test @polars #numeric
 `is_after_than` +test @pyspark #numeric
 `is_after_than` +test @snowpark #numeric
-`is_before_than` +family #numeric
+`is_before_than` +family #numeric {cm:2025-02-09}
 `is_before_than` +engine @bigquery #numeric
 `is_before_than` +engine @duckdb #numeric
 `is_before_than` +engine @pandas #numeric
@@ -765,7 +765,7 @@
 `is_before_than` +test @polars #numeric
 `is_before_than` +test @pyspark #numeric
 `is_before_than` +test @snowpark #numeric
-`is_on_date` +family #numeric
+`is_on_date` +family #numeric {cm:2025-02-09}
 `is_on_date` +engine @bigquery #numeric
 `is_on_date` +engine @duckdb #numeric
 `is_on_date` +engine @pandas #numeric
@@ -778,7 +778,7 @@
 `is_on_date` +test @polars #numeric
 `is_on_date` +test @pyspark #numeric
 `is_on_date` +test @snowpark #numeric
-`is_before_or_equal_than` +family #numeric
+`is_before_or_equal_than` +family #numeric {cm:2025-02-09}
 `is_before_or_equal_than` +engine @bigquery #numeric
 `is_before_or_equal_than` +engine @duckdb #numeric
 `is_before_or_equal_than` +engine @pandas #numeric
@@ -791,7 +791,7 @@
 `is_before_or_equal_than` +test @polars #numeric
 `is_before_or_equal_than` +test @pyspark #numeric
 `is_before_or_equal_than` +test @snowpark #numeric
-`is_after_or_equal_than` +family #numeric
+`is_after_or_equal_than` +family #numeric {cm:2025-02-09}
 `is_after_or_equal_than` +engine @bigquery #numeric
 `is_after_or_equal_than` +engine @duckdb #numeric
 `is_after_or_equal_than` +engine @pandas #numeric

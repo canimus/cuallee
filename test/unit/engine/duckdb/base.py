@@ -14,7 +14,7 @@ class DuckDbTestCase(ABC):
             conn = duckdb.connect(":memory:")
             conn.execute(
                 """
-                CREATE TABLE TEMP AS (
+                CREATE OR REPLACE TABLE TEMP AS (
                     SELECT * FROM range(10) t(ID),
                     LATERAL (SELECT ID + 1) t2(ID2),
                     LATERAL (SELECT CASE WHEN ID < 5 THEN ID ELSE NULL END) t3(ID3),
@@ -22,6 +22,17 @@ class DuckDbTestCase(ABC):
                 )
             """
             )
+
+            conn.execute(
+                """
+                CREATE OR REPLACE TABLE DUPS AS (
+                    select * FROM TEMP
+                    UNION ALL
+                    select * FROM TEMP
+                )
+            """
+            )
+
             yield conn
         except Exception:
             pass

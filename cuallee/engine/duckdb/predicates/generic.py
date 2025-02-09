@@ -12,14 +12,11 @@ def is_empty(rule: Rule) -> str:
 
 
 def are_complete(rule: Rule) -> str:
-    """Verify the abscence of null values on groups of columns"""
-    return (
-        "SUM( "
-        + " + ".join(
-            [f"(CAST({column} IS NOT NULL AS INTEGER))" for column in rule.column]
-        )
-        + f") / {float(len(rule.column))}"
+    """Verify the absence of null values on groups of columns"""
+    columns = " + ".join(
+        [f"(CAST({column} IS NOT NULL AS INTEGER))" for column in rule.column]
     )
+    return f"SUM({columns}) / {float(len(rule.column))}"
 
 
 def is_unique(rule: Rule) -> str:
@@ -28,8 +25,5 @@ def is_unique(rule: Rule) -> str:
 
 
 def are_unique(rule: Rule) -> str:
-    return (
-        "( "
-        + " + ".join([f"approx_count_distinct({column})" for column in rule.column])
-        + f") / cast({float(len(rule.column))} AS FLOAT)"
-    )
+    """Confirms the abscense of duplicates in a combination of columns"""
+    return f"(COUNT(DISTINCT({','.join(rule.column)})) == count(*))"

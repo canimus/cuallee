@@ -16,11 +16,11 @@
 `is_equal_than` +family #numeric {cm:2025-02-09}
 `has_pattern` +family #string {cm:2025-02-09}
 `is_legit` +family #string {cm:2025-02-09}
-`has_min` +family #stats
-`has_max` +family #stats
-`has_std` +family #stats
-`has_mean` +family #stats
-`has_sum` +family #stats
+`has_min` +family #stats {cm:2025-02-09}
+`has_max` +family #stats {cm:2025-02-09}
+`has_std` +family #stats {cm:2025-02-09}
+`has_mean` +family #stats {cm:2025-02-09}
+`has_sum` +family #stats {cm:2025-02-09}
 `is_between` +family #generic {cm:2025-02-09}
 `not_contained_in` +family #generic {cm:2025-02-09}
 `not_in` +family #generic {cm:2025-02-09}
@@ -32,8 +32,8 @@
 `is_t_minus_3` +family #datetime
 `is_yesterday` +family #datetime
 `is_today` +family #datetime
-`has_percentile` +family #stats
-`is_inside_interquartile_range` +family #stats
+`has_percentile` +family #stats {cm:2025-02-09}
+`is_inside_interquartile_range` +family #stats {cm:2025-02-09}
 `has_correlation` +family #stats
 `satisfies` +family #generic {cm:2025-02-09}
 `has_cardinality` +family #generic

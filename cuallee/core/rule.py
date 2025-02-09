@@ -26,7 +26,7 @@ class Rule:
     method: str
     column: Union[str, List[str], Tuple[str, str]]
     value: Optional[Any]
-    data_type: RuleDataType
+    data_type: Union[RuleDataType, List[RuleDataType]]
     coverage: float = 1.0
     options: Union[List[Tuple], None] = None
     status: Union[str, None] = None

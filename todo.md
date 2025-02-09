@@ -1,57 +1,57 @@
-`is_complete` +family #generic
-`is_empty` +family #generic
-`are_complete` +family #generic
-`is_unique` +family #generic
-`is_primary_key` +family #generic
-`are_unique` +family #generic
-`is_composite_key` +family #generic
-`is_greater_than` +family #numeric
-`is_positive` +family #numeric
-`is_greater_or_equal_than` +family #numeric
-`is_in_millions` +family #numeric
-`is_in_billions` +family #numeric
-`is_less_than` +family #numeric
-`is_negative` +family #numeric
-`is_less_or_equal_than` +family #numeric
-`is_equal_than` +family #numeric
-`has_pattern` +family #string
-`is_legit` +family #string
-`has_min` +family #stats
-`has_max` +family #stats
-`has_std` +family #stats
-`has_mean` +family #stats
-`has_sum` +family #stats
-`is_between` +family #generic
-`not_contained_in` +family #generic
-`not_in` +family #generic
-`is_contained_in` +family #generic
-`is_in` +family #generic
-`is_t_minus_n` +family #datetime
-`is_t_minus_1` +family #datetime
-`is_t_minus_2` +family #datetime
-`is_t_minus_3` +family #datetime
-`is_yesterday` +family #datetime
-`is_today` +family #datetime
-`has_percentile` +family #stats
-`is_inside_interquartile_range` +family #stats
-`has_correlation` +family #stats
-`satisfies` +family #generic
-`has_cardinality` +family #generic
-`has_infogain` +family #generic
-`has_entropy` +family #stats
-`is_on_weekday` +family #datetime
-`is_on_weekend` +family #datetime
-`is_on_monday` +family #datetime
-`is_on_tuesday` +family #datetime
-`is_on_wednesday` +family #datetime
-`is_on_thursday` +family #datetime
-`is_on_friday` +family #datetime
-`is_on_saturday` +family #datetime
-`is_on_sunday` +family #datetime
-`is_on_schedule` +family #datetime
-`is_daily` +family #datetime
-`has_workflow` +family #business
-`is_custom` +family #generic
+`is_complete` +family #generic {cm:2025-02-09}
+`is_empty` +family #generic {cm:2025-02-09}
+`are_complete` +family #generic {cm:2025-02-09}
+`is_unique` +family #generic {cm:2025-02-09}
+`is_primary_key` +family #generic {cm:2025-02-09}
+`are_unique` +family #generic {cm:2025-02-09}
+`is_composite_key` +family #generic {cm:2025-02-09}
+`is_greater_than` +family #numeric {cm:2025-02-09}
+`is_positive` +family #numeric {cm:2025-02-09}
+`is_greater_or_equal_than` +family #numeric {cm:2025-02-09}
+`is_in_millions` +family #numeric {cm:2025-02-09}
+`is_in_billions` +family #numeric {cm:2025-02-09}
+`is_less_than` +family #numeric {cm:2025-02-09}
+`is_negative` +family #numeric {cm:2025-02-09}
+`is_less_or_equal_than` +family #numeric {cm:2025-02-09}
+`is_equal_than` +family #numeric {cm:2025-02-09}
+`has_pattern` +family #string {cm:2025-02-09}
+`is_legit` +family #string {cm:2025-02-09}
+`has_min` +family #stats {cm:2025-02-09}
+`has_max` +family #stats {cm:2025-02-09}
+`has_std` +family #stats {cm:2025-02-09}
+`has_mean` +family #stats {cm:2025-02-09}
+`has_sum` +family #stats {cm:2025-02-09}
+`is_between` +family #generic {cm:2025-02-09}
+`not_contained_in` +family #generic {cm:2025-02-09}
+`not_in` +family #generic {cm:2025-02-09}
+`is_contained_in` +family #generic {cm:2025-02-09}
+`is_in` +family #generic {cm:2025-02-09}
+`is_t_minus_n` +family #datetime {cm:2025-02-09}
+`is_t_minus_1` +family #datetime {cm:2025-02-09}
+`is_t_minus_2` +family #datetime {cm:2025-02-09}
+`is_t_minus_3` +family #datetime {cm:2025-02-09}
+`is_yesterday` +family #datetime {cm:2025-02-09}
+`is_today` +family #datetime {cm:2025-02-09}
+`has_percentile` +family #stats {cm:2025-02-09}
+`is_inside_interquartile_range` +family #stats {cm:2025-02-09}
+`has_correlation` +family #ml {cm#ml-02-09} {cm:2025-02-09}
+`satisfies` +family #generic {cm:2025-02-09}
+`has_cardinality` +family #ml {cm:2025-02-09}
+`has_infogain` +family #ml {cm:2025-02-09}
+`has_entropy` +family #ml {cm:2025-02-09}
+`is_on_weekday` +family #datetime {cm:2025-02-09}
+`is_on_weekend` +family #datetime {cm:2025-02-09}
+`is_on_monday` +family #datetime {cm:2025-02-09}
+`is_on_tuesday` +family #datetime {cm:2025-02-09}
+`is_on_wednesday` +family #datetime {cm:2025-02-09}
+`is_on_thursday` +family #datetime {cm:2025-02-09}
+`is_on_friday` +family #datetime {cm:2025-02-09}
+`is_on_saturday` +family #datetime {cm:2025-02-09}
+`is_on_sunday` +family #datetime {cm:2025-02-09}
+`is_on_schedule` +family #datetime {cm:2025-02-09}
+`is_daily` +family #datetime {cm:2025-02-09}
+`has_workflow` +family #complex {cm:2025-02-09}
+`is_custom` +family #complex {cm:2025-02-09}
 `is_complete` +engine @pyspark #generic
 `is_empty` +engine @pyspark #generic
 `are_complete` +engine @pyspark #generic
@@ -88,11 +88,11 @@
 `is_today` +engine @pyspark #datetime
 `has_percentile` +engine @pyspark #stats
 `is_inside_interquartile_range` +engine @pyspark #stats
-`has_correlation` +engine @pyspark #stats
+`has_correlation` +engine @pyspark #ml
 `satisfies` +engine @pyspark #generic
-`has_cardinality` +engine @pyspark #generic
-`has_infogain` +engine @pyspark #generic
-`has_entropy` +engine @pyspark #stats
+`has_cardinality` +engine @pyspark #ml
+`has_infogain` +engine @pyspark #ml
+`has_entropy` +engine @pyspark #ml
 `is_on_weekday` +engine @pyspark #datetime
 `is_on_weekend` +engine @pyspark #datetime
 `is_on_monday` +engine @pyspark #datetime
@@ -104,8 +104,8 @@
 `is_on_sunday` +engine @pyspark #datetime
 `is_on_schedule` +engine @pyspark #datetime
 `is_daily` +engine @pyspark #datetime
-`has_workflow` +engine @pyspark #business
-`is_custom` +engine @pyspark #generic
+`has_workflow` +engine @pyspark #complex
+`is_custom` +engine @pyspark #complex
 `is_complete` +engine @pandas #generic
 `is_empty` +engine @pandas #generic
 `are_complete` +engine @pandas #generic
@@ -142,11 +142,11 @@
 `is_today` +engine @pandas #datetime
 `has_percentile` +engine @pandas #stats
 `is_inside_interquartile_range` +engine @pandas #stats
-`has_correlation` +engine @pandas #stats
+`has_correlation` +engine @pandas #ml
 `satisfies` +engine @pandas #generic
-`has_cardinality` +engine @pandas #generic
-`has_infogain` +engine @pandas #generic
-`has_entropy` +engine @pandas #stats
+`has_cardinality` +engine @pandas #ml
+\1#ml$
+`has_entropy` +engine @pandas #ml
 `is_on_weekday` +engine @pandas #datetime
 `is_on_weekend` +engine @pandas #datetime
 `is_on_monday` +engine @pandas #datetime
@@ -158,8 +158,8 @@
 `is_on_sunday` +engine @pandas #datetime
 `is_on_schedule` +engine @pandas #datetime
 `is_daily` +engine @pandas #datetime
-`has_workflow` +engine @pandas #business
-`is_custom` +engine @pandas #generic
+`has_workflow` +engine @pandas #complex
+`is_custom` +engine @pandas #complex
 `is_complete` +engine @polars #generic
 `is_empty` +engine @polars #generic
 `are_complete` +engine @polars #generic
@@ -196,11 +196,11 @@
 `is_today` +engine @polars #datetime
 `has_percentile` +engine @polars #stats
 `is_inside_interquartile_range` +engine @polars #stats
-`has_correlation` +engine @polars #stats
+`has_correlation` +engine @polars #ml
 `satisfies` +engine @polars #generic
-`has_cardinality` +engine @polars #generic
-`has_infogain` +engine @polars #generic
-`has_entropy` +engine @polars #stats
+`has_cardinality` +engine @polars #ml
+`has_infogain` +engine @polars #ml
+`has_entropy` +engine @polars #ml
 `is_on_weekday` +engine @polars #datetime
 `is_on_weekend` +engine @polars #datetime
 `is_on_monday` +engine @polars #datetime
@@ -212,8 +212,8 @@
 `is_on_sunday` +engine @polars #datetime
 `is_on_schedule` +engine @polars #datetime
 `is_daily` +engine @polars #datetime
-`has_workflow` +engine @polars #business
-`is_custom` +engine @polars #generic
+`has_workflow` +engine @polars #complex
+`is_custom` +engine @polars #complex
 `is_complete` +engine @duckdb #generic
 `is_empty` +engine @duckdb #generic
 `are_complete` +engine @duckdb #generic
@@ -250,11 +250,11 @@
 `is_today` +engine @duckdb #datetime
 `has_percentile` +engine @duckdb #stats
 `is_inside_interquartile_range` +engine @duckdb #stats
-`has_correlation` +engine @duckdb #stats
+`has_correlation` +engine @duckdb #ml
 `satisfies` +engine @duckdb #generic
-`has_cardinality` +engine @duckdb #generic
-`has_infogain` +engine @duckdb #generic
-`has_entropy` +engine @duckdb #stats
+`has_cardinality` +engine @duckdb #ml
+`has_infogain` +engine @duckdb #ml
+`has_entropy` +engine @duckdb #ml
 `is_on_weekday` +engine @duckdb #datetime
 `is_on_weekend` +engine @duckdb #datetime
 `is_on_monday` +engine @duckdb #datetime
@@ -266,8 +266,8 @@
 `is_on_sunday` +engine @duckdb #datetime
 `is_on_schedule` +engine @duckdb #datetime
 `is_daily` +engine @duckdb #datetime
-`has_workflow` +engine @duckdb #business
-`is_custom` +engine @duckdb #generic
+`has_workflow` +engine @duckdb #complex
+`is_custom` +engine @duckdb #complex
 `is_complete` +engine @bigquery #generic
 `is_empty` +engine @bigquery #generic
 `are_complete` +engine @bigquery #generic
@@ -304,11 +304,11 @@
 `is_today` +engine @bigquery #datetime
 `has_percentile` +engine @bigquery #stats
 `is_inside_interquartile_range` +engine @bigquery #stats
-`has_correlation` +engine @bigquery #stats
+`has_correlation` +engine @bigquery #ml
 `satisfies` +engine @bigquery #generic
-`has_cardinality` +engine @bigquery #generic
-`has_infogain` +engine @bigquery #generic
-`has_entropy` +engine @bigquery #stats
+`has_cardinality` +engine @bigquery #ml
+`has_infogain` +engine @bigquery #ml
+`has_entropy` +engine @bigquery #ml
 `is_on_weekday` +engine @bigquery #datetime
 `is_on_weekend` +engine @bigquery #datetime
 `is_on_monday` +engine @bigquery #datetime
@@ -320,8 +320,8 @@
 `is_on_sunday` +engine @bigquery #datetime
 `is_on_schedule` +engine @bigquery #datetime
 `is_daily` +engine @bigquery #datetime
-`has_workflow` +engine @bigquery #business
-`is_custom` +engine @bigquery #generic
+`has_workflow` +engine @bigquery #complex
+`is_custom` +engine @bigquery #complex
 `is_complete` +engine @snowpark #generic
 `is_empty` +engine @snowpark #generic
 `are_complete` +engine @snowpark #generic
@@ -358,11 +358,11 @@
 `is_today` +engine @snowpark #datetime
 `has_percentile` +engine @snowpark #stats
 `is_inside_interquartile_range` +engine @snowpark #stats
-`has_correlation` +engine @snowpark #stats
+`has_correlation` +engine @snowpark #ml
 `satisfies` +engine @snowpark #generic
-`has_cardinality` +engine @snowpark #generic
-`has_infogain` +engine @snowpark #generic
-`has_entropy` +engine @snowpark #stats
+`has_cardinality` +engine @snowpark #ml
+`has_infogain` +engine @snowpark #ml
+`has_entropy` +engine @snowpark #ml
 `is_on_weekday` +engine @snowpark #datetime
 `is_on_weekend` +engine @snowpark #datetime
 `is_on_monday` +engine @snowpark #datetime
@@ -374,8 +374,8 @@
 `is_on_sunday` +engine @snowpark #datetime
 `is_on_schedule` +engine @snowpark #datetime
 `is_daily` +engine @snowpark #datetime
-`has_workflow` +engine @snowpark #business
-`is_custom` +engine @snowpark #generic
+`has_workflow` +engine @snowpark #complex
+`is_custom` +engine @snowpark #complex
 `is_complete` +test @pyspark #generic
 `is_empty` +test @pyspark #generic
 `are_complete` +test @pyspark #generic
@@ -412,11 +412,11 @@
 `is_today` +test @pyspark #datetime
 `has_percentile` +test @pyspark #stats
 `is_inside_interquartile_range` +test @pyspark #stats
-`has_correlation` +test @pyspark #stats
+`has_correlation` +test @pyspark #ml
 `satisfies` +test @pyspark #generic
-`has_cardinality` +test @pyspark #generic
-`has_infogain` +test @pyspark #generic
-`has_entropy` +test @pyspark #stats
+`has_cardinality` +test @pyspark #ml
+`has_infogain` +test @pyspark #ml
+`has_entropy` +test @pyspark #ml
 `is_on_weekday` +test @pyspark #datetime
 `is_on_weekend` +test @pyspark #datetime
 `is_on_monday` +test @pyspark #datetime
@@ -428,8 +428,8 @@
 `is_on_sunday` +test @pyspark #datetime
 `is_on_schedule` +test @pyspark #datetime
 `is_daily` +test @pyspark #datetime
-`has_workflow` +test @pyspark #business
-`is_custom` +test @pyspark #generic
+`has_workflow` +test @pyspark #complex
+`is_custom` +test @pyspark #complex
 `is_complete` +test @pandas #generic
 `is_empty` +test @pandas #generic
 `are_complete` +test @pandas #generic
@@ -466,11 +466,11 @@
 `is_today` +test @pandas #datetime
 `has_percentile` +test @pandas #stats
 `is_inside_interquartile_range` +test @pandas #stats
-`has_correlation` +test @pandas #stats
+`has_correlation` +test @pandas #ml
 `satisfies` +test @pandas #generic
-`has_cardinality` +test @pandas #generic
-`has_infogain` +test @pandas #generic
-`has_entropy` +test @pandas #stats
+`has_cardinality` +test @pandas #ml
+`has_infogain` +test @pandas #ml
+`has_entropy` +test @pandas #ml
 `is_on_weekday` +test @pandas #datetime
 `is_on_weekend` +test @pandas #datetime
 `is_on_monday` +test @pandas #datetime
@@ -482,8 +482,8 @@
 `is_on_sunday` +test @pandas #datetime
 `is_on_schedule` +test @pandas #datetime
 `is_daily` +test @pandas #datetime
-`has_workflow` +test @pandas #business
-`is_custom` +test @pandas #generic
+`has_workflow` +test @pandas #complex
+`is_custom` +test @pandas #complex
 `is_complete` +test @polars #generic
 `is_empty` +test @polars #generic
 `are_complete` +test @polars #generic
@@ -520,11 +520,11 @@
 `is_today` +test @polars #datetime
 `has_percentile` +test @polars #stats
 `is_inside_interquartile_range` +test @polars #stats
-`has_correlation` +test @polars #stats
+`has_correlation` +test @polars #ml
 `satisfies` +test @polars #generic
-`has_cardinality` +test @polars #generic
-`has_infogain` +test @polars #generic
-`has_entropy` +test @polars #stats
+`has_cardinality` +test @polars #ml
+`has_infogain` +test @polars #ml
+`has_entropy` +test @polars #ml
 `is_on_weekday` +test @polars #datetime
 `is_on_weekend` +test @polars #datetime
 `is_on_monday` +test @polars #datetime
@@ -536,8 +536,8 @@
 `is_on_sunday` +test @polars #datetime
 `is_on_schedule` +test @polars #datetime
 `is_daily` +test @polars #datetime
-`has_workflow` +test @polars #business
-`is_custom` +test @polars #generic
+`has_workflow` +test @polars #complex
+`is_custom` +test @polars #complex
 `is_complete` +test @duckdb #generic
 `is_empty` +test @duckdb #generic
 `are_complete` +test @duckdb #generic
@@ -574,11 +574,11 @@
 `is_today` +test @duckdb #datetime
 `has_percentile` +test @duckdb #stats
 `is_inside_interquartile_range` +test @duckdb #stats
-`has_correlation` +test @duckdb #stats
+`has_correlation` +test @duckdb #ml
 `satisfies` +test @duckdb #generic
-`has_cardinality` +test @duckdb #generic
-`has_infogain` +test @duckdb #generic
-`has_entropy` +test @duckdb #stats
+`has_cardinality` +test @duckdb #ml
+`has_infogain` +test @duckdb #ml
+`has_entropy` +test @duckdb #ml
 `is_on_weekday` +test @duckdb #datetime
 `is_on_weekend` +test @duckdb #datetime
 `is_on_monday` +test @duckdb #datetime
@@ -590,8 +590,8 @@
 `is_on_sunday` +test @duckdb #datetime
 `is_on_schedule` +test @duckdb #datetime
 `is_daily` +test @duckdb #datetime
-`has_workflow` +test @duckdb #business
-`is_custom` +test @duckdb #generic
+`has_workflow` +test @duckdb #complex
+`is_custom` +test @duckdb #complex
 `is_complete` +test @bigquery #generic
 `is_empty` +test @bigquery #generic
 `are_complete` +test @bigquery #generic
@@ -628,11 +628,11 @@
 `is_today` +test @bigquery #datetime
 `has_percentile` +test @bigquery #stats
 `is_inside_interquartile_range` +test @bigquery #stats
-`has_correlation` +test @bigquery #stats
+`has_correlation` +test @bigquery #ml
 `satisfies` +test @bigquery #generic
-`has_cardinality` +test @bigquery #generic
-`has_infogain` +test @bigquery #generic
-`has_entropy` +test @bigquery #stats
+`has_cardinality` +test @bigquery #ml
+`has_infogain` +test @bigquery #ml
+`has_entropy` +test @bigquery #ml
 `is_on_weekday` +test @bigquery #datetime
 `is_on_weekend` +test @bigquery #datetime
 `is_on_monday` +test @bigquery #datetime
@@ -644,8 +644,8 @@
 `is_on_sunday` +test @bigquery #datetime
 `is_on_schedule` +test @bigquery #datetime
 `is_daily` +test @bigquery #datetime
-`has_workflow` +test @bigquery #business
-`is_custom` +test @bigquery #generic
+`has_workflow` +test @bigquery #complex
+`is_custom` +test @bigquery #complex
 `is_complete` +test @snowpark #generic
 `is_empty` +test @snowpark #generic
 `are_complete` +test @snowpark #generic
@@ -682,11 +682,11 @@
 `is_today` +test @snowpark #datetime
 `has_percentile` +test @snowpark #stats
 `is_inside_interquartile_range` +test @snowpark #stats
-`has_correlation` +test @snowpark #stats
+`has_correlation` +test @snowpark #ml
 `satisfies` +test @snowpark #generic
-`has_cardinality` +test @snowpark #generic
-`has_infogain` +test @snowpark #generic
-`has_entropy` +test @snowpark #stats
+`has_cardinality` +test @snowpark #ml
+`has_infogain` +test @snowpark #ml
+`has_entropy` +test @snowpark #ml
 `is_on_weekday` +test @snowpark #datetime
 `is_on_weekend` +test @snowpark #datetime
 `is_on_monday` +test @snowpark #datetime
@@ -698,5 +698,135 @@
 `is_on_sunday` +test @snowpark #datetime
 `is_on_schedule` +test @snowpark #datetime
 `is_daily` +test @snowpark #datetime
-`has_workflow` +test @snowpark #business
-`is_custom` +test @snowpark #generic
+`has_workflow` +test @snowpark #complex
+`is_custom` +test @snowpark #complex
+`not_between` +family #generic {cm:2025-02-09}
+`not_between` +engine @bigquery #generic
+`not_between` +engine @duckdb #generic
+`not_between` +engine @pandas #generic
+`not_between` +engine @polars #generic
+`not_between` +engine @pyspark #generic
+`not_between` +engine @snowpark #generic
+`not_between` +test @bigquery #generic
+`not_between` +test @duckdb #generic
+`not_between` +test @pandas #generic
+`not_between` +test @polars #generic
+`not_between` +test @pyspark #generic
+`not_between` +test @snowpark #generic
+`is_below` +family #numeric {cm:2025-02-09}
+`is_below` +engine @bigquery #numeric
+`is_below` +engine @duckdb #numeric
+`is_below` +engine @pandas #numeric
+`is_below` +engine @polars #numeric
+`is_below` +engine @pyspark #numeric
+`is_below` +engine @snowpark #numeric
+`is_below` +test @bigquery #numeric
+`is_below` +test @duckdb #numeric
+`is_below` +test @pandas #numeric
+`is_below` +test @polars #numeric
+`is_below` +test @pyspark #numeric
+`is_below` +test @snowpark #numeric
+`is_above` +family #numeric {cm:2025-02-09}
+`is_above` +engine @bigquery #numeric
+`is_above` +engine @duckdb #numeric
+`is_above` +engine @pandas #numeric
+`is_above` +engine @polars #numeric
+`is_above` +engine @pyspark #numeric
+`is_above` +engine @snowpark #numeric
+`is_above` +test @bigquery #numeric
+`is_above` +test @duckdb #numeric
+`is_above` +test @pandas #numeric
+`is_above` +test @polars #numeric
+`is_above` +test @pyspark #numeric
+`is_above` +test @snowpark #numeric
+`is_after_than` +family #numeric {cm:2025-02-09}
+`is_after_than` +engine @bigquery #numeric
+`is_after_than` +engine @duckdb #numeric
+`is_after_than` +engine @pandas #numeric
+`is_after_than` +engine @polars #numeric
+`is_after_than` +engine @pyspark #numeric
+`is_after_than` +engine @snowpark #numeric
+`is_after_than` +test @bigquery #numeric
+`is_after_than` +test @duckdb #numeric
+`is_after_than` +test @pandas #numeric
+`is_after_than` +test @polars #numeric
+`is_after_than` +test @pyspark #numeric
+`is_after_than` +test @snowpark #numeric
+`is_before_than` +family #numeric {cm:2025-02-09}
+`is_before_than` +engine @bigquery #numeric
+`is_before_than` +engine @duckdb #numeric
+`is_before_than` +engine @pandas #numeric
+`is_before_than` +engine @polars #numeric
+`is_before_than` +engine @pyspark #numeric
+`is_before_than` +engine @snowpark #numeric
+`is_before_than` +test @bigquery #numeric
+`is_before_than` +test @duckdb #numeric
+`is_before_than` +test @pandas #numeric
+`is_before_than` +test @polars #numeric
+`is_before_than` +test @pyspark #numeric
+`is_before_than` +test @snowpark #numeric
+`is_on_date` +family #numeric {cm:2025-02-09}
+`is_on_date` +engine @bigquery #numeric
+`is_on_date` +engine @duckdb #numeric
+`is_on_date` +engine @pandas #numeric
+`is_on_date` +engine @polars #numeric
+`is_on_date` +engine @pyspark #numeric
+`is_on_date` +engine @snowpark #numeric
+`is_on_date` +test @bigquery #numeric
+`is_on_date` +test @duckdb #numeric
+`is_on_date` +test @pandas #numeric
+`is_on_date` +test @polars #numeric
+`is_on_date` +test @pyspark #numeric
+`is_on_date` +test @snowpark #numeric
+`is_before_or_equal_than` +family #numeric {cm:2025-02-09}
+`is_before_or_equal_than` +engine @bigquery #numeric
+`is_before_or_equal_than` +engine @duckdb #numeric
+`is_before_or_equal_than` +engine @pandas #numeric
+`is_before_or_equal_than` +engine @polars #numeric
+`is_before_or_equal_than` +engine @pyspark #numeric
+`is_before_or_equal_than` +engine @snowpark #numeric
+`is_before_or_equal_than` +test @bigquery #numeric
+`is_before_or_equal_than` +test @duckdb #numeric
+`is_before_or_equal_than` +test @pandas #numeric
+`is_before_or_equal_than` +test @polars #numeric
+`is_before_or_equal_than` +test @pyspark #numeric
+`is_before_or_equal_than` +test @snowpark #numeric
+`is_after_or_equal_than` +family #numeric {cm:2025-02-09}
+`is_after_or_equal_than` +engine @bigquery #numeric
+`is_after_or_equal_than` +engine @duckdb #numeric
+`is_after_or_equal_than` +engine @pandas #numeric
+`is_after_or_equal_than` +engine @polars #numeric
+`is_after_or_equal_than` +engine @pyspark #numeric
+`is_after_or_equal_than` +engine @snowpark #numeric
+`is_after_or_equal_than` +test @bigquery #numeric
+`is_after_or_equal_than` +test @duckdb #numeric
+`is_after_or_equal_than` +test @pandas #numeric
+`is_after_or_equal_than` +test @polars #numeric
+`is_after_or_equal_than` +test @pyspark #numeric
+`is_after_or_equal_than` +test @snowpark #numeric
+`has_max_by` +family #complex {cm:2025-02-09}
+`has_max_by` +engine @bigquery #complex
+`has_max_by` +engine @duckdb #complex
+`has_max_by` +engine @pandas #complex
+`has_max_by` +engine @polars #complex
+`has_max_by` +engine @pyspark #complex
+`has_max_by` +engine @snowpark #complex
+`has_max_by` +test @bigquery #complex
+`has_max_by` +test @duckdb #complex
+`has_max_by` +test @pandas #complex
+`has_max_by` +test @polars #complex
+`has_max_by` +test @pyspark #complex
+`has_max_by` +test @snowpark #complex
+`has_min_by` +family #complex {cm:2025-02-09}
+`has_min_by` +engine @bigquery #complex
+`has_min_by` +engine @duckdb #complex
+`has_min_by` +engine @pandas #complex
+`has_min_by` +engine @polars #complex
+`has_min_by` +engine @pyspark #complex
+`has_min_by` +engine @snowpark #complex
+`has_min_by` +test @bigquery #complex
+`has_min_by` +test @duckdb #complex
+`has_min_by` +test @pandas #complex
+`has_min_by` +test @polars #complex
+`has_min_by` +test @pyspark #complex
+`has_min_by` +test @snowpark #complex

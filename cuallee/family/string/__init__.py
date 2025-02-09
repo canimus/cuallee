@@ -22,6 +22,7 @@ class StringCheck(ABC):
             column (str): Column name in dataframe
             value (regex): A regular expression used to  match values in the `column`
             pct (float): The threshold percentage required to pass
+            options (dict): A dictionary with key='name' and  value='explicit_rule_name'. Default {'name':'has_pattern'}
         """
         (
             Rule(

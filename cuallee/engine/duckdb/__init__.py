@@ -54,21 +54,25 @@ def summary(check: Check, connection: dk.DuckDBPyConnection) -> list:
         connection.execute(f"select count(*) from '{check.table_name}'").fetchone()
     )
 
+    for index, (hash_key, rule) in enumerate(check._rule.items(), 1):
+        rule.ordinal = index
+        rule.evaluate(unified_results[hash_key], rows)
+
     computation_basis = [
         {
-            "id": index,
+            "id": rule.ordinal,
             "timestamp": check.date.strftime("%Y-%m-%d %H:%M:%S"),
             "check": check.name,
             "level": check.level.name,
             "column": rule.column,
             "rule": rule.name,
-            "value": rule.value,
+            "value": rule.format_value(),
             "rows": rows,
-            "violations": 0,
-            "pass_rate": 1.0,
+            "violations": rule.violations,
+            "pass_rate": rule.pass_rate,
             "pass_threshold": rule.coverage,
-            "status": "PASS",
+            "status": rule.status,
         }
-        for index, (hash_key, rule) in enumerate(unified_results.items(), 1)
+        for rule in check.rules
     ]
     return pd.DataFrame(computation_basis).reset_index(drop=True)

@@ -14,8 +14,8 @@
 `is_negative` +family #numeric
 `is_less_or_equal_than` +family #numeric
 `is_equal_than` +family #numeric
-`has_pattern` +family #string
-`is_legit` +family #string
+`has_pattern` +family #string {cm:2025-02-09}
+`is_legit` +family #string {cm:2025-02-09}
 `has_min` +family #stats
 `has_max` +family #stats
 `has_std` +family #stats

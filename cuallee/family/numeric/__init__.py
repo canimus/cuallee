@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from cuallee.core.rule import Rule, RuleDataType
 
@@ -94,6 +95,32 @@ class NumericCheck(ABC):
         return self.is_greater_than(
             column, 0, RuleDataType.NUMERIC, pct, options={"name": "is_positive"}
         )
+
+    def is_after_than(
+        self,
+        column: str,
+        value: datetime,
+        pct: float = 1.0,
+    ):
+        """
+        Validation for date/timestamp greater than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (datetime): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_greater_than",
+                column,
+                value,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+            )
+            >> self._rule
+        )
+        return self
 
     def is_greater_or_equal_than(self, column: str, value: float, pct: float = 1.0):
         """

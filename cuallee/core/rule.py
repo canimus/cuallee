@@ -17,6 +17,7 @@ class RuleDataType(enum.Enum):
     TIMESTAMP = 4
     ARRAY = 5
     MAP = 6
+    DUO = 7
 
 
 @dataclass

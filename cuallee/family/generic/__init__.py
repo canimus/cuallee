@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 from cuallee.core.rule import Rule, RuleDataType
 
@@ -204,7 +204,14 @@ class GenericCheck(ABC):
             pct (float): The threshold percentage required to pass
         """
         (
-            Rule("not_contained_in", column, value, RuleDataType.AGNOSTIC, pct, options={})
+            Rule(
+                "not_contained_in",
+                column,
+                value,
+                RuleDataType.AGNOSTIC,
+                pct,
+                options={},
+            )
             >> self._rule
         )
 

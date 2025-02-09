@@ -265,7 +265,7 @@ class GenericCheck(ABC):
     def satisfies(
         self,
         column: str,
-        predicate: str,
+        value: str,
         pct: float = 1.0,
         options: Dict[str, str] = {},
     ):
@@ -274,7 +274,7 @@ class GenericCheck(ABC):
 
         Args:
             column (str): Column name in the dataframe
-            predicate (str): A predicate written in SQL-like syntax
+            value (str): A predicate written in SQL-like syntax
             pct (float): The threshold percentage required to pass
             options (dict): A dictionary with key='name' and  value='explicit_rule_name'. Default {'name':'satisfies'}
         """
@@ -282,7 +282,7 @@ class GenericCheck(ABC):
             Rule(
                 "satisfies",
                 column,
-                predicate,
+                value,
                 RuleDataType.AGNOSTIC,
                 pct,
                 options=options,

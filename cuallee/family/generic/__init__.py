@@ -79,7 +79,7 @@ class GenericCheck(ABC):
     def is_primary_key(self, column: str, pct: float = 1.0):
         """
         Validation for unique values in column
-        Alias for is_unique
+        Alias for is_unique, with approximate and ignore_nulls set to False
 
         Args:
             column (str): Column name in dataframe
@@ -98,15 +98,33 @@ class GenericCheck(ABC):
         )
         return self
 
-    def are_unique(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
+    def are_unique(
+        self,
+        column: Union[List[str], Tuple[str, str]],
+        pct: float = 1.0,
+        approximate: bool = False,
+        ignore_nulls: bool = False,
+    ):
         """
         Validation for unique values in a group of columns
 
         Args:
             column (List[str]): A tuple or list of column names in dataframe
             pct (float): The threshold percentage required to pass
+            approximate (bool): A flag to speed up computation using an approximation through maximum relative std. dev.
+            ignore_nulls (bool): Run drop nulls before counting
         """
-        Rule("are_unique", column, "N/A", RuleDataType.AGNOSTIC, pct) >> self._rule
+        (
+            Rule(
+                "are_unique",
+                column,
+                "N/A",
+                RuleDataType.AGNOSTIC,
+                pct,
+                options={"approximate": approximate, "ignore_nulls": ignore_nulls},
+            )
+            >> self._rule
+        )
         return self
 
     def is_composite_key(
@@ -114,7 +132,7 @@ class GenericCheck(ABC):
     ):
         """
         Validation for unique values in a group of columns
-        Alias for are_unique
+        Alias for are_unique, with approximate and ignore_nulls set to False
 
         Args:
             column (str): Column name in dataframe
@@ -189,7 +207,6 @@ class GenericCheck(ABC):
                 value,
                 RuleDataType.AGNOSTIC,
                 pct,
-                options={},
             )
             >> self._rule
         )
@@ -227,7 +244,6 @@ class GenericCheck(ABC):
                 value,
                 RuleDataType.AGNOSTIC,
                 pct,
-                options={},
             )
             >> self._rule
         )

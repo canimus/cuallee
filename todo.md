@@ -5,15 +5,15 @@
 `is_primary_key` +family #generic {cm:2025-02-09}
 `are_unique` +family #generic {cm:2025-02-09}
 `is_composite_key` +family #generic {cm:2025-02-09}
-`is_greater_than` +family #numeric
-`is_positive` +family #numeric
-`is_greater_or_equal_than` +family #numeric
-`is_in_millions` +family #numeric
-`is_in_billions` +family #numeric
-`is_less_than` +family #numeric
-`is_negative` +family #numeric
-`is_less_or_equal_than` +family #numeric
-`is_equal_than` +family #numeric
+`is_greater_than` +family #numeric {cm:2025-02-09}
+`is_positive` +family #numeric {cm:2025-02-09}
+`is_greater_or_equal_than` +family #numeric {cm:2025-02-09}
+`is_in_millions` +family #numeric {cm:2025-02-09}
+`is_in_billions` +family #numeric {cm:2025-02-09}
+`is_less_than` +family #numeric {cm:2025-02-09}
+`is_negative` +family #numeric {cm:2025-02-09}
+`is_less_or_equal_than` +family #numeric {cm:2025-02-09}
+`is_equal_than` +family #numeric {cm:2025-02-09}
 `has_pattern` +family #string {cm:2025-02-09}
 `is_legit` +family #string {cm:2025-02-09}
 `has_min` +family #stats

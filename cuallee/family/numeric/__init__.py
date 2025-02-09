@@ -13,7 +13,10 @@ class NumericCheck(ABC):
         pass
 
     def is_greater_than(
-        self, column: str, value: float, pct: float = 1.0, options: Dict[str, str] = {}
+        self,
+        column: str,
+        value: float,
+        pct: float = 1.0,
     ):
         """
         Validation for numeric greater than value
@@ -31,15 +34,22 @@ class NumericCheck(ABC):
     ):
         """
         Validation for numeric greater than value
+        Alias for is_greater_than
 
         Args:
             column (str): Column name in dataframe
             value (number): The condition for the column to match
             pct (float): The threshold percentage required to pass
         """
-        options.update({"name": "gt"})
         (
-            Rule("is_greater_than", column, value, RuleDataType.NUMERIC, pct, options)
+            Rule(
+                "is_greater_than",
+                column,
+                value,
+                RuleDataType.NUMERIC,
+                pct,
+                options={"name": "gt"},
+            )
             >> self._rule
         )
         return self
@@ -99,7 +109,9 @@ class NumericCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_greater_or_equal_than(column, 1e6, pct)
+        return self.is_greater_or_equal_than(
+            column, 1e6, pct, options={"name": "is_in_millions"}
+        )
 
     def is_in_billions(self, column: str, pct: float = 1.0):
         """
@@ -109,7 +121,9 @@ class NumericCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_greater_or_equal_than(column, 1e9, pct)
+        return self.is_greater_or_equal_than(
+            column, 1e9, pct, options={"name": "is_in_billions"}
+        )
 
     def is_less_than(self, column: str, value: float, pct: float = 1.0):
         """

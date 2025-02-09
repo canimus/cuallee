@@ -1,10 +1,10 @@
-`is_complete` +family #generic
-`is_empty` +family #generic
-`are_complete` +family #generic
-`is_unique` +family #generic
-`is_primary_key` +family #generic
-`are_unique` +family #generic
-`is_composite_key` +family #generic
+`is_complete` +family #generic {cm:2025-02-09}
+`is_empty` +family #generic {cm:2025-02-09}
+`are_complete` +family #generic {cm:2025-02-09}
+`is_unique` +family #generic {cm:2025-02-09}
+`is_primary_key` +family #generic {cm:2025-02-09}
+`are_unique` +family #generic {cm:2025-02-09}
+`is_composite_key` +family #generic {cm:2025-02-09}
 `is_greater_than` +family #numeric
 `is_positive` +family #numeric
 `is_greater_or_equal_than` +family #numeric
@@ -21,11 +21,11 @@
 `has_std` +family #stats
 `has_mean` +family #stats
 `has_sum` +family #stats
-`is_between` +family #generic
-`not_contained_in` +family #generic
-`not_in` +family #generic
-`is_contained_in` +family #generic
-`is_in` +family #generic
+`is_between` +family #generic {cm:2025-02-09}
+`not_contained_in` +family #generic {cm:2025-02-09}
+`not_in` +family #generic {cm:2025-02-09}
+`is_contained_in` +family #generic {cm:2025-02-09}
+`is_in` +family #generic {cm:2025-02-09}
 `is_t_minus_n` +family #datetime
 `is_t_minus_1` +family #datetime
 `is_t_minus_2` +family #datetime
@@ -35,7 +35,7 @@
 `has_percentile` +family #stats
 `is_inside_interquartile_range` +family #stats
 `has_correlation` +family #stats
-`satisfies` +family #generic
+`satisfies` +family #generic {cm:2025-02-09}
 `has_cardinality` +family #generic
 `has_infogain` +family #generic
 `has_entropy` +family #stats
@@ -700,3 +700,16 @@
 `is_daily` +test @snowpark #datetime
 `has_workflow` +test @snowpark #business
 `is_custom` +test @snowpark #generic
+`not_between` +family #generic {cm:2025-02-09}
+`not_between` +engine @bigquery #generic
+`not_between` +engine @duckdb #generic
+`not_between` +engine @pandas #generic
+`not_between` +engine @polars #generic
+`not_between` +engine @pyspark #generic
+`not_between` +engine @snowpark #generic
+`not_between` +test @bigquery #generic
+`not_between` +test @duckdb #generic
+`not_between` +test @pandas #generic
+`not_between` +test @polars #generic
+`not_between` +test @pyspark #generic
+`not_between` +test @snowpark #generic

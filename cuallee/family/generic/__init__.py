@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from cuallee.core.rule import Rule, RuleDataType
 
@@ -150,6 +150,23 @@ class GenericCheck(ABC):
         (Rule("is_between", column, value, RuleDataType.AGNOSTIC, pct) >> self._rule)
         return self
 
+    def not_between(
+        self,
+        column: str,
+        value: Union[List[Any], Tuple[Any, Any]],
+        pct: float = 1.0,
+    ):
+        """
+        Validation of a column not between a range of given values
+
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (Rule("not_between", column, value, RuleDataType.AGNOSTIC, pct) >> self._rule)
+        return self
+
     def is_contained_in(
         self,
         column: str,
@@ -228,3 +245,32 @@ class GenericCheck(ABC):
             pct (float): The threshold percentage required to pass
         """
         return self.not_contained_in(column, value, pct, options={"name": "not_in"})
+
+    def satisfies(
+        self,
+        column: str,
+        predicate: str,
+        pct: float = 1.0,
+        options: Dict[str, str] = {},
+    ):
+        """
+        Validation of a column satisfying a SQL-like predicate
+
+        Args:
+            column (str): Column name in the dataframe
+            predicate (str): A predicate written in SQL-like syntax
+            pct (float): The threshold percentage required to pass
+            options (dict): A dictionary with key='name' and  value='explicit_rule_name'. Default {'name':'satisfies'}
+        """
+        (
+            Rule(
+                "satisfies",
+                column,
+                predicate,
+                RuleDataType.AGNOSTIC,
+                pct,
+                options=options,
+            )
+            >> self._rule
+        )
+        return self

@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 from cuallee.core.rule import Rule, RuleDataType
 
 
-class MlCheck(ABC):
+class MLCheck(ABC):
     """Functionality for ml operations"""
 
     @abstractmethod
     def __init__(self) -> None:
-        """Restrict use of MlCheck as it misses rule container"""
+        """Restrict use of MLCheck as it misses rule container"""
         pass
 
     def has_correlation(self, column_left: str, column_right: str, value: float):

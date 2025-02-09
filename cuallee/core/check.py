@@ -5,9 +5,12 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Union
 
-from toolz import first, valfilter  # type: ignore
+from toolz import first, valfilter
 
+from ..family.complex import ComplexCheck
+from ..family.datetime import DateTimeCheck
 from ..family.generic import GenericCheck
+from ..family.ml import MLCheck
 from ..family.numeric import NumericCheck
 from ..family.stats import StatsCheck
 from ..family.string import StringCheck
@@ -31,7 +34,16 @@ class CheckStatus(enum.Enum):
 ENGINES = ["pyspark", "pandas", "snowpark", "polars", "duckdb", "bigquery", "daft"]
 
 
-class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
+class Check(
+    GenericCheck,
+    NumericCheck,
+    StringCheck,
+    StatsCheck,
+    ComplexCheck,
+    MLCheck,
+    DateTimeCheck,
+):
+
     def __init__(
         self,
         level: Union[CheckLevel, int] = 0,

@@ -2,7 +2,7 @@ import enum
 import hashlib
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from toolz import valfilter  # type: ignore
 
@@ -28,7 +28,7 @@ class Rule:
     value: Optional[Any]
     data_type: RuleDataType
     coverage: float = 1.0
-    options: Union[List[Tuple], None] = None
+    options: Union[List[Tuple], Iterable[tuple[Any, Any]], None] = None
     status: Union[str, None] = None
     violations: int = 0
     pass_rate: float = 0.0
@@ -38,7 +38,7 @@ class Rule:
     @property
     def settings(self) -> dict:
         """holds the additional settings for the predicate execution"""
-        return dict(self.options)
+        return dict(self.options)  # type: ignore
 
     @property
     def key(self):

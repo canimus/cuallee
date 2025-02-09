@@ -1,4 +1,4 @@
-from .base import PysparkTestCase
+from ..base import PysparkTestCase
 
 
 class TestCase(PysparkTestCase):

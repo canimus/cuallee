@@ -2,8 +2,9 @@ import inspect
 import logging
 from abc import ABC, abstractmethod
 
+import pyspark.sql.functions as F
 import pytest
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 
 from cuallee.core.check import Check, CheckLevel
 
@@ -58,8 +59,18 @@ class PysparkTestCase(ABC):
         """Test case for coverage calculation"""
         pass
 
-    def get_data(self):
+    def get_data(self, spark_session: SparkSession) -> DataFrame:
         """Get data for test using the caller's file location"""
-        caller_frame = inspect.currentframe().f_back
-        caller_file = caller_frame.f_globals["__file__"]
-        return caller_file
+        frame = inspect.currentframe().f_back
+        caller_file = frame.f_globals["__file__"]
+        calling_function = frame.f_code.co_name[5:]
+        test_name = caller_file.split("/")[-1][5:-3]
+
+        df = spark_session.read.parquet("test/fixtures/pyspark.parquet")
+        mappings = {"pass": ["id_1"], "fail": ["id_3"]}
+        df = (
+            df.filter(F.col("check") == test_name)
+            # .filter(F.col("test") == calling_function)
+            .select(*mappings[calling_function])
+        )
+        return df

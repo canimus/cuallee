@@ -2,7 +2,7 @@ import inspect
 from typing import List, Set, Union
 
 from rich import print as rich_print
-from toolz import groupby, keyfilter, valmap
+from toolz import keyfilter, valmap
 
 from .check import Check
 from .rule import Rule, RuleDataType
@@ -69,11 +69,18 @@ def inventory() -> None:
     """List all available checks in cuallee"""
     methods = dict(inspect.getmembers(Check, predicate=inspect.isfunction))
     rich_print(
-        keyfilter(
-            lambda x: "core.check" not in x,
-            groupby(
-                lambda x: x[0],
-                valmap(lambda x: (x.__module__, x.__name__), methods).values(),
+        sorted(
+            list(
+                filter(
+                    lambda x: len(x) > 0,
+                    valmap(
+                        lambda x: keyfilter(
+                            lambda k: "core.check" not in k, {x.__module__: x.__name__}
+                        ),
+                        methods,
+                    ).values(),
+                )
             ),
+            key=lambda x: list(x.keys())[0],
         )
     )

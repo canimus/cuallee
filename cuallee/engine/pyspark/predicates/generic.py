@@ -9,7 +9,9 @@ from ..utils import ComputeInstruction, ComputeMethod
 
 def is_complete(rule: Rule):
     """Validation for non-null values in column"""
-    predicate = F.col(f"`{rule.column}`").isNotNull().cast("integer")
+    column = f"`{rule.column}`"
+    condition = F.isnotnull(column) & ~F.isnan(column)
+    predicate = condition.cast("integer")
     return ComputeInstruction(
         predicate,
         F.sum(predicate),

@@ -3,9 +3,9 @@ import importlib
 import operator
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
-from toolz import first, valfilter
+from toolz import first, valfilter  # type: ignore
 
 from ..family.generic import GenericCheck
 from ..family.numeric import NumericCheck
@@ -38,7 +38,7 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
         name: str = "cuallee.check",
         *,
         execution_date: datetime = datetime.now(timezone.utc),
-        table_name: str = None,
+        table_name: Union[str, None] = None,
         session: Any = None,
         config: Dict = {},
     ):
@@ -53,8 +53,8 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
             session (Session): When operating in Session enabled environments like Databricks or Snowflake
 
         """
-        self._rule = {}
-        self.compute_engine = None
+        self._rule: Dict[str, str] = {}
+        self.compute_engine: Union[Any, None] = None
         self.level = CheckLevel(level) if isinstance(level, int) else level
         self.name = name
         self.date = execution_date
@@ -120,8 +120,12 @@ class Check(GenericCheck, NumericCheck, StringCheck, StatsCheck):
         # Stop execution if the there is no rules in the check
         assert not self.empty, "Check is empty. Try adding some rules?"
 
-        self.dtype = first(re.match(r".*'(.*)'", str(type(dataframe))).groups())
-        engine_key = next((k for k in ENGINES if k in self.dtype), None)
+        frame_engine: Optional[re.Match] = re.match(r".*'(.*)'", str(type(dataframe)))
+        if frame_engine:
+            frame_name: Optional[tuple[str]] = frame_engine.groups()
+            if frame_name:
+                self.dtype = first(frame_name)
+        engine_key: Optional[str] = next((k for k in ENGINES if k in self.dtype), None)
 
         if not engine_key:
             raise NotImplementedError(f"{self.dtype} is not yet implemented in cuallee")

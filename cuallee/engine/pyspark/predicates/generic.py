@@ -45,10 +45,14 @@ def are_complete(rule: Rule):
 
 def is_unique(rule: Rule):
     """Validation for unique values in column"""
-    predicate = None
+    predicate = None  # F.count_distinct(F.col(rule.column))
+    instruction = "count_distinct"
+    if rule.options and (rule.options.get("approximate", False)):
+        instruction = f"approx_{instruction}"
+
     return ComputeInstruction(
         predicate,
-        F.count_distinct(F.col(f"`{rule.column}`")),
+        operator.methodcaller(instruction, F.col(f"`{rule.column}`"))(F),
         ComputeMethod.SELECT,
     )
 

@@ -18,9 +18,9 @@ def test_negative(snowpark):
     check.is_inside_interquartile_range("ID")
     rs = check.validate(df)
     assert rs.first().STATUS == "FAIL"
-    assert rs.first().VIOLATIONS == 4
+    assert rs.first().VIOLATIONS == 6
     assert rs.first().PASS_THRESHOLD == 1.0
-    assert rs.first().PASS_RATE == 0.6
+    assert rs.first().PASS_RATE == 0.4
 
 
 @pytest.mark.parametrize(
@@ -47,6 +47,6 @@ def test_coverage(snowpark):
     check.is_inside_interquartile_range("ID", pct=0.4)
     rs = check.validate(df)
     assert rs.first().STATUS == "PASS"
-    assert rs.first().VIOLATIONS == 4
+    assert rs.first().VIOLATIONS == 6
     assert rs.first().PASS_THRESHOLD == 0.4
-    assert rs.first().PASS_RATE == 0.6
+    assert rs.first().PASS_RATE == 0.4

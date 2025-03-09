@@ -28,13 +28,18 @@ class DateTimeCheck(ABC):
             pct (float): The threshold percentage required to pass
         """
         target_day = datetime.now(tz=timezone.utc) - timedelta(days=value)
-        return self.is_contained_in(
-            column,
-            tuple([target_day.strftime("%Y-%m-%d")]),
-            [RuleDataType.DATE, RuleDataType.TIMESTAMP],
-            pct,
-            options={"name": f"is_t_minus_{value}"},
+        (
+            Rule(
+                "is_contained_in",
+                column,
+                tuple([target_day.strftime("%Y-%m-%d")]),
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": f"is_t_minus_{value}"},
+            )
+            >> self._rule
         )
+        return self
 
     def is_t_minus_1(self, column: str, pct: float = 1.0):
         """
@@ -44,7 +49,18 @@ class DateTimeCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 1, pct, options={"name": "is_t_minus_1"})
+        (
+            Rule(
+                "is_contained_in",
+                column,
+                1,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_t_minus_1"},
+            )
+            >> self._rule
+        )
+        return self
 
     def is_yesterday(self, column: str, pct: float = 1.0):
         """
@@ -54,7 +70,18 @@ class DateTimeCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 1, pct, options={"name": "is_yesterday"})
+        (
+            Rule(
+                "is_contained_in",
+                column,
+                1,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_yesterday"},
+            )
+            >> self._rule
+        )
+        return self
 
     def is_t_minus_2(self, column: str, pct: float = 1.0):
         """
@@ -64,7 +91,18 @@ class DateTimeCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 2, pct, options={"name": "is_t_minus_2"})
+        (
+            Rule(
+                "is_contained_in",
+                column,
+                2,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_t_minus_2"},
+            )
+            >> self._rule
+        )
+        return self
 
     def is_t_minus_3(self, column: str, pct: float = 1.0):
         """
@@ -74,7 +112,18 @@ class DateTimeCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 3, pct, options={"name": "is_t_minus_3"})
+        (
+            Rule(
+                "is_contained_in",
+                column,
+                2,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_t_minus_3"},
+            )
+            >> self._rule
+        )
+        return self
 
     def is_today(self, column: str, pct: float = 1.0):
         """
@@ -84,7 +133,18 @@ class DateTimeCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
         """
-        return self.is_t_minus_n(column, 0, pct, options={"name": "is_today"})
+        (
+            Rule(
+                "is_contained_in",
+                column,
+                0,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_today"},
+            )
+            >> self._rule
+        )
+        return self
 
     def is_on_weekday(self, column: str, value: str = "Mon-Fri", pct: float = 1.0):
         """
@@ -304,6 +364,121 @@ class DateTimeCheck(ABC):
                 value,
                 [RuleDataType.DATE, RuleDataType.TIMESTAMP],
                 pct,
+            )
+            >> self._rule
+        )
+        return self
+
+    def is_after_than(
+        self,
+        column: str,
+        value: datetime,
+        pct: float = 1.0,
+    ):
+        """
+        Validation for date/timestamp greater than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (datetime): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_greater_than",
+                column,
+                value,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_after_than"},
+            )
+            >> self._rule
+        )
+        return self
+
+    def is_after_or_equal_than(self, column: str, value: datetime, pct: float = 1.0):
+        """
+        Validation for datetime greater or equal than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (datetime): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_greater_or_equal_than",
+                column,
+                value,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_after_or_equal_than"},
+            )
+            >> self._rule
+        )
+        return self
+
+    def is_before_than(self, column: str, value: datetime, pct: float = 1.0):
+        """
+        Validation for datetime less than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (datetime): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_less_than",
+                column,
+                value,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_before_than"},
+            )
+            >> self._rule
+        )
+        return self
+
+    def is_before_or_equal_than(self, column: str, value: datetime, pct: float = 1.0):
+        """
+        Validation for datetime less or equal than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (datetime): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_less_or_equal_than",
+                column,
+                value,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_before_or_equal_than"},
+            )
+            >> self._rule
+        )
+        return self
+
+    def is_on_date(self, column: str, value: datetime, pct: float = 1.0):
+        """
+        Validation for datetime column equal than value
+
+        Args:
+            column (str): Column name in dataframe
+            value (datetime): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "is_equal_than",
+                column,
+                value,
+                [RuleDataType.DATE, RuleDataType.TIMESTAMP],
+                pct,
+                options={"name": "is_on_date"},
             )
             >> self._rule
         )

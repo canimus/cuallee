@@ -120,7 +120,8 @@ def are_unique(rule: Rule):
 
 def is_between(rule: Rule):
     """Validation of a column between a range"""
-    predicate = F.col(f"`{rule.column}`").between(*rule.value).cast("bigint")
+    condition = F.col(f"`{rule.column}`").between(*rule.value)
+    predicate = condition.cast("bigint")
     return ComputeInstruction(
         predicate,
         F.sum(predicate),
@@ -130,7 +131,8 @@ def is_between(rule: Rule):
 
 def not_between(rule: Rule):
     """Validation of a column outside a range"""
-    predicate = ~F.col(f"`{rule.column}`").between(*rule.value).cast("bigint")
+    condition = ~F.col(f"`{rule.column}`").between(*rule.value)
+    predicate = condition.cast("bigint")
     return ComputeInstruction(
         predicate,
         F.sum(predicate),
@@ -140,7 +142,8 @@ def not_between(rule: Rule):
 
 def is_contained_in(rule: Rule):
     """Validation of column value in set of given values"""
-    predicate = F.col(f"`{rule.column}`").isin(list(rule.value)).cast("bigint")
+    condition = F.col(f"`{rule.column}`").isin(list(rule.value))
+    predicate = condition.cast("bigint")
     return ComputeInstruction(
         predicate,
         F.sum(predicate),
@@ -150,9 +153,21 @@ def is_contained_in(rule: Rule):
 
 def not_contained_in(rule: Rule):
     """Validation of column value not in set of given values"""
-    predicate = ~F.col(f"`{rule.column}`").isin(list(rule.value)).cast("bigint")
+    condition = ~F.col(f"`{rule.column}`").isin(list(rule.value))
+    predicate = condition.cast("bigint")
     return ComputeInstruction(
         predicate,
         F.sum(predicate),
+        ComputeMethod.OBSERVE,
+    )
+
+
+def satisfies(rule: Rule):
+    """Validation of a column satisfying a SQL-like predicate"""
+    condition = F.expr(f"{rule.value}").cast("bigint")
+    predicate = None
+    return ComputeInstruction(
+        predicate,
+        F.sum(condition),
         ComputeMethod.OBSERVE,
     )

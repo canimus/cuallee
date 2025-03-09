@@ -221,7 +221,17 @@ class GenericCheck(ABC):
             value (List[str,number,date]): The condition for the column to match
             pct (float): The threshold percentage required to pass
         """
-        return self.is_contained_in(column, value, pct, options={"name": "is_in"})
+        (
+            Rule(
+                "is_contained_in",
+                column,
+                value,
+                RuleDataType.AGNOSTIC,
+                pct,
+                options={"name": "is_in"},
+            )
+            >> self._rule
+        )
 
     def not_contained_in(
         self,
@@ -247,7 +257,6 @@ class GenericCheck(ABC):
             )
             >> self._rule
         )
-
         return self
 
     def not_in(self, column: str, value: Union[List, Tuple], pct: float = 1.0):
@@ -260,7 +269,18 @@ class GenericCheck(ABC):
             value (List[str,number,date]): The condition for the column to match
             pct (float): The threshold percentage required to pass
         """
-        return self.not_contained_in(column, value, pct, options={"name": "not_in"})
+        (
+            Rule(
+                "not_contained_in",
+                column,
+                value,
+                RuleDataType.AGNOSTIC,
+                pct,
+                options={"name": "not_in"},
+            )
+            >> self._rule
+        )
+        return self
 
     def satisfies(
         self,

@@ -24,6 +24,17 @@ class GenericCheck(ABC):
         Rule("is_complete", column, "N/A", RuleDataType.AGNOSTIC, pct) >> self._rule
         return self
 
+    def are_complete(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
+        """
+        Validation for non-null values in a group of columns
+
+        Args:
+            column (List[str]): A tuple or list of column names in dataframe
+            pct (float): The threshold percentage required to pass
+        """
+        Rule("are_complete", column, "N/A", RuleDataType.AGNOSTIC, pct) >> self._rule
+        return self
+
     def is_empty(self, column: str, pct: float = 1.0):
         """
         Validation for null values in column
@@ -36,15 +47,16 @@ class GenericCheck(ABC):
         Rule("is_empty", column, "N/A", RuleDataType.AGNOSTIC, pct) >> self._rule
         return self
 
-    def are_complete(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
+    def are_empty(self, column: Union[List[str], Tuple[str, str]], pct: float = 1.0):
         """
-        Validation for non-null values in a group of columns
+        Validation for null values in a group of columns
 
         Args:
             column (List[str]): A tuple or list of column names in dataframe
             pct (float): The threshold percentage required to pass
+
         """
-        Rule("are_complete", column, "N/A", RuleDataType.AGNOSTIC, pct) >> self._rule
+        Rule("are_empty", column, "N/A", RuleDataType.AGNOSTIC, pct) >> self._rule
         return self
 
     def is_unique(
@@ -61,7 +73,7 @@ class GenericCheck(ABC):
             column (str): Column name in dataframe
             pct (float): The threshold percentage required to pass
             approximate (bool): A flag to speed up computation using an approximation through maximum relative std. dev.
-            ignore_nulls (bool): Run drop nulls before counting
+            ignore_nulls (bool): Correct for null values
         """
         (
             Rule(
@@ -175,7 +187,7 @@ class GenericCheck(ABC):
         pct: float = 1.0,
     ):
         """
-        Validation of a column not between a range of given values
+        Validation of a column outside a range of given values
 
         Args:
             column (str): Column name in dataframe
@@ -183,6 +195,33 @@ class GenericCheck(ABC):
             pct (float): The threshold percentage required to pass
         """
         (Rule("not_between", column, value, RuleDataType.AGNOSTIC, pct) >> self._rule)
+        return self
+
+    def is_excluded(
+        self,
+        column: str,
+        value: Union[List[Any], Tuple[Any, Any]],
+        pct: float = 1.0,
+    ):
+        """
+        Validation of a column outside a range of given values
+
+        Args:
+            column (str): Column name in dataframe
+            value (List[str,number,date]): The condition for the column to match
+            pct (float): The threshold percentage required to pass
+        """
+        (
+            Rule(
+                "not_between",
+                column,
+                value,
+                RuleDataType.AGNOSTIC,
+                pct,
+                options={"name": "is_excluded"},
+            )
+            >> self._rule
+        )
         return self
 
     def is_contained_in(

@@ -20,7 +20,7 @@
 temp/
 .vscode/
 .env
-unit_test_*/
+test/fixtures/unit_data_*/
 
 # Build
 cuallee/cuallee.egg-info

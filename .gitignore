@@ -11,6 +11,7 @@
 **__pycache__/
 .DS_Store
 uv.lock
+.venv-container/
 
 # Security
 *.crt

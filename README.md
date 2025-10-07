@@ -32,7 +32,7 @@ When benchmarking against pydeequ, `cuallee` uses circa <3k java classes underne
 Provider | API | Versions
  ------- | ----------- | ------
 ![snowflake](https://github.com/canimus/cuallee/blob/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/snowflake.svg?raw=true "Snowpark DataFrame API")| `snowpark` | `1.11.1`, `1.4.0`
-![databricks](https://github.com/canimus/cuallee/blob/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` & `spark-connect` |`3.5.x`, `3.4.0`, `3.3.x`, `3.2.x`
+![databricks](https://github.com/canimus/cuallee/blob/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/databricks.svg?raw=true "PySpark DataFrame API")| `pyspark` & `spark-connect` | `4.0.1`,`3.5.x`, `3.4.0`, `3.3.x`, `3.2.x`
 ![bigquery](https://github.com/canimus/cuallee/blob/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/bigquery.png?raw=true "BigQuery Client API")| `bigquery` | `3.4.1`
 ![pandas](https://github.com/canimus/cuallee/blob/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/pandas.svg?raw=true "Pandas DataFrame API")| `pandas`| `2.0.2`, `1.5.x`, `1.4.x`
 ![duckdb](https://github.com/canimus/cuallee/blob/fbef98f5340279fc726b369a7ce879fd67ea1d1f/logos/duckdb.png?raw=true "DuckDB API")|`duckdb` | `1.4.0`,~~`1.0.0`~~, ~~`0.10.2`~~,~~`0.9.2`~~,~~`0.8.0`~~

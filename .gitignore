@@ -10,6 +10,7 @@
 # Cache
 **__pycache__/
 .DS_Store
+uv.lock
 
 # Security
 *.crt

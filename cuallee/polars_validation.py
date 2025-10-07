@@ -75,10 +75,7 @@ class Compute:
     def are_unique(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
         """Validate absence of duplicate in group of columns"""
         return Compute._result(
-            dataframe.select(
-                [pl.col(c).is_unique().cast(pl.Int8).sum() for c in rule.column]
-            ).sum_horizontal()
-            / len(rule.column)
+            dataframe.select(pl.struct(*rule.column).is_unique().cast(pl.Int8)).sum()
         )
 
     def is_greater_than(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:

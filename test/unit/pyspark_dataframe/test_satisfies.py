@@ -56,7 +56,7 @@ def test_col_name_error(spark):
     check.satisfies(["id", "id2"], "(id * id3) > 10", 0.9)
     with pytest.raises(
         AnalysisException,
-        match=r"A column or function parameter with name `id3` cannot be resolved",
+        match=r"`id3` cannot be resolved",
     ):
         check.validate(df)
 

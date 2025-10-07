@@ -1,9 +1,10 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
+from pyspark.sql.session import SparkSession
 from typing import Tuple, Dict, Set, List
 from toolz import valfilter  # type: ignore
 
@@ -297,8 +298,9 @@ def test_compute_summary_return_dataframe(spark):
     assert isinstance(rs, DataFrame)
 
 
-@patch.object(SparkSession, "version", "3.2.0")
-def test_lower_spark_version(spark):
+@patch.object(SparkSession, "version", new_callable=PropertyMock)
+def test_lower_spark_version(mock_version, spark):
+    mock_version.return_value = "3.2.0"
     df = spark.range(10)
     check = Check(CheckLevel.WARNING, "test_spark_dataframe").is_complete("id")
     rs = PSV.summary(check, df)

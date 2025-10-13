@@ -36,7 +36,7 @@ pyspark_connect = [
   "pyspark[connect]"
 ]
 snowpark = [
-  "snowflake-snowpark-python==1.11.1",
+  "snowflake-snowpark-python==1.40.0",
   "pyarrow >= 14.0.2"
 ]
 pandas = [

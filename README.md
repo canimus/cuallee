@@ -3,6 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/cuallee.svg)](https://badge.fury.io/py/cuallee)
 [![ci](https://github.com/canimus/cuallee/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/canimus/cuallee/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/canimus/cuallee/branch/main/graph/badge.svg?token=D7SOV620MS)](https://codecov.io/gh/canimus/cuallee)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/cuallee?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/cuallee)
 [![](https://img.shields.io/pypi/dm/cuallee.svg?style=popout-square)](https://pypi.org/project/cuallee/)
 [![License](https://img.shields.io/github/license/canimus/cuallee.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 [![status](https://joss.theoj.org/papers/db01d4f5a02a319fe2b4c49f68e3f859/status.svg)](https://joss.theoj.org/papers/db01d4f5a02a319fe2b4c49f68e3f859)

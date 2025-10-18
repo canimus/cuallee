@@ -1,4 +1,4 @@
-y te# cuallee
+# cuallee
 
 [![PyPI version](https://badge.fury.io/py/cuallee.svg)](https://badge.fury.io/py/cuallee)
 [![ci](https://github.com/canimus/cuallee/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/canimus/cuallee/actions/workflows/ci.yml)

@@ -6,7 +6,7 @@ import numpy as np
 import polars as pl  # type: ignore
 from toolz import compose, first  # type: ignore
 from toolz.curried import map as map_curried
-from cuallee import Check, Rule, CheckStatus
+from cuallee import Check, Rule, CheckStatus, CustomComputeException
 from functools import partial
 
 
@@ -398,6 +398,25 @@ class Compute:
             return len(dataframe) - len(interactions)
 
         return workflow(dataframe.select(*rule.column))
+
+    def is_custom(self, rule: Rule, dataframe: pl.DataFrame) -> Union[bool, int]:
+        """Validates dataframe by applying a custom function and returning the sum of boolean results."""
+        try:
+            assert callable(
+                rule.value
+            ), "Please provide a Callable/Function for validation"
+            result = rule.value(dataframe)
+            if isinstance(result, pl.DataFrame):
+                assert (
+                    len(result.columns) >= 1
+                ), "Custom function should return at least one column"
+                result = result.to_series(-1)
+            assert isinstance(
+                result, pl.Series
+            ), "Custom function should return a Polars DataFrame or Series"
+            return result.cast(pl.Boolean).sum()
+        except Exception as err:
+            raise CustomComputeException(str(err))
 
 
 def compute(rules: Dict[str, Rule]):
